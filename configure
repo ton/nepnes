@@ -1,0 +1,31 @@
+#!/bin/bash
+
+if [[ $# -gt 0 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
+  echo "Usage: configure [debug | release]"
+  echo
+  echo "Configures the either a debug or release build."
+  exit 1
+fi
+
+if [ ! -e build/ ]; then
+  mkdir build
+fi
+
+# Determine the build type from the commandline (in case it is specified), and
+# lowercase it.
+build_type="$(tr '[:upper:]' '[:lower:]' <<< "$*")"
+
+# By default, make a debug build in case no build type has been specified.
+if [ "$build_type" = "" ]; then
+  build_type="debug"
+fi
+
+echo "Configuring a $build_type build..."
+
+# Upper the first character of the build type for use with CMake.
+build_type="$(tr '[:lower:]' '[:upper:]' <<< ${build_type:0:1})${build_type:1}"
+
+cd build && cmake ../ -GNinja \
+  -DCMAKE_MAKE_PROGRAM="$(command -v ninja)" \
+  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+  -DCMAKE_BUILD_TYPE="$build_type"

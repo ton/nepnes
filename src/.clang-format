@@ -1,0 +1,17 @@
+---
+BasedOnStyle: Google
+Language: Cpp
+
+ColumnLimit: 120
+
+BreakBeforeBraces: Allman
+
+IncludeBlocks: Regroup
+IncludeCategories:
+    - Regex:  '^".*"'
+      Priority: 1
+    - Regex:  '^<(check.h)>'
+      Priority: 2
+    - Regex:  '^<.*\.h>'
+      Priority: 3
+...

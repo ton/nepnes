@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
+/* clang-format off */
 enum Mapper
 {
   Mapper_NROM = 0,                    // All 32kB ROM + 8kB VROM games
@@ -163,6 +164,7 @@ enum Mapper
   Mapper_SAN_GUO_ZHI_PIRATE = 252,    //
   Mapper_DRAGON_BALL_PIRATE = 253,    //
 };
+/* clang-format on */
 
 static inline const char *string_from_mapper(enum Mapper mapper)
 {
@@ -545,7 +547,8 @@ struct Nes2Header
 };
 
 struct iNesHeader make_ines_header(uint8_t header_data[16]);
-void ines_header_prg_data(struct iNesHeader header, uint8_t *rom_data, uint8_t **prg_data);
+void ines_header_prg_data(struct iNesHeader header, uint8_t *rom_data,
+                          uint8_t **prg_data);
 
 enum RomFormat get_rom_format(uint8_t rom_header[16]);
 void write_rom_information(FILE *fp, uint8_t *rom_data, size_t rom_size);

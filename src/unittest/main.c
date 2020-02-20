@@ -2,6 +2,7 @@
 #include "opcode_test.h"
 
 #include <check.h>
+
 #include <stdio.h>
 
 int main(void)

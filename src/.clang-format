@@ -2,9 +2,11 @@
 BasedOnStyle: Google
 Language: Cpp
 
+AlignEscapedNewlines: Right
 AlignTrailingComments: true
+AllowShortFunctionsOnASingleLine: None
 
-ColumnLimit: 100
+ColumnLimit: 80
 
 BreakBeforeBraces: Allman
 

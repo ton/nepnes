@@ -13,7 +13,8 @@ static int BUFFER_SIZE = 128 * 1024;
  * Decompresses the file with the given index in the given zip archive. Returns
  * 0 in case inflating the file in the archive succeeded. Otherwise, returns -1.
  */
-static int inflate_file_index(zip_t* zip, int index, uint8_t** data, size_t* size)
+static int inflate_file_index(zip_t* zip, int index, uint8_t** data,
+                              size_t* size)
 {
   int entries = zip_get_num_entries(zip, ZIP_FL_UNCHANGED);
   if (index >= entries)

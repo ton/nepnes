@@ -19,7 +19,8 @@ static uint8_t* load_rom(const char* rom_file_name)
   if (read_all(rom_file_path, &rom_data, &rom_size) == -1)
   {
     free(rom_file_path);
-    ck_abort_msg("Could not open the input ROM file '%s' for reading", rom_file_name);
+    ck_abort_msg("Could not open the input ROM file '%s' for reading",
+                 rom_file_name);
   }
 
   free(rom_file_path);

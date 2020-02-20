@@ -9,7 +9,8 @@
 
 static const int MAXLINE = 120;
 
-static void quit_optional_strerror(bool append_strerror, const char* fmt, va_list ap);
+static void quit_optional_strerror(bool append_strerror, const char* fmt,
+                                   va_list ap);
 
 /*
  * This will concatenate the given string x and y, and returns the result.
@@ -55,12 +56,14 @@ void quit_strerror(const char* fmt, ...)
   exit(1);
 }
 
-static void quit_optional_strerror(bool append_strerror, const char* fmt, va_list ap)
+static void quit_optional_strerror(bool append_strerror, const char* fmt,
+                                   va_list ap)
 {
   char buf[MAXLINE];
   vsnprintf(buf, MAXLINE - 1, fmt, ap);
   if (append_strerror)
-    snprintf(buf + strlen(buf), MAXLINE - strlen(buf) - 1, ": %s", strerror(errno));
+    snprintf(buf + strlen(buf), MAXLINE - strlen(buf) - 1, ": %s",
+             strerror(errno));
   strcat(buf, "\n");
 
   fflush(stdout);  // in case stdout and stderr are the same

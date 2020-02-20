@@ -14,7 +14,8 @@ int main(int argc, char** argv)
   size_t rom_size = 0;
   if (read_all(options.rom_file_name, &rom_data, &rom_size) == -1)
   {
-    quit_strerror("Could not open the given ROM file '%s' for reading", options.rom_file_name);
+    quit_strerror("Could not open the given ROM file '%s' for reading",
+                  options.rom_file_name);
   }
 
   write_rom_information(stdout, rom_data, rom_size);

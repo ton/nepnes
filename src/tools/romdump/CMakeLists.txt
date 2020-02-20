@@ -1,5 +1,5 @@
 add_executable(romdump
-  romdump.c
+  main.c
   options.c
 )
 

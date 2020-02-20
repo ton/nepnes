@@ -3,6 +3,7 @@ add_subdirectory(tools)
 add_subdirectory(vendor)
 
 add_library(libnepnes
+  cpu.c
   ines.c
   io.c
   util.c

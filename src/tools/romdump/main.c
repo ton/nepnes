@@ -3,17 +3,11 @@
 #include "tools/romdump/options.h"
 #include "util.h"
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 
 int main(int argc, char** argv)
 {
-  struct Options options;
-  init_options(&options);
+  struct Options options = {0};
   parse_options(&options, argc, argv);
 
   unsigned char* rom_data = NULL;

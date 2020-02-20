@@ -1,5 +1,5 @@
-#ifndef ALSOF_UI_H
-#define ALSOF_UI_H
+#ifndef NEPNES_UI_H
+#define NEPNES_UI_H
 
 namespace alsof
 {

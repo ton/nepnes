@@ -534,7 +534,8 @@ struct Nes2Header
   int chr_rom_size;  // size of CHR ROM (character data, graphics) in 8KB units
 };
 
-struct iNesHeader read_ines_header(uint8_t header_data[16]);
+struct iNesHeader make_ines_header(uint8_t header_data[16]);
+void ines_header_prg_data(struct iNesHeader header, uint8_t* rom_data, uint8_t** prg_data);
 
 enum RomFormat get_rom_format(uint8_t rom_header[16]);
 void write_rom_information(FILE *fp, uint8_t *rom_data, size_t rom_size);

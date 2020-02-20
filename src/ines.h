@@ -7,161 +7,161 @@
 
 enum Mapper
 {
-  Mapper_NROM = 0,              // All 32kB ROM + 8kB VROM games
-  Mapper_MMC1 = 1,              // Nintendo MMC1 (Megaman2, Bomberman2, etc.)
-  Mapper_UXROM = 2,             // UNROM/UOROM/etc. switch (QBert, PipeDream, Cybernoid,
-                                // many Japanese games)
-  Mapper_CNROM = 3,             // CNROM switch (Castlevania, LifeForce, etc.)
-  Mapper_MMC3 = 4,              // Nintendo MMC3 (SilverSurfer, SuperContra, Immortal, etc.)
-  Mapper_MMC5 = 5,              // Nintendo MMC5 (Castlevania3)
-  Mapper_F4XXX = 6,             // FFE F4xxx (F4xxx games off FFE CDROM)
-  Mapper_AxROM = 7,             // AOROM switch (WizardsAndWarriors, Solstice, etc.)
-  Mapper_F3XXX = 8,             // FFE F3xxx (F3xxx games off FFE CDROM)
-  Mapper_MMC2 = 9,              // Nintendo MMC2 (Punchout)
-  Mapper_MMC4I = 10,            // Nintendo MMC4 (Punchout2)
-  Mapper_COLOR_DREAMS = 11,     // ColorDreams chip (CrystalMines, TaginDragon, etc.)
-  Mapper_F6XXX = 12,            // FFE F6xxx (F6xxx games off FFE CDROM)
-  Mapper_CPROM = 13,            // CPROM switch
-  Mapper_REX_SL1632 = 14,       // SL-1632 PCB (8-character version of Samurai Spirits)
-  Mapper_100_IN_1 = 15,         // 100-in-1 switch
-  Mapper_BANDAI = 16,           // Bandai chip (Japanese DragonBallZ series, etc.)
-  Mapper_F8XXX = 17,            // FFE F8xxx (F8xxx games off FFE CDROM)
-  Mapper_JALECO = 18,           // Jaleco SS8806 chip (Japanese Baseball3, etc.)
-  Mapper_NAMCOT = 19,           // Namcot 106 chip (Japanese GhostHouse2, Baseball90, etc.)
-  Mapper_VRC2_VCR4_REV_A = 21,  // Konami VRC2/VCR4 rev. a (Japanese WaiWaiWorld2, etc.)
-  Mapper_VRC2_VCR4_REV_B = 22,  // Konami VRC2/VCR4 rev. b (Japanese TwinBee3)
-  Mapper_VRC2_VCR4_REV_C = 23,  // Konami VRC2/VCR4 rev. c (Japanese WaiWaiWorld)
-  Mapper_VRC6_REV_A = 24,       // Konami VRC6 rev. a
-  Mapper_VRC2_VCR4_REV_D = 25,  // Konami VRC2/VCR4 rev. d
-  Mapper_VRC6_REV_B = 26,       // Konami VRC6 rev. b
-  Mapper_VCR4_PIRATE = 27,      // Believed to be a pirate variant of VCR4
-  Mapper_ACTION_53 = 28,        // Multicart discrete mapper
-  Mapper_RET_CUFROM = 29,       // RET-CUFROM
-  Mapper_UNROM512 = 30,         // UNROM 512 (Study Hall, Mystic Origins)
-  Mapper_NSF = 31,
-  Mapper_IREM_G101 = 32,  // Irem G-101 chip (Japanese ImageFight, etc.)
-  Mapper_TC0190FMC_TC0350FMR = 33,
-  Mapper_IREM_BNROM = 34,
-  Mapper_WARIO_LAND_2 = 35,
-  Mapper_TXC_POLICEMAN = 36,
-  Mapper_PAL_ZZ_SMB_TETRIS_NWC = 37,
-  Mapper_BIT_CORP = 38,
-  Mapper_SMB2J_FDS = 40,
-  Mapper_CALTRON_6_in_1 = 41,
-  Mapper_BIO_MIRACLE_FDS = 42,
-  Mapper_FDS_SMB2J_LF36 = 43,
-  Mapper_MMC3_BMC_PIRATE_REV_A = 44,
-  Mapper_MMC3_BMC_PIRATE_REV_B = 45,
-  Mapper_RUMBLESTATION_15_in_1 = 46,
-  Mapper_NES_QJ_SSVB_NWC = 48,
-  Mapper_MMC3_BMC_REV_C = 49,
-  Mapper_SMB2j_FDS_REV_A = 50,
-  Mapper_11_in_1_BALL_SERIES = 51,
-  Mapper_MMC3_BMC_PIRATE_REV_D = 52,
-  Mapper_SUPERVISION_16_IN_1 = 53,
-  Mapper_SIMPLE_BMC_REV_A = 57,
-  Mapper_SIMPLE_BMC_REV_B = 58,
-  Mapper_SIMPLE_BMC_REV_C = 60,
-  Mapper_20_IN_1_KAISER_REV_A = 61,
-  Mapper_700_IN_1 = 62,
-  Mapper_TENGEN = 64,
-  Mapper_IREM_H_3001 = 65,
-  Mapper_MHROM = 66,
-  Mapper_SUNSOFT_FZII = 67,
-  Mapper_SUNSOFT4 = 68,
-  Mapper_SUNSOFT5_FME_7 = 69,
-  Mapper_BA_KAMEN_DISCRETE = 70,
-  Mapper_CAMERICA = 71,  // Camerica chip
-  Mapper_JALECO_JF_17 = 72,
-  Mapper_KONAMI_VRC3 = 73,
-  Mapper_TW_MMC3_VRAM_REV_A = 74,
-  Mapper_KONAMI_VRC1 = 75,
-  Mapper_NAMCOT_108_REV_A = 76,
-  Mapper_IREM_LROG017 = 77,
-  Mapper_IREM = 78,   // Irem 74HC161/32-based
-  Mapper_NINA3 = 79,  // AVE Nina-3 board (KrazyKreatures, DoubleStrike, etc.)
-  Mapper_TAITO_X1_005 = 80,
-  Mapper_NINA6 = 81,  // AVE Nina-6 board (Deathbots, MermaidsOfAtlantis, etc.)
-  Mapper_TAITO_X1_017 = 82,
-  Mapper_YOKO_VRC_REV_B = 83,
-  Mapper_KONAMI_VRC7 = 85,
-  Mapper_JALECO_JF_13 = 86,
-  Mapper_74x139_74_DISCRETE = 87,
-  Mapper_NAMCO_3433 = 88,
-  Mapper_SUN_SOFT_3 = 89,
-  Mapper_HUMMER_JY = 90,
-  Mapper_EARLY_HUMMER_JY = 91,  // Pirate HK-SF3 chip
-  Mapper_JALECO_JF_19 = 92,
-  Mapper_SUN_SOFT_3R = 93,
-  Mapper_HVC_UN1ROM = 94,
-  Mapper_NAMCO_108_REV_B = 95,
-  Mapper_BANDAI_OEKAKIDS = 96,
-  Mapper_IREM_TAM_S1 = 97,
-  Mapper_VS_UNI_DUAL_SYSTEM = 99,
-  Mapper_FDS_DOKIDOKI_FULL = 103,
-  Mapper_NES_EVENT_NWC1990 = 105,
-  Mapper_SMB3_PIRATE_A = 106,
-  Mapper_MAGIC_CORP_A = 107,
-  Mapper_FDS_UNROM_BOARD = 108,
-  Mapper_CHEAPOCABRA = 111,
-  Mapper_ASDER_NTDEC = 112,
-  Mapper_HACKER_SACHEN = 113,
-  Mapper_MMC3_SG_PROT_A = 114,
-  Mapper_MMC3_PIRATE_A = 115,
-  Mapper_MMC1_MMC3_VRC_PIRATE = 116,
-  Mapper_FUTURE_MEDIA = 117,
-  Mapper_TSK = 118,
-  Mapper_TQROM = 119,
-  Mapper_FDS_TOBIDASE = 120,
-  Mapper_MMC3_PIRATE_PROT_A = 121,
-  Mapper_MMC3_PIRATE_H2288 = 123,
-  Mapper_FDS_LH32 = 125,
-  Mapper_TXC_MGENIUS_22111 = 132,
-  Mapper_SA72008 = 133,
-  Mapper_MMC3_BMC_PIRATE = 134,
-  Mapper_TCU02 = 136,
-  Mapper_S8259D = 137,
-  Mapper_S8259B = 138,
-  Mapper_S8259C = 139,
-  Mapper_JALECO_JF_11_14 = 140,
-  Mapper_S8259A = 141,
-  Mapper_UNLKS7032 = 142,
-  Mapper_TCA01 = 143,
-  Mapper_AGCI_50282 = 144,
-  Mapper_SA72007 = 145,
-  Mapper_SA0161M = 146,
-  Mapper_TCU01 = 147,
-  Mapper_SA0037 = 148,
-  Mapper_SA0036 = 149,
-  Mapper_S74LS374N = 150,
-  Mapper_BANDAI_SRAM = 153,
-  Mapper_BANDAI_BARCODE = 157,
-  Mapper_BANDAI_24C01 = 159,
-  Mapper_SA009 = 160,
-  Mapper_SUBOR_rev_A = 166,
-  Mapper_SUBOR_rev_B = 167,
-  Mapper_BMCFK23C = 176,
-  Mapper_TW_MMC3_VRAM_REV_B = 192,
-  Mapper_NTDEC_TC_112 = 193,
-  Mapper_TW_MMC3_VRAM_REV_C = 194,
-  Mapper_TW_MMC3_VRAM_REV_D = 195,
-  Mapper_TW_MMC3_VRAM_REV_E = 198,
-  Mapper_NAMCOT_108_REV_C = 206,
-  Mapper_TAITO_X1_005_REV_B = 207,
-  Mapper_UNLA9746 = 219,
-  Mapper_DEBUG_MAPPER = 220,
-  Mapper_UNLN625092 = 221,
-  Mapper_BMC_22_20_IN_1 = 226,
-  Mapper_BMC_Contra_22_IN_1 = 230,
-  Mapper_BMC_QUATTRO = 232,
-  Mapper_BMC_22_20_IN_1_RST = 233,
-  Mapper_BMC_MAXI = 234,
-  Mapper_UNL6035052 = 238,
-  Mapper_S74LS374NA = 243,
-  Mapper_DECATHLON = 244,
-  Mapper_FONG_SHEN_BANG = 246,
-  Mapper_SAN_GUO_ZHI_PIRATE = 252,
-  Mapper_DRAGON_BALL_PIRATE = 253,
+  Mapper_NROM = 0,                    // All 32kB ROM + 8kB VROM games
+  Mapper_MMC1 = 1,                    // Nintendo MMC1 (Megaman2, Bomberman2, etc.)
+  Mapper_UXROM = 2,                   // UNROM/UOROM/etc. switch (QBert, PipeDream, Cybernoid,
+                                      // many Japanese games)
+  Mapper_CNROM = 3,                   // CNROM switch (Castlevania, LifeForce, etc.)
+  Mapper_MMC3 = 4,                    // Nintendo MMC3 (SilverSurfer, SuperContra, Immortal, etc.)
+  Mapper_MMC5 = 5,                    // Nintendo MMC5 (Castlevania3)
+  Mapper_F4XXX = 6,                   // FFE F4xxx (F4xxx games off FFE CDROM)
+  Mapper_AxROM = 7,                   // AOROM switch (WizardsAndWarriors, Solstice, etc.)
+  Mapper_F3XXX = 8,                   // FFE F3xxx (F3xxx games off FFE CDROM)
+  Mapper_MMC2 = 9,                    // Nintendo MMC2 (Punchout)
+  Mapper_MMC4I = 10,                  // Nintendo MMC4 (Punchout2)
+  Mapper_COLOR_DREAMS = 11,           // ColorDreams chip (CrystalMines, TaginDragon, etc.)
+  Mapper_F6XXX = 12,                  // FFE F6xxx (F6xxx games off FFE CDROM)
+  Mapper_CPROM = 13,                  // CPROM switch
+  Mapper_REX_SL1632 = 14,             // SL-1632 PCB (8-character version of Samurai Spirits)
+  Mapper_100_IN_1 = 15,               // 100-in-1 switch
+  Mapper_BANDAI = 16,                 // Bandai chip (Japanese DragonBallZ series, etc.)
+  Mapper_F8XXX = 17,                  // FFE F8xxx (F8xxx games off FFE CDROM)
+  Mapper_JALECO = 18,                 // Jaleco SS8806 chip (Japanese Baseball3, etc.)
+  Mapper_NAMCOT = 19,                 // Namcot 106 chip (Japanese GhostHouse2, Baseball90, etc.)
+  Mapper_VRC2_VCR4_REV_A = 21,        // Konami VRC2/VCR4 rev. a (Japanese WaiWaiWorld2, etc.)
+  Mapper_VRC2_VCR4_REV_B = 22,        // Konami VRC2/VCR4 rev. b (Japanese TwinBee3)
+  Mapper_VRC2_VCR4_REV_C = 23,        // Konami VRC2/VCR4 rev. c (Japanese WaiWaiWorld)
+  Mapper_VRC6_REV_A = 24,             // Konami VRC6 rev. a
+  Mapper_VRC2_VCR4_REV_D = 25,        // Konami VRC2/VCR4 rev. d
+  Mapper_VRC6_REV_B = 26,             // Konami VRC6 rev. b
+  Mapper_VCR4_PIRATE = 27,            // Believed to be a pirate variant of VCR4
+  Mapper_ACTION_53 = 28,              // Multicart discrete mapper
+  Mapper_RET_CUFROM = 29,             // RET-CUFROM
+  Mapper_UNROM512 = 30,               // UNROM 512 (Study Hall, Mystic Origins)
+  Mapper_NSF = 31,                    //
+  Mapper_IREM_G101 = 32,              // Irem G-101 chip (Japanese ImageFight, etc.)
+  Mapper_TC0190FMC_TC0350FMR = 33,    //
+  Mapper_IREM_BNROM = 34,             //
+  Mapper_WARIO_LAND_2 = 35,           //
+  Mapper_TXC_POLICEMAN = 36,          //
+  Mapper_PAL_ZZ_SMB_TETRIS_NWC = 37,  //
+  Mapper_BIT_CORP = 38,               //
+  Mapper_SMB2J_FDS = 40,              //
+  Mapper_CALTRON_6_in_1 = 41,         //
+  Mapper_BIO_MIRACLE_FDS = 42,        //
+  Mapper_FDS_SMB2J_LF36 = 43,         //
+  Mapper_MMC3_BMC_PIRATE_REV_A = 44,  //
+  Mapper_MMC3_BMC_PIRATE_REV_B = 45,  //
+  Mapper_RUMBLESTATION_15_in_1 = 46,  //
+  Mapper_NES_QJ_SSVB_NWC = 48,        //
+  Mapper_MMC3_BMC_REV_C = 49,         //
+  Mapper_SMB2j_FDS_REV_A = 50,        //
+  Mapper_11_in_1_BALL_SERIES = 51,    //
+  Mapper_MMC3_BMC_PIRATE_REV_D = 52,  //
+  Mapper_SUPERVISION_16_IN_1 = 53,    //
+  Mapper_SIMPLE_BMC_REV_A = 57,       //
+  Mapper_SIMPLE_BMC_REV_B = 58,       //
+  Mapper_SIMPLE_BMC_REV_C = 60,       //
+  Mapper_20_IN_1_KAISER_REV_A = 61,   //
+  Mapper_700_IN_1 = 62,               //
+  Mapper_TENGEN = 64,                 //
+  Mapper_IREM_H_3001 = 65,            //
+  Mapper_MHROM = 66,                  //
+  Mapper_SUNSOFT_FZII = 67,           //
+  Mapper_SUNSOFT4 = 68,               //
+  Mapper_SUNSOFT5_FME_7 = 69,         //
+  Mapper_BA_KAMEN_DISCRETE = 70,      //
+  Mapper_CAMERICA = 71,               // Camerica chip
+  Mapper_JALECO_JF_17 = 72,           //
+  Mapper_KONAMI_VRC3 = 73,            //
+  Mapper_TW_MMC3_VRAM_REV_A = 74,     //
+  Mapper_KONAMI_VRC1 = 75,            //
+  Mapper_NAMCOT_108_REV_A = 76,       //
+  Mapper_IREM_LROG017 = 77,           //
+  Mapper_IREM = 78,                   // Irem 74HC161/32-based
+  Mapper_NINA3 = 79,                  // AVE Nina-3 board (KrazyKreatures, DoubleStrike, etc.)
+  Mapper_TAITO_X1_005 = 80,           //
+  Mapper_NINA6 = 81,                  // AVE Nina-6 board (Deathbots, MermaidsOfAtlantis, etc.)
+  Mapper_TAITO_X1_017 = 82,           //
+  Mapper_YOKO_VRC_REV_B = 83,         //
+  Mapper_KONAMI_VRC7 = 85,            //
+  Mapper_JALECO_JF_13 = 86,           //
+  Mapper_74x139_74_DISCRETE = 87,     //
+  Mapper_NAMCO_3433 = 88,             //
+  Mapper_SUN_SOFT_3 = 89,             //
+  Mapper_HUMMER_JY = 90,              //
+  Mapper_EARLY_HUMMER_JY = 91,        // Pirate HK-SF3 chip
+  Mapper_JALECO_JF_19 = 92,           //
+  Mapper_SUN_SOFT_3R = 93,            //
+  Mapper_HVC_UN1ROM = 94,             //
+  Mapper_NAMCO_108_REV_B = 95,        //
+  Mapper_BANDAI_OEKAKIDS = 96,        //
+  Mapper_IREM_TAM_S1 = 97,            //
+  Mapper_VS_UNI_DUAL_SYSTEM = 99,     //
+  Mapper_FDS_DOKIDOKI_FULL = 103,     //
+  Mapper_NES_EVENT_NWC1990 = 105,     //
+  Mapper_SMB3_PIRATE_A = 106,         //
+  Mapper_MAGIC_CORP_A = 107,          //
+  Mapper_FDS_UNROM_BOARD = 108,       //
+  Mapper_CHEAPOCABRA = 111,           //
+  Mapper_ASDER_NTDEC = 112,           //
+  Mapper_HACKER_SACHEN = 113,         //
+  Mapper_MMC3_SG_PROT_A = 114,        //
+  Mapper_MMC3_PIRATE_A = 115,         //
+  Mapper_MMC1_MMC3_VRC_PIRATE = 116,  //
+  Mapper_FUTURE_MEDIA = 117,          //
+  Mapper_TSK = 118,                   //
+  Mapper_TQROM = 119,                 //
+  Mapper_FDS_TOBIDASE = 120,          //
+  Mapper_MMC3_PIRATE_PROT_A = 121,    //
+  Mapper_MMC3_PIRATE_H2288 = 123,     //
+  Mapper_FDS_LH32 = 125,              //
+  Mapper_TXC_MGENIUS_22111 = 132,     //
+  Mapper_SA72008 = 133,               //
+  Mapper_MMC3_BMC_PIRATE = 134,       //
+  Mapper_TCU02 = 136,                 //
+  Mapper_S8259D = 137,                //
+  Mapper_S8259B = 138,                //
+  Mapper_S8259C = 139,                //
+  Mapper_JALECO_JF_11_14 = 140,       //
+  Mapper_S8259A = 141,                //
+  Mapper_UNLKS7032 = 142,             //
+  Mapper_TCA01 = 143,                 //
+  Mapper_AGCI_50282 = 144,            //
+  Mapper_SA72007 = 145,               //
+  Mapper_SA0161M = 146,               //
+  Mapper_TCU01 = 147,                 //
+  Mapper_SA0037 = 148,                //
+  Mapper_SA0036 = 149,                //
+  Mapper_S74LS374N = 150,             //
+  Mapper_BANDAI_SRAM = 153,           //
+  Mapper_BANDAI_BARCODE = 157,        //
+  Mapper_BANDAI_24C01 = 159,          //
+  Mapper_SA009 = 160,                 //
+  Mapper_SUBOR_rev_A = 166,           //
+  Mapper_SUBOR_rev_B = 167,           //
+  Mapper_BMCFK23C = 176,              //
+  Mapper_TW_MMC3_VRAM_REV_B = 192,    //
+  Mapper_NTDEC_TC_112 = 193,          //
+  Mapper_TW_MMC3_VRAM_REV_C = 194,    //
+  Mapper_TW_MMC3_VRAM_REV_D = 195,    //
+  Mapper_TW_MMC3_VRAM_REV_E = 198,    //
+  Mapper_NAMCOT_108_REV_C = 206,      //
+  Mapper_TAITO_X1_005_REV_B = 207,    //
+  Mapper_UNLA9746 = 219,              //
+  Mapper_DEBUG_MAPPER = 220,          //
+  Mapper_UNLN625092 = 221,            //
+  Mapper_BMC_22_20_IN_1 = 226,        //
+  Mapper_BMC_Contra_22_IN_1 = 230,    //
+  Mapper_BMC_QUATTRO = 232,           //
+  Mapper_BMC_22_20_IN_1_RST = 233,    //
+  Mapper_BMC_MAXI = 234,              //
+  Mapper_UNL6035052 = 238,            //
+  Mapper_S74LS374NA = 243,            //
+  Mapper_DECATHLON = 244,             //
+  Mapper_FONG_SHEN_BANG = 246,        //
+  Mapper_SAN_GUO_ZHI_PIRATE = 252,    //
+  Mapper_DRAGON_BALL_PIRATE = 253,    //
 };
 
 static inline const char *string_from_mapper(enum Mapper mapper)
@@ -476,46 +476,56 @@ struct RomInfo
 
   enum Tv tv_system;
 
-  // 76543210
-  // ||||||||
-  // |||||||+- Mirroring: 0: horizontal (vertical arrangement) (CIRAM A10 = PPU
-  // A11)
-  // |||||||              1: vertical (horizontal arrangement) (CIRAM A10 = PPU
-  // A10)
-  // ||||||+-- 1: Cartridge contains battery-backed PRG RAM ($6000-7FFF) or
-  // other persistent memory
-  // |||||+--- 1: 512-byte trainer at $7000-$71FF (stored before PRG data)
-  // ||||+---- 1: Ignore mirroring control or above mirroring bit; instead
-  // provide four-screen VRAM
-  // ++++----- Lower nybble of mapper number
+  /*
+   * 76543210
+   * ||||||||
+   * |||||||+- Mirroring: 0: horizontal (vertical arrangement) (CIRAM A10 = PPU
+   * A11)
+   * |||||||              1: vertical (horizontal arrangement) (CIRAM A10 = PPU
+   * A10)
+   * ||||||+-- 1: Cartridge contains battery-backed PRG RAM ($6000-7FFF) or
+   * other persistent memory
+   * |||||+--- 1: 512-byte trainer at $7000-$71FF (stored before PRG data)
+   * ||||+---- 1: Ignore mirroring control or above mirroring bit; instead
+   * provide four-screen VRAM
+   * ++++----- Lower nybble of mapper number
+   */
   uint8_t flags_6;
-  // 76543210
-  // ||||||||
-  // |||||||+- VS Unisystem
-  // ||||||+-- PlayChoice-10 (8KB of Hint Screen data stored after CHR data)
-  // ||||++--- If equal to 2, flags 8-15 are in NES 2.0 format
-  // ++++----- Upper nybble of mapper number
+  /*
+   * 76543210
+   * ||||||||
+   * |||||||+- VS Unisystem
+   * ||||||+-- PlayChoice-10 (8KB of Hint Screen data stored after CHR data)
+   * ||||++--- If equal to 2, flags 8-15 are in NES 2.0 format
+   * ++++----- Upper nybble of mapper number
+   */
   uint8_t flags_7;
-  // 76543210
-  // ||||||||
-  // ++++++++- PRG RAM size
+  /*
+   * 76543210
+   * ||||||||
+   * ++++++++- PRG RAM size
+   */
   uint8_t flags_8;
-  // 76543210
-  // ||||||||
-  // |||||||+- TV system (0: NTSC; 1: PAL)
-  // +++++++-- Reserved, set to zero
+  /*
+   * 76543210
+   * ||||||||
+   * |||||||+- TV system (0: NTSC; 1: PAL)
+   * +++++++-- Reserved, set to zero
+   */
   uint8_t flags_9;
-  // 76543210
-  // ||  ||
-  // ||  ++- TV system (0: NTSC; 2: PAL; 1/3: dual compatible)
-  // |+----- PRG RAM ($6000-$7FFF) (0: present; 1: not present)
-  // +------ 0: Board has no bus conflicts; 1: Board has bus conflicts
+  /*
+   * 76543210
+   * ||  ||
+   * ||  ++- TV system (0: NTSC; 2: PAL; 1/3: dual compatible)
+   * |+----- PRG RAM ($6000-$7FFF) (0: present; 1: not present)
+   * +------ 0: Board has no bus conflicts; 1: Board has bus conflicts
+   */
   uint8_t flags_10;
 
   uint8_t padding[5];
 };
 
-// iNES header information.
+/* iNES header information. */
 struct iNesHeader
 {
   uint8_t prg_rom_size;  // size of PRG ROM (program memory) in KB
@@ -527,7 +537,7 @@ struct iNesHeader
   enum Mapper mapper;
 };
 
-// NES 2.0 header information.
+/* NES 2.0 header information. */
 struct Nes2Header
 {
   int prg_rom_size;  // size of PRG ROM (program memory) in 16KB units
@@ -535,7 +545,7 @@ struct Nes2Header
 };
 
 struct iNesHeader make_ines_header(uint8_t header_data[16]);
-void ines_header_prg_data(struct iNesHeader header, uint8_t* rom_data, uint8_t** prg_data);
+void ines_header_prg_data(struct iNesHeader header, uint8_t *rom_data, uint8_t **prg_data);
 
 enum RomFormat get_rom_format(uint8_t rom_header[16]);
 void write_rom_information(FILE *fp, uint8_t *rom_data, size_t rom_size);

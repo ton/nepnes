@@ -19,6 +19,6 @@ int main(int argc, char** argv)
 
   write_rom_information(stdout, rom_data, rom_size);
 
-  // Note; data is not free()'d, the OS will take care of it.
+  /* Note; data is not free()'d, the OS will take care of it. */
   exit(0);
 }

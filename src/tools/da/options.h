@@ -1,4 +1,5 @@
-#pragma once
+#ifndef NEPNES_TOOLS_DA_OPTIONS_H
+#define NEPNES_TOOLS_DA_OPTIONS_H
 
 struct Options
 {
@@ -8,3 +9,5 @@ struct Options
 
 void init_options(struct Options* options);
 void parse_options(struct Options* options, int argc, char** argv);
+
+#endif

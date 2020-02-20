@@ -2,7 +2,9 @@
 BasedOnStyle: Google
 Language: Cpp
 
-ColumnLimit: 80
+AlignTrailingComments: true
+
+ColumnLimit: 100
 
 BreakBeforeBraces: Allman
 

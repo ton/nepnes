@@ -3,7 +3,7 @@
 
 namespace alsof
 {
-  /// UI state.
+  /* UI state. */
   struct Ui
   {
     bool show_open_file_dialog{false};

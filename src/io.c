@@ -47,7 +47,7 @@ static int inflate_file_index(zip_t* zip, int index, uint8_t** data, size_t* siz
 
   if (0 < bytes_read && bytes_read < BUFFER_SIZE)
   {
-    // Ensure the buffer holds exactly the number of bytes that were read.
+    /* Ensure the buffer holds exactly the number of bytes that were read. */
     *size -= (BUFFER_SIZE - bytes_read);
     *data = realloc(*data, *size);
   }
@@ -67,47 +67,47 @@ int read_all(const char* file_name, uint8_t** data, size_t* size)
     return -1;
   }
 
-  // In case the ROM file is in a ZIP archive, inflate it.
+  /* In case the ROM file is in a ZIP archive, inflate it. */
   zip_t* zip = NULL;
   if ((zip = zip_open(file_name, ZIP_RDONLY, NULL)) != NULL)
   {
     return inflate_file_index(zip, 0, data, size);
   }
 
-  // Otherwise, just open the file as a whole.
+  /* Otherwise, just open the file as a whole. */
   FILE* fp = fopen(file_name, "r");
   if (fp == NULL)
   {
     return -1;
   }
 
-  // Seek until the end of the file.
+  /* Seek until the end of the file. */
   if (fseek(fp, 0, SEEK_END) != 0)
   {
     return -1;
   }
 
-  // Determine the file size.
+  /* Determine the file size. */
   *size = ftell(fp);
   if (*size == -1)
   {
     return -1;
   }
 
-  // Reset read head to the start of the file stream.
+  /* Reset read head to the start of the file stream. */
   if (fseek(fp, 0, SEEK_SET) != 0)
   {
     return -1;
   }
 
-  // Allocate data.
+  /* Allocate data. */
   *data = malloc(*size);
   if (data == NULL)
   {
     return -1;
   }
 
-  // Read all data.
+  /* Read all data. */
   if (fread(*data, 1, *size, fp) != *size)
   {
     return -1;

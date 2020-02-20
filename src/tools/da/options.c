@@ -7,7 +7,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-static void print_usage() { printf("Usage: da -i|--input ROMFILE [-h|--help]\n"); }
+static void print_usage()
+{
+  printf("Usage: da -i|--input ROMFILE [-h|--help]\n");
+}
 
 static void print_help()
 {

@@ -530,8 +530,8 @@ struct RomInfo
 /* iNES header information. */
 struct iNesHeader
 {
-  uint8_t prg_rom_size;  // size of PRG ROM (program memory) in KB
-  uint8_t chr_rom_size;  // size of CHR ROM (character data, graphics) in KB
+  uint8_t prg_rom_size;  // PRG ROM size (program memory) in 16KB blocks
+  uint8_t chr_rom_size;  // CHR ROM size (character data) in 8KB blocks
 
   enum Mirroring mirroring;
   bool has_battery_backed_vram;
@@ -547,8 +547,9 @@ struct Nes2Header
 };
 
 struct iNesHeader make_ines_header(uint8_t header_data[16]);
-void ines_header_prg_data(struct iNesHeader header, uint8_t *rom_data,
-                          uint8_t **prg_data);
+void iNesHeader_prg_data(struct iNesHeader header, uint8_t *rom_data,
+                         uint8_t **prg_data);
+uint32_t iNesHeader_rom_size_in_bytes(struct iNesHeader* header);
 
 enum RomFormat get_rom_format(uint8_t rom_header[16]);
 void write_rom_information(FILE *fp, uint8_t *rom_data);

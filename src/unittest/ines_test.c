@@ -43,8 +43,8 @@ START_TEST(test_make_ines_header_bingo)
   uint8_t* rom_data = load_rom("bingo.nes");
 
   struct iNesHeader header = make_ines_header(rom_data);
-  ck_assert_int_eq(header.prg_rom_size, 32);
-  ck_assert_int_eq(header.chr_rom_size, 8);
+  ck_assert_int_eq(header.prg_rom_size, 2);
+  ck_assert_int_eq(header.chr_rom_size, 1);
   ck_assert_int_eq(header.has_battery_backed_vram, 0);
   ck_assert_int_eq(header.has_trainer, 0);
   ck_assert_int_eq(header.mapper, Mapper_NROM);
@@ -54,15 +54,27 @@ START_TEST(test_make_ines_header_bingo)
 }
 END_TEST
 
-START_TEST(test_ines_header_prg_data_bingo)
+START_TEST(test_iNesHeader_prg_data_bingo)
 {
   uint8_t* rom_data = load_rom("bingo.nes");
 
   struct iNesHeader header = make_ines_header(rom_data);
 
   uint8_t* prg_data;
-  ines_header_prg_data(header, rom_data, &prg_data);
+  iNesHeader_prg_data(header, rom_data, &prg_data);
   ck_assert_int_eq(prg_data - rom_data, sizeof(struct iNesHeader));
+
+  free(rom_data);
+}
+END_TEST
+
+START_TEST(test_iNesHeader_prg_rom_size_in_bytes)
+{
+  uint8_t* rom_data = load_rom("bingo.nes");
+
+  struct iNesHeader header = make_ines_header(rom_data);
+
+  ck_assert_int_eq(32 * 1024, iNesHeader_rom_size_in_bytes(&header));
 
   free(rom_data);
 }
@@ -73,6 +85,7 @@ TCase* make_ines_test_case(void)
   TCase* tc = tcase_create("iNes test cases");
   tcase_add_test(tc, test_ines_get_rom_format);
   tcase_add_test(tc, test_make_ines_header_bingo);
-  tcase_add_test(tc, test_ines_header_prg_data_bingo);
+  tcase_add_test(tc, test_iNesHeader_prg_data_bingo);
+  tcase_add_test(tc, test_iNesHeader_prg_rom_size_in_bytes);
   return tc;
 }

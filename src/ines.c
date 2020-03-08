@@ -8,8 +8,8 @@
 struct iNesHeader make_ines_header(uint8_t header_data[16])
 {
   struct iNesHeader header = {0};
-  header.prg_rom_size = header_data[4] * 16;
-  header.chr_rom_size = header_data[5] * 8;
+  header.prg_rom_size = header_data[4];
+  header.chr_rom_size = header_data[5];
 
   if (header_data[6] & 0x8)
   {
@@ -30,11 +30,19 @@ struct iNesHeader make_ines_header(uint8_t header_data[16])
  * Calculates the offset of the PRG data (program data) in the given ROM data
  * given an iNes ROM header. Returns a pointer to the PRG data in `prg_data`.
  */
-void ines_header_prg_data(struct iNesHeader header, uint8_t* rom_data,
-                          uint8_t** prg_data)
+void iNesHeader_prg_data(struct iNesHeader header, uint8_t* rom_data,
+                         uint8_t** prg_data)
 {
   *prg_data =
       rom_data + (sizeof(struct iNesHeader) + (header.has_trainer ? 512 : 0));
+}
+
+/*
+ * Returns the ROM size in bytes for the given iNes header.
+ */
+uint32_t iNesHeader_rom_size_in_bytes(struct iNesHeader* header)
+{
+  return header->prg_rom_size * 16 * 1024;
 }
 
 void write_rom_information(FILE* fp, uint8_t* rom_data)
@@ -56,8 +64,8 @@ void write_rom_information(FILE* fp, uint8_t* rom_data)
 
     fprintf(fp, string_fmt, left_width, "ROM format:", "iNes");
 
-    fprintf(fp, kb_fmt, left_width, "PRG ROM size:", header.prg_rom_size);
-    fprintf(fp, kb_fmt, left_width, "CHR ROM size:", header.chr_rom_size);
+    fprintf(fp, kb_fmt, left_width, "PRG ROM size:", header.prg_rom_size * 16);
+    fprintf(fp, kb_fmt, left_width, "CHR ROM size:", header.chr_rom_size * 8);
     fprintf(fp, string_fmt, left_width,
             "Cartridge contains battery backed PRG RAM:",
             header.has_battery_backed_vram ? "Yes" : "No");

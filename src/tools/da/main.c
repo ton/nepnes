@@ -9,9 +9,9 @@
 void disassemble(uint8_t* prg_data, size_t prg_size)
 {
   /* Address where the NES typically stores PRG data. */
-  const uint16_t prg_rom = 0x8000;
+  const uint32_t prg_rom = 0x08000;
 
-  uint16_t rom_offset = prg_rom;
+  uint32_t rom_offset = prg_rom;
 
   uint8_t* pc = prg_data;
   uint8_t* end = prg_data + prg_size;
@@ -23,14 +23,14 @@ void disassemble(uint8_t* prg_data, size_t prg_size)
      * instruction will be zero. */
     if (ins.opcode == 0)
     {
-      printf("$%4X: .byte %02X\n", rom_offset, *pc);
+      printf("$%X: .byte %02X\n", rom_offset, *pc);
 
       ++pc;
       ++rom_offset;
     }
     else
     {
-      printf("$%4X: %s\n", rom_offset, operation_name(ins.op));
+      printf("$%X: %s\n", rom_offset, operation_name(ins.op));
 
       pc += ins.bytes;
       rom_offset += ins.bytes;
@@ -62,13 +62,13 @@ int main(int argc, char** argv)
       struct iNesHeader header = make_ines_header(rom_data);
 
       uint8_t* prg_data;
-      ines_header_prg_data(header, rom_data, &prg_data);
+      iNesHeader_prg_data(header, rom_data, &prg_data);
 
-      printf("PRG ROM size: %d bytes\n", header.prg_rom_size);
+      printf("PRG ROM size: %d bytes\n", iNesHeader_rom_size_in_bytes(&header));
       printf("PRG offset in ROM data: %lu\n", (prg_data - rom_data));
       printf("\n");
 
-      disassemble(prg_data, header.prg_rom_size);
+      disassemble(prg_data, iNesHeader_rom_size_in_bytes(&header));
     }
     break;
     case RomFormat_Nes20:

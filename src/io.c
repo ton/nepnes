@@ -89,11 +89,13 @@ int read_all(const char* file_name, uint8_t** data, size_t* size)
   }
 
   /* Determine the file size. */
-  *size = ftell(fp);
-  if (*size == -1)
+  long pos = ftell(fp);
+  if (pos == -1)
   {
+    *size = 0;
     return -1;
   }
+  *size = pos;
 
   /* Reset read head to the start of the file stream. */
   if (fseek(fp, 0, SEEK_SET) != 0)

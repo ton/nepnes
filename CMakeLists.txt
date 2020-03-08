@@ -5,16 +5,14 @@ cmake_minimum_required(VERSION 3.15.4)
 # Custom cmake modules
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-# Require C++17 support.
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+# Require C11 support.
+set(CMAKE_C_STANDARD 11)
 
 # Put all executables in build/.
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # Set the appropriate compiler flags.
-add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wall;-Werror>")
+add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wall;-Wextra;-Wshadow;-Wpedantic;-Werror;-Wstrict-overflow;-fno-strict-aliasing;-march=native>")
 
 # By default, include headers from src/.
 include_directories(src)

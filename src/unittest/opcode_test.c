@@ -1,9 +1,13 @@
 #include "opcode_test.h"
 
+#include "cpu.h"
+
 #include <check.h>
 
 START_TEST(initial_state)
 {
+  struct Instruction ins = {0};
+  ck_assert_int_eq(0, ins.opcode);
 }
 END_TEST
 

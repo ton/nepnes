@@ -551,6 +551,6 @@ void ines_header_prg_data(struct iNesHeader header, uint8_t *rom_data,
                           uint8_t **prg_data);
 
 enum RomFormat get_rom_format(uint8_t rom_header[16]);
-void write_rom_information(FILE *fp, uint8_t *rom_data, size_t rom_size);
+void write_rom_information(FILE *fp, uint8_t *rom_data);
 
 #endif

@@ -7,7 +7,7 @@
  */
 struct iNesHeader make_ines_header(uint8_t header_data[16])
 {
-  struct iNesHeader header = {};
+  struct iNesHeader header = {0};
   header.prg_rom_size = header_data[4] * 16;
   header.chr_rom_size = header_data[5] * 8;
 
@@ -27,8 +27,8 @@ struct iNesHeader make_ines_header(uint8_t header_data[16])
 }
 
 /*
- * Calculates the offset of the PRG data in the given ROM data given an iNes ROM
- * header. Returns a pointer to the PRG data in `prg_data`.
+ * Calculates the offset of the PRG data (program data) in the given ROM data
+ * given an iNes ROM header. Returns a pointer to the PRG data in `prg_data`.
  */
 void ines_header_prg_data(struct iNesHeader header, uint8_t* rom_data,
                           uint8_t** prg_data)
@@ -37,7 +37,7 @@ void ines_header_prg_data(struct iNesHeader header, uint8_t* rom_data,
       rom_data + (sizeof(struct iNesHeader) + (header.has_trainer ? 512 : 0));
 }
 
-void write_rom_information(FILE* fp, uint8_t* rom_data, size_t rom_size)
+void write_rom_information(FILE* fp, uint8_t* rom_data)
 {
   enum RomFormat rf = get_rom_format(rom_data);
   if (rf == RomFormat_Unknown)

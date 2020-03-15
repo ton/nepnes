@@ -13,6 +13,22 @@ static void quit_optional_strerror(bool append_strerror, const char* fmt,
                                    va_list ap);
 
 /*
+ * Converts a 16-bit number from little to big endian.
+ */
+uint16_t uint16_ltob(uint16_t i)
+{
+  return ((i & 0x0ff) << 8) + ((i & 0x0ff00) >> 8);
+}
+
+/*
+ * Converts a 32-bit number from little to big endian.
+ */
+uint32_t uint32_ltob(uint32_t i)
+{
+  return uint16_ltob(i & 0xffff) << 16 | uint16_ltob((i >> 16) & 0xffff);
+}
+
+/*
  * This will concatenate the given string x and y, and returns the result.
  * Allocates enough memory to hold the resulting concatenated string, plus the
  * zero character. In case memory allocation fails, returns a null pointer.

@@ -19,18 +19,29 @@ void disassemble(uint8_t* prg_data, size_t prg_size)
   {
     struct Instruction ins = make_instruction(*pc);
 
+    const int assembly_size = 14;
+
     /* In case of an unknown instruction, the calculated opcode of the
      * instruction will be zero. */
-    if (ins.opcode == 0)
+    if (ins.bytes == 0)
     {
-      printf("$%X: .byte %02X\n", rom_offset, *pc);
+      printf("$%X: %*s (%02X)\n", rom_offset, assembly_size, "", *pc);
 
       ++pc;
       ++rom_offset;
     }
     else
     {
-      printf("$%X: %s\n", rom_offset, operation_name(ins.op));
+      uint32_t encoding = *pc;
+      for (int i = 1; i < ins.bytes; ++i)
+      {
+        encoding = (encoding << 8) + (pc + i < end ? *(pc + i) : 0);
+      }
+
+      char assembly[assembly_size + 1];
+      Instruction_print(assembly, sizeof assembly, &ins, encoding);
+
+      printf("$%X: %-*s (%0*X)\n", rom_offset, assembly_size, assembly, ins.bytes * 2, encoding);
 
       pc += ins.bytes;
       rom_offset += ins.bytes;

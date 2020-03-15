@@ -1,6 +1,7 @@
 #ifndef NEPNES_CPU_H
 #define NEPNES_CPU_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 /*
@@ -15,22 +16,8 @@
  * at:
  * http://www.thealmightyguru.com/Games/Hacking/Wiki/index.php?title=Main_Page
  */
-
 enum AddressingMode
 {
-  /*
-   * Immediate Addressing is used when the operand's value is given in the
-   * instruction itself. In 6502 assembly, this is indicated by an pound sign,
-   * "#", before the operand.
-   */
-  AM_IMMEDIATE,
-  /*
-   * In Zero-Page Addressing, the operand is a memory address rather than a
-   * value. As the name suggests, the memory must be on the zero-page of memory
-   * (addresses $0000-$00FF). You only need to supply the low byte of the memory
-   * address, the $00 high byte is automatically added by the processor.
-   */
-  AM_ZERO_PAGE,
   /*
    * Absolute addressing is very similar to zero-page addressing, except that
    * absolute addressing requires a full 2-byte address, and can access the full
@@ -38,38 +25,32 @@ enum AddressingMode
    */
   AM_ABSOLUTE,
   /*
-   * Implied Addressing occurs when there is no operand. The addressing mode is
-   * implied by the instruction. Note that Accumulator Addressing is a special
-   * type of Implied Addressing that only addresses the accumulator.
+   * Similar to absolute addressing, except that the value in the X register is
+   * added to the provided 16-bit address to compute the final address.
    */
-  AM_IMPLIED,
+  AM_ABSOLUTE_X,
+  /*
+   * Similar to absolute addressing, except that the value in the Y register is
+   * added to the provided 16-bit address to compute the final address.
+   */
+  AM_ABSOLUTE_Y,
   /*
    * Accumulator Addressing is a special type of Implied Addressing that only
    * addresses the accumulator.
    */
   AM_ACCUMULATOR,
   /*
-   * In Indexed Addressing is similar to zero-page indexed addressing, except
-   * that in Indexed Addressing you have to include full 2-byte address. In this
-   * mode, the address is added to the value either by the X or Y index
-   * register. Most opcodes support the X index register for the offset, but an
-   * additional handful also support the Y index register.
-   *
-   * The benefit of Indexed addressing is that you can quickly loop through
-   * memory by simply increasing or decreasing the offset.
+   * Immediate Addressing is used when the operand's value is given in the
+   * instruction itself. In 6502 assembly, this is indicated by an pound sign,
+   * "#", before the operand.
    */
-  AM_INDEXED,
+  AM_IMMEDIATE,
   /*
-   * Zero-page indexed addressing is similar to indexed addressing, except that
-   * since it applies only to the zero-page, you only need to include 1-byte for
-   * the address. In this mode, the address is added to the value either by the
-   * X or Y index register. Most opcodes support the X index register for the
-   * offset, but an additional handful also support the Y index register.
-   *
-   * The benefit of zero-page indexed addressing is that you can quickly loop
-   * through memory by simply increasing or decreasing the offset.
+   * Implied Addressing occurs when there is no operand. The addressing mode is
+   * implied by the instruction. Note that Accumulator Addressing is a special
+   * type of Implied Addressing that only addresses the accumulator.
    */
-  AM_INDEXED_ZERO_PAGE,
+  AM_IMPLIED,
   /*
    * Indirect Addressing reads a memory location from a two-byte pointer. This
    * particular addressing mode is used only by a special type of JMP. A pointer
@@ -98,17 +79,17 @@ enum AddressingMode
    * use an operand of $FF and an X-register of $10, the result is $0F, not $110
    * which you might expect.
    */
-  AM_PRE_INDEXED_INDIRECT,
+  AM_INDIRECT_X,
   /*
-   * Post-Indexed Indirect Addressing is one of the three Indirect addressing
-   * modes of the 6502 processor. This mode is similar to Pre-Indexed Indirect
-   * Addressing, however, unlike the pre-indexed mode, where the X-register is
-   * added to the operand prior to reading from memory, post-indexed mode adds
-   * the Y-register after reading from memory. The address is expected to
-   * contain a 2-byte pointer to a memory address (in little-endian, of course).
-   * The indirection is indicated by parenthesis in assembly language, notice
-   * that, unlike pre-indexed mode, they don't encompass the Y, signifying that
-   * the addition occurs after the read.
+   * Post-indexed indirect addressing is one of the three indirect addressing
+   * modes of the 6502 processor. This mode is similar to pre-indexed indirect
+   * addressing mode (AM_INDIRECT_X), however, unlike the pre-indexed mode,
+   * where the X-register is added to the operand prior to reading from memory,
+   * post-indexed mode adds the Y-register after reading from memory. The
+   * address is expected to contain a 2-byte pointer to a memory address (in
+   * little-endian, of course). The indirection is indicated by parenthesis in
+   * assembly language, notice that, unlike pre-indexed mode, they don't
+   * encompass the Y, signifying that the addition occurs after the read.
    *
    * This instruction is a three step process.
    *
@@ -116,7 +97,7 @@ enum AddressingMode
    * 2. Sum the address and the Y-register to get the offset address.
    * 3. Return the value found in the offset address.
    */
-  AM_POST_INDEXED_INDIRECT,
+  AM_INDIRECT_Y,
   /*
    * Relative addressing is used on the various Branch-On-Condition
    * instructions. A 1 byte signed operand is added to the program counter, and
@@ -136,18 +117,93 @@ enum AddressingMode
    * and move the program counter to the JMP line.
    */
   AM_RELATIVE,
+  /*
+   * In Zero-Page Addressing, the operand is a memory address rather than a
+   * value. As the name suggests, the memory must be on the zero-page of memory
+   * (addresses $0000-$00FF). You only need to supply the low byte of the memory
+   * address, the $00 high byte is automatically added by the processor.
+   */
+  AM_ZERO_PAGE,
+  /*
+   * Zero-page indexed addressing is similar to indexed addressing, except that
+   * since it applies only to the zero-page, you only need to include 1-byte for
+   * the address. In this mode, the address is added to the value in the X index
+   * register.
+   *
+   * The benefit of zero-page indexed addressing is that you can quickly loop
+   * through memory by simply increasing or decreasing the offset.
+   */
+  AM_ZERO_PAGE_X,
+  /*
+   * Equivalent to the `AM_ZERO_PAGE_X` addressing mode, except that the value
+   * in the Y index register is added to the provided 1-byte address.
+   */
+  AM_ZERO_PAGE_Y,
 };
 
 /* Enumeration of all possible operations that can be performed by the NES. */
 enum Operation
 {
+  OP_ADC,  // Add With Carry
   OP_AND,  // Logical AND
   OP_ASL,  // Arithmetic Shift Left
+  OP_BCC,  // Branch if Carry Clear
+  OP_BCS,  // Branch if Carry Set
+  OP_BEQ,  // Branch if Equal
+  OP_BIT,  // Bit Test
+  OP_BMI,  // Branch if Minus
+  OP_BNE,  // Branch if Not Equal
+  OP_BPL,  // Branch if Positive
+  OP_BRK,  // Force Interrupt
+  OP_BVC,  // Branch If Overflow Clear
+  OP_BVS,  // Branch If Overflow Set
+  OP_CLC,  // Clear Carry Flag
+  OP_CLD,  // Clear Decimal Mode
+  OP_CLI,  // Clear Interrupt Disable
+  OP_CLV,  // Clear Overflow Flag
+  OP_CMP,  // Compare
   OP_CPX,  // Compare X Register
+  OP_CPY,  // Compare Y Register
+  OP_DEC,  // Decrement Memory
+  OP_DEX,  // Decrement X Register
+  OP_DEY,  // Decrement Y Register
+  OP_EOR,  // Exclusive OR
   OP_INC,  // Increment Memory
+  OP_INX,  // Increment X Register
+  OP_INY,  // Increment Y Register
+  OP_JMP,  // Jump
+  OP_JSR,  // Jump to Subroutine
+  OP_LDA,  // Load Accumulator
+  OP_LDX,  // Load X Register
+  OP_LDY,  // Load Y Register
+  OP_LSR,  // Logical Shift Right
+  OP_NOP,  // No Operation
+  OP_ORA,  // Logical Accumulator OR
+  OP_PHA,  // Push Accumulator
+  OP_PHP,  // Push Processor Status
+  OP_PLA,  // Pull Accumulator
+  OP_PLP,  // Pull Processor Status
+  OP_ROL,  // Rotate Left
+  OP_ROR,  // Rotate Right
+  OP_RTI,  // Return from Interrupt
+  OP_RTS,  // Return from Subroutine
+  OP_SBC,  // Subtract With Carry
+  OP_SEC,  // Set Carry Flag
+  OP_SED,  // Set Decimal Flag
+  OP_SEI,  // Set Interrupt Disable
+  OP_STA,  // Store Accumulator
+  OP_STX,  // Store X Register
+  OP_STY,  // Store Y Register
+  OP_TAX,  // Transfer Accumulator to X
+  OP_TAY,  // Transfer Accumulator to Y
+  OP_TSX,  // Transfer Stack Pointer to X
+  OP_TXA,  // Transfer X to Accumulator
+  OP_TXS,  // Transfer X to Stack Pointer
+  OP_TYA,  // Transfer Y to Accumulator
 };
 
-/* Composes all relevant properties of an instruction, which is made up of an
+/*
+ * Composes all relevant properties of an instruction, which is made up of an
  * encoding of the particular operation (opcode), a particular addressing mode
  * that indicates how the operands should be interpreted.
  */
@@ -159,20 +215,15 @@ struct Instruction
   enum Operation op;
   /* The number of bytes that are required for representing this opcode. */
   int bytes;
-  /*
-   * Addressing mode that indicates how the operands for this instruction should
-   * interpreted.
-   */
-  enum AddressingMode addressing;
-  /*
-   * The number of CPU cylces it takes to execute the instruction encoded by
-   * this opcode.
-   */
+  /* Indicates how the operands for this instruction should interpreted. */
+  enum AddressingMode addressing_mode;
+  /* The number of CPU cycles it takes to execute this instruction. */
   int cycles;
 };
 
 /* Converts the encoding of an instruction to an opcode representation. */
 struct Instruction make_instruction(uint8_t opcode);
-const char* operation_name(enum Operation op);
+int Instruction_print(char* buffer, size_t buffer_size, struct Instruction* ins,
+                      int32_t encoding);
 
 #endif

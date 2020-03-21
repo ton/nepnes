@@ -1,6 +1,6 @@
 add_executable(nepnes_test
   main.c
-  ines_test.c
+  rom_test.c
   opcode_test.c
 )
 

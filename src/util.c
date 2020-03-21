@@ -15,17 +15,17 @@ static void quit_optional_strerror(bool append_strerror, const char* fmt,
 /*
  * Converts a 16-bit number from little to big endian.
  */
-uint16_t uint16_ltob(uint16_t i)
+uint16_t ltob_uint16(uint16_t i)
 {
-  return ((i & 0x0ff) << 8) + ((i & 0x0ff00) >> 8);
+  return ((i & 0x0ff) << 8) | ((i & 0x0ff00) >> 8);
 }
 
 /*
  * Converts a 32-bit number from little to big endian.
  */
-uint32_t uint32_ltob(uint32_t i)
+uint32_t ltob_uint32(uint32_t i)
 {
-  return uint16_ltob(i & 0xffff) << 16 | uint16_ltob((i >> 16) & 0xffff);
+  return ltob_uint16(i & 0xffff) << 16 | ltob_uint16((i >> 16) & 0xffff);
 }
 
 /*

@@ -1,7 +1,7 @@
 #include "cpu.h"
-#include "ines.h"
 #include "io.h"
 #include "options.h"
+#include "rom.h"
 #include "util.h"
 
 #include <stdlib.h>
@@ -41,7 +41,8 @@ void disassemble(uint8_t* prg_data, size_t prg_size)
       char assembly[assembly_size + 1];
       Instruction_print(assembly, sizeof assembly, &ins, encoding);
 
-      printf("$%X: %-*s (%0*X)\n", rom_offset, assembly_size, assembly, ins.bytes * 2, encoding);
+      printf("$%X: %-*s (%0*X)\n", rom_offset, assembly_size, assembly,
+             ins.bytes * 2, encoding);
 
       pc += ins.bytes;
       rom_offset += ins.bytes;
@@ -66,23 +67,22 @@ int main(int argc, char** argv)
 
   printf("ROM size: %lu bytes\n", rom_size);
 
-  switch (get_rom_format(rom_data))
+  struct RomHeader header = rom_make_header(rom_data);
+  switch (header.rom_format)
   {
     case RomFormat_iNes:
+    case RomFormat_Nes20:
     {
-      struct iNesHeader header = make_ines_header(rom_data);
-
       uint8_t* prg_data;
-      iNesHeader_prg_data(header, rom_data, &prg_data);
+      rom_prg_data(header, rom_data, &prg_data);
 
-      printf("PRG ROM size: %d bytes\n", iNesHeader_rom_size_in_bytes(&header));
+      printf("PRG ROM size: %d bytes\n", rom_size_in_bytes(&header));
       printf("PRG offset in ROM data: %lu\n", (prg_data - rom_data));
       printf("\n");
 
-      disassemble(prg_data, iNesHeader_rom_size_in_bytes(&header));
+      disassemble(prg_data, rom_size_in_bytes(&header));
     }
     break;
-    case RomFormat_Nes20:
     case RomFormat_Unknown:
       quit(
           "Can not open the ROM file '%s', it is not an iNes ROM and in some "

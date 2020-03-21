@@ -21,13 +21,13 @@ static void print_help()
   printf("\t-h | --help    : shows this help message\n");
 }
 
-void init_options(struct Options* options)
+void init_options(struct Options *options)
 {
   memset(options, 0, sizeof(struct Options));
   options->print_help = 0;
 }
 
-void parse_options(struct Options* options, int argc, char** argv)
+void parse_options(struct Options *options, int argc, char **argv)
 {
   struct option opts[] = {
       {"help", no_argument, NULL, 'h'},

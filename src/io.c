@@ -13,8 +13,8 @@ static int BUFFER_SIZE = 128 * 1024;
  * Decompresses the file with the given index in the given zip archive. Returns
  * 0 in case inflating the file in the archive succeeded. Otherwise, returns -1.
  */
-static int inflate_file_index(zip_t* zip, int index, uint8_t** data,
-                              size_t* size)
+static int inflate_file_index(zip_t *zip, int index, uint8_t **data,
+                              size_t *size)
 {
   int entries = zip_get_num_entries(zip, ZIP_FL_UNCHANGED);
   if (index >= entries)
@@ -22,7 +22,7 @@ static int inflate_file_index(zip_t* zip, int index, uint8_t** data,
     return -1;
   }
 
-  zip_file_t* zip_file = zip_fopen_index(zip, index, ZIP_FL_UNCHANGED);
+  zip_file_t *zip_file = zip_fopen_index(zip, index, ZIP_FL_UNCHANGED);
   if (zip_file == NULL)
   {
     return -1;
@@ -31,7 +31,7 @@ static int inflate_file_index(zip_t* zip, int index, uint8_t** data,
   *data = malloc(BUFFER_SIZE);
   *size = BUFFER_SIZE;
 
-  uint8_t* offset = *data;
+  uint8_t *offset = *data;
   int bytes_read = 0;
 
   while ((bytes_read = zip_fread(zip_file, offset, BUFFER_SIZE)) == BUFFER_SIZE)
@@ -61,7 +61,7 @@ static int inflate_file_index(zip_t* zip, int index, uint8_t** data,
  * hold the data read from file. In case the file does not exist or can not be
  * opened, returns -1, otherwise, returns 0.
  */
-int read_all(const char* file_name, uint8_t** data, size_t* size)
+int read_all(const char *file_name, uint8_t **data, size_t *size)
 {
   if (access(file_name, F_OK) == -1)
   {
@@ -69,14 +69,14 @@ int read_all(const char* file_name, uint8_t** data, size_t* size)
   }
 
   /* In case the ROM file is in a ZIP archive, inflate it. */
-  zip_t* zip = NULL;
+  zip_t *zip = NULL;
   if ((zip = zip_open(file_name, ZIP_RDONLY, NULL)) != NULL)
   {
     return inflate_file_index(zip, 0, data, size);
   }
 
   /* Otherwise, just open the file as a whole. */
-  FILE* fp = fopen(file_name, "r");
+  FILE *fp = fopen(file_name, "r");
   if (fp == NULL)
   {
     return -1;

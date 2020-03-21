@@ -6,15 +6,15 @@
 
 #include <stdlib.h>
 
-void disassemble(uint8_t* prg_data, size_t prg_size)
+void disassemble(uint8_t *prg_data, size_t prg_size)
 {
   /* Address where the NES typically stores PRG data. */
   const uint32_t prg_rom = 0x08000;
 
   uint32_t rom_offset = prg_rom;
 
-  uint8_t* pc = prg_data;
-  uint8_t* end = prg_data + prg_size;
+  uint8_t *pc = prg_data;
+  uint8_t *end = prg_data + prg_size;
   while (pc < end)
   {
     struct Instruction ins = make_instruction(*pc);
@@ -52,12 +52,12 @@ void disassemble(uint8_t* prg_data, size_t prg_size)
   return;
 }
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
   struct Options options = {0};
   parse_options(&options, argc, argv);
 
-  unsigned char* rom_data = NULL;
+  unsigned char *rom_data = NULL;
   size_t rom_size = 0;
   if (read_all(options.rom_file_name, &rom_data, &rom_size) == -1)
   {
@@ -73,7 +73,7 @@ int main(int argc, char** argv)
     case RomFormat_iNes:
     case RomFormat_Nes20:
     {
-      uint8_t* prg_data;
+      uint8_t *prg_data;
       rom_prg_data(header, rom_data, &prg_data);
 
       printf("PRG ROM size: %d bytes\n", rom_size_in_bytes(&header));

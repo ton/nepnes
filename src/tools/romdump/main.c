@@ -5,12 +5,12 @@
 
 #include <stdlib.h>
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
   struct Options options = {0};
   parse_options(&options, argc, argv);
 
-  unsigned char* rom_data = NULL;
+  unsigned char *rom_data = NULL;
   size_t rom_size = 0;
   if (read_all(options.rom_file_name, &rom_data, &rom_size) == -1)
   {

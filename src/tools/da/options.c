@@ -21,7 +21,7 @@ static void print_help()
   printf("\t-h | --help    : shows this help message\n");
 }
 
-void parse_options(struct Options* options, int argc, char** argv)
+void parse_options(struct Options *options, int argc, char **argv)
 {
   struct option opts[] = {
       {"help", no_argument, NULL, 'h'},

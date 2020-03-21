@@ -313,13 +313,13 @@ int Instruction_print(char* buffer, size_t buffer_size, struct Instruction* ins,
   switch (ins->addressing_mode)
   {
     case AM_ABSOLUTE:
-      snprintf(operands, sizeof operands, "$%04X", uint16_ltob(encoding));
+      snprintf(operands, sizeof operands, "$%04X", ltob_uint16(encoding));
       break;
     case AM_ABSOLUTE_X:
-      snprintf(operands, sizeof operands, "$%04X,X", uint16_ltob(encoding));
+      snprintf(operands, sizeof operands, "$%04X,X", ltob_uint16(encoding));
       break;
     case AM_ABSOLUTE_Y:
-      snprintf(operands, sizeof operands, "$%04X,Y", uint16_ltob(encoding));
+      snprintf(operands, sizeof operands, "$%04X,Y", ltob_uint16(encoding));
       break;
     case AM_ACCUMULATOR:
       strcpy(operands, "A");
@@ -330,7 +330,7 @@ int Instruction_print(char* buffer, size_t buffer_size, struct Instruction* ins,
     case AM_IMPLIED:
       break;
     case AM_INDIRECT:
-      snprintf(operands, sizeof operands, "($%04X)", uint16_ltob(encoding));
+      snprintf(operands, sizeof operands, "($%04X)", ltob_uint16(encoding));
       break;
     case AM_INDIRECT_X:
       snprintf(operands, sizeof operands, "($%02X,X)", encoding & 0xff);

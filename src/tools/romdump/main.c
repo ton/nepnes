@@ -1,5 +1,5 @@
-#include "ines.h"
 #include "io.h"
+#include "rom.h"
 #include "tools/romdump/options.h"
 #include "util.h"
 
@@ -18,7 +18,13 @@ int main(int argc, char** argv)
                   options.rom_file_name);
   }
 
-  write_rom_information(stdout, rom_data);
+  if (write_rom_information(stdout, rom_data) != 0)
+  {
+    quit_strerror(
+        "Could extract ROM information from the given ROM file '%s', "
+        "unknown ROM format",
+        options.rom_file_name);
+  }
 
   /* Note; data is not free()'d, the OS will take care of it. */
   exit(0);

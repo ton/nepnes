@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 
-static const char* operation_names[] = {
+static const char *operation_names[] = {
     [OP_ADC] = "ADC", [OP_AND] = "AND", [OP_ASL] = "ASL", [OP_BCC] = "BCC",
     [OP_BCS] = "BCS", [OP_BEQ] = "BEQ", [OP_BIT] = "BIT", [OP_BMI] = "BMI",
     [OP_BNE] = "BNE", [OP_BPL] = "BPL", [OP_BRK] = "BRK", [OP_BVC] = "BVC",
@@ -295,7 +295,7 @@ struct Instruction make_instruction(uint8_t opcode)
 /*
  * Returns the assembly token for the given operation.
  */
-const char* Instruction_operation_name(enum Operation op)
+const char *Instruction_operation_name(enum Operation op)
 {
   return operation_names[op];
 }
@@ -306,7 +306,7 @@ const char* Instruction_operation_name(enum Operation op)
  * Returns the number of characters written if successful, or a negative value
  * if an error occurred.
  */
-int Instruction_print(char* buffer, size_t buffer_size, struct Instruction* ins,
+int Instruction_print(char *buffer, size_t buffer_size, struct Instruction *ins,
                       int32_t encoding)
 {
   char operands[11] = "";

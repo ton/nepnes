@@ -9,7 +9,7 @@
 
 static const int MAXLINE = 120;
 
-static void quit_optional_strerror(bool append_strerror, const char* fmt,
+static void quit_optional_strerror(bool append_strerror, const char *fmt,
                                    va_list ap);
 
 /*
@@ -33,9 +33,9 @@ uint32_t ltob_uint32(uint32_t i)
  * Allocates enough memory to hold the resulting concatenated string, plus the
  * zero character. In case memory allocation fails, returns a null pointer.
  */
-char* nn_strcat(const char* x, const char* y)
+char *nn_strcat(const char *x, const char *y)
 {
-  char* result;
+  char *result;
   if ((result = malloc(strlen(x) + strlen(y) + 1)) != NULL)
   {
     result[0] = '\0';
@@ -48,7 +48,7 @@ char* nn_strcat(const char* x, const char* y)
 /*
  * Print a message to stderr, and exits the application.
  */
-void quit(const char* fmt, ...)
+void quit(const char *fmt, ...)
 {
   va_list ap;
   va_start(ap, fmt);
@@ -62,7 +62,7 @@ void quit(const char* fmt, ...)
  * Prints a message to stderr, appending the error message generated from the
  * current error code, and exits the application.
  */
-void quit_strerror(const char* fmt, ...)
+void quit_strerror(const char *fmt, ...)
 {
   va_list ap;
   va_start(ap, fmt);
@@ -72,7 +72,7 @@ void quit_strerror(const char* fmt, ...)
   exit(1);
 }
 
-static void quit_optional_strerror(bool append_strerror, const char* fmt,
+static void quit_optional_strerror(bool append_strerror, const char *fmt,
                                    va_list ap)
 {
   char buf[MAXLINE];

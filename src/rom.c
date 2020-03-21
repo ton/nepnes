@@ -39,8 +39,8 @@ struct RomHeader rom_make_header(uint8_t header_data[16])
  * Calculates the offset of the PRG data (program data) in the given ROM data
  * given an iNes ROM header. Returns a pointer to the PRG data in `prg_data`.
  */
-void rom_prg_data(struct RomHeader header, uint8_t* rom_data,
-                  uint8_t** prg_data)
+void rom_prg_data(struct RomHeader header, uint8_t *rom_data,
+                  uint8_t **prg_data)
 {
   /* Note; header size is 16 bytes. */
   *prg_data = rom_data + (16 + (header.has_trainer ? 512 : 0));
@@ -49,7 +49,7 @@ void rom_prg_data(struct RomHeader header, uint8_t* rom_data,
 /*
  * Returns the ROM size in bytes for the given NES ROM header.
  */
-uint32_t rom_size_in_bytes(struct RomHeader* header)
+uint32_t rom_size_in_bytes(struct RomHeader *header)
 {
   return header->prg_rom_size * 16 * 1024;
 }
@@ -59,7 +59,7 @@ uint32_t rom_size_in_bytes(struct RomHeader* header)
  * writing ROM meta information was successful, or an non-zero value in case of
  * an error.
  */
-int write_rom_information(FILE* fp, uint8_t* rom_data)
+int write_rom_information(FILE *fp, uint8_t *rom_data)
 {
   struct RomHeader header = rom_make_header(rom_data);
   if (header.rom_format == RomFormat_Unknown)
@@ -68,8 +68,8 @@ int write_rom_information(FILE* fp, uint8_t* rom_data)
   }
 
   const int left_width = 50;
-  const char* string_fmt = "; %-*s %s\n";
-  const char* kb_fmt = "; %-*s %dKB\n";
+  const char *string_fmt = "; %-*s %s\n";
+  const char *kb_fmt = "; %-*s %dKB\n";
 
   fprintf(fp, string_fmt, left_width, "ROM format:",
           header.rom_format == RomFormat_iNes ? "iNes" : "NES 2.0");

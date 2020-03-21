@@ -8,13 +8,13 @@
 
 #include <stdlib.h>
 
-static uint8_t* load_rom(const char* rom_file_name)
+static uint8_t *load_rom(const char *rom_file_name)
 {
-  uint8_t* rom_data;
+  uint8_t *rom_data;
   size_t rom_size;
 
-  const char* roms_path = "src/unittest/input/roms/";
-  char* rom_file_path = nn_strcat(roms_path, rom_file_name);
+  const char *roms_path = "src/unittest/input/roms/";
+  char *rom_file_path = nn_strcat(roms_path, rom_file_name);
 
   if (read_all(rom_file_path, &rom_data, &rom_size) == -1)
   {
@@ -29,7 +29,7 @@ static uint8_t* load_rom(const char* rom_file_name)
 
 START_TEST(test_bingo_get_rom_format)
 {
-  uint8_t* rom_data = load_rom("bingo.nes");
+  uint8_t *rom_data = load_rom("bingo.nes");
 
   enum RomFormat rf = rom_get_format(rom_data);
   ck_assert_int_eq(rf, RomFormat_iNes);
@@ -40,7 +40,7 @@ END_TEST
 
 START_TEST(test_bingo_make_rom_header)
 {
-  uint8_t* rom_data = load_rom("bingo.nes");
+  uint8_t *rom_data = load_rom("bingo.nes");
 
   struct RomHeader header = rom_make_header(rom_data);
   ck_assert_int_eq(header.rom_format, RomFormat_iNes);
@@ -57,12 +57,12 @@ END_TEST
 
 START_TEST(test_bingo_rom_prg_data)
 {
-  uint8_t* rom_data = load_rom("bingo.nes");
+  uint8_t *rom_data = load_rom("bingo.nes");
 
   struct RomHeader header = rom_make_header(rom_data);
   ck_assert_int_eq(header.rom_format, RomFormat_iNes);
 
-  uint8_t* prg_data;
+  uint8_t *prg_data;
   rom_prg_data(header, rom_data, &prg_data);
   ck_assert_int_eq(prg_data - rom_data, 16);
 
@@ -72,7 +72,7 @@ END_TEST
 
 START_TEST(test_bingo_rom_prg_rom_size_in_bytes)
 {
-  uint8_t* rom_data = load_rom("bingo.nes");
+  uint8_t *rom_data = load_rom("bingo.nes");
 
   struct RomHeader header = rom_make_header(rom_data);
 
@@ -85,7 +85,7 @@ END_TEST
 
 START_TEST(test_fail368_get_rom_format)
 {
-  uint8_t* rom_data = load_rom("nes-test-roms/nrom368/fail368.nes");
+  uint8_t *rom_data = load_rom("nes-test-roms/nrom368/fail368.nes");
 
   enum RomFormat rf = rom_get_format(rom_data);
   ck_assert_int_eq(rf, RomFormat_Nes20);
@@ -96,7 +96,7 @@ END_TEST
 
 START_TEST(test_fail368_make_rom_header)
 {
-  uint8_t* rom_data = load_rom("nes-test-roms/nrom368/fail368.nes");
+  uint8_t *rom_data = load_rom("nes-test-roms/nrom368/fail368.nes");
 
   struct RomHeader header = rom_make_header(rom_data);
   ck_assert_int_eq(header.rom_format, RomFormat_Nes20);
@@ -111,9 +111,9 @@ START_TEST(test_fail368_make_rom_header)
 }
 END_TEST
 
-TCase* make_rom_test_case(void)
+TCase *make_rom_test_case(void)
 {
-  TCase* tc = tcase_create("ROM test cases");
+  TCase *tc = tcase_create("ROM test cases");
   tcase_add_test(tc, test_bingo_get_rom_format);
   tcase_add_test(tc, test_bingo_make_rom_header);
   tcase_add_test(tc, test_bingo_rom_prg_data);

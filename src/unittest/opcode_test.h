@@ -3,6 +3,6 @@
 
 struct TCase;
 
-struct TCase* make_opcode_test_case(void);
+struct TCase *make_opcode_test_case(void);
 
 #endif

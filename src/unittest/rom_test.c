@@ -63,21 +63,9 @@ START_TEST(test_bingo_rom_prg_data)
   ck_assert_int_eq(header.rom_format, RomFormat_iNes);
 
   uint8_t *prg_data;
-  rom_prg_data(header, rom_data, &prg_data);
+  size_t prg_data_size;
+  rom_prg_data(&header, rom_data, &prg_data, &prg_data_size);
   ck_assert_int_eq(prg_data - rom_data, 16);
-
-  free(rom_data);
-}
-END_TEST
-
-START_TEST(test_bingo_rom_prg_rom_size_in_bytes)
-{
-  uint8_t *rom_data = load_rom("bingo.nes");
-
-  struct RomHeader header = rom_make_header(rom_data);
-
-  ck_assert_int_eq(header.rom_format, RomFormat_iNes);
-  ck_assert_int_eq(32 * 1024, rom_size_in_bytes(&header));
 
   free(rom_data);
 }
@@ -117,7 +105,6 @@ TCase *make_rom_test_case(void)
   tcase_add_test(tc, test_bingo_get_rom_format);
   tcase_add_test(tc, test_bingo_make_rom_header);
   tcase_add_test(tc, test_bingo_rom_prg_data);
-  tcase_add_test(tc, test_bingo_rom_prg_rom_size_in_bytes);
   tcase_add_test(tc, test_fail368_get_rom_format);
   tcase_add_test(tc, test_fail368_make_rom_header);
   return tc;

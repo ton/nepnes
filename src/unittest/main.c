@@ -1,3 +1,4 @@
+#include "da_test.h"
 #include "opcode_test.h"
 #include "rom_test.h"
 
@@ -8,6 +9,7 @@
 int main(void)
 {
   Suite *suite = suite_create("nepnes test suite");
+  suite_add_tcase(suite, make_da_test_case());
   suite_add_tcase(suite, make_opcode_test_case());
   suite_add_tcase(suite, make_rom_test_case());
 

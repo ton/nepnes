@@ -4,5 +4,5 @@ add_executable(da
 )
 
 target_link_libraries(da
-  libnepnes
+  PRIVATE libnepnes
 )

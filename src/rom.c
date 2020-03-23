@@ -3,7 +3,7 @@
 #include "util.h"
 
 /*
- * Constructs an iNes header from the given ROM header data.
+ * Constructs a ROM header from the given raw ROM header data.
  */
 struct RomHeader rom_make_header(uint8_t header_data[16])
 {
@@ -37,21 +37,16 @@ struct RomHeader rom_make_header(uint8_t header_data[16])
 
 /*
  * Calculates the offset of the PRG data (program data) in the given ROM data
- * given an iNes ROM header. Returns a pointer to the PRG data in `prg_data`.
+ * given an iNes ROM header. Returns a pointer to the PRG data in `prg_data`,
+ * and the size of the PRG data segment in `prg_data_size`.
  */
-void rom_prg_data(struct RomHeader header, uint8_t *rom_data,
-                  uint8_t **prg_data)
+void rom_prg_data(struct RomHeader *header, uint8_t *rom_data,
+                  uint8_t **prg_data, size_t *prg_data_size)
 {
-  /* Note; header size is 16 bytes. */
-  *prg_data = rom_data + (16 + (header.has_trainer ? 512 : 0));
-}
-
-/*
- * Returns the ROM size in bytes for the given NES ROM header.
- */
-uint32_t rom_size_in_bytes(struct RomHeader *header)
-{
-  return header->prg_rom_size * 16 * 1024;
+  /* Header size is 16 bytes. */
+  *prg_data = rom_data + (16 + (header->has_trainer ? 512 : 0));
+  /* PRG ROM size is stored in units of 16KB blocks. */
+  *prg_data_size = header->prg_rom_size * 16 * 1024;
 }
 
 /*

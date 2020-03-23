@@ -23,29 +23,19 @@ int main(int argc, char **argv)
   printf("ROM size: %lu bytes\n", rom_size);
 
   struct RomHeader header = rom_make_header(rom_data);
-  switch (header.rom_format)
+  if (header.rom_format == RomFormat_Unknown)
   {
-    case RomFormat_iNes:
-    case RomFormat_Nes20:
-    {
-      uint8_t *prg_data;
-      size_t prg_data_size;
-      rom_prg_data(&header, rom_data, &prg_data, &prg_data_size);
-
-      printf("PRG ROM size: %lu bytes\n", prg_data_size);
-      printf("PRG offset in ROM data: %lu\n", (prg_data - rom_data));
-      printf("\n");
-
-      da_disassemble(stdout, prg_data, prg_data_size);
-    }
-    break;
-    case RomFormat_Unknown:
-      quit(
-          "Can not open the ROM file '%s', it is not an iNes ROM and in some "
-          "unsupported format",
-          options.rom_file_name);
-      break;
+    quit("Can not open the ROM file '%s', unknown ROM format",
+         options.rom_file_name);
   }
 
-  exit(0);
+  uint8_t *prg_data;
+  size_t prg_data_size;
+  rom_prg_data(&header, rom_data, &prg_data, &prg_data_size);
+
+  printf("PRG ROM size: %lu bytes\n", prg_data_size);
+  printf("PRG offset in ROM data: %lu\n", (prg_data - rom_data));
+  printf("\n");
+
+  return da_disassemble(stdout, prg_data, prg_data_size);
 }

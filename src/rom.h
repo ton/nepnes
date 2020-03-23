@@ -491,9 +491,8 @@ struct RomHeader
 };
 
 struct RomHeader rom_make_header(uint8_t header_data[16]);
-void rom_prg_data(struct RomHeader header, uint8_t *rom_data,
-                  uint8_t **prg_data);
-uint32_t rom_size_in_bytes(struct RomHeader *header);
+void rom_prg_data(struct RomHeader *header, uint8_t *rom_data,
+                  uint8_t **prg_data, size_t *prg_data_size);
 
 enum RomFormat rom_get_format(uint8_t rom_header[16]);
 int write_rom_information(FILE *fp, uint8_t *rom_data);

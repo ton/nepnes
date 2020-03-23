@@ -7,10 +7,11 @@ add_library(libnepnes
   io.c
   rom.c
   util.c
+  tools/da/da.c
 )
 
 target_link_libraries(libnepnes
-  PkgConfig::libzip
+  PRIVATE PkgConfig::libzip
 )
 
 add_executable(nepnes

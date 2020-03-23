@@ -309,50 +309,53 @@ const char *Instruction_operation_name(enum Operation op)
 int Instruction_print(char *buffer, size_t buffer_size, struct Instruction *ins,
                       int32_t encoding)
 {
-  char operands[11] = "";
   switch (ins->addressing_mode)
   {
     case AM_ABSOLUTE:
-      snprintf(operands, sizeof operands, "$%04X", ltob_uint16(encoding));
-      break;
+      return snprintf(buffer, buffer_size, "%s $%04X",
+                      Instruction_operation_name(ins->op),
+                      ltob_uint16(encoding));
     case AM_ABSOLUTE_X:
-      snprintf(operands, sizeof operands, "$%04X,X", ltob_uint16(encoding));
-      break;
+      return snprintf(buffer, buffer_size, "%s $%04X,X",
+                      Instruction_operation_name(ins->op),
+                      ltob_uint16(encoding));
     case AM_ABSOLUTE_Y:
-      snprintf(operands, sizeof operands, "$%04X,Y", ltob_uint16(encoding));
-      break;
+      return snprintf(buffer, buffer_size, "%s $%04X,Y",
+                      Instruction_operation_name(ins->op),
+                      ltob_uint16(encoding));
     case AM_ACCUMULATOR:
-      strcpy(operands, "A");
-      break;
+      return snprintf(buffer, buffer_size, "%s A",
+                      Instruction_operation_name(ins->op));
     case AM_IMMEDIATE:
-      snprintf(operands, sizeof operands, "#$%02X", encoding & 0xff);
-      break;
+      return snprintf(buffer, buffer_size, "%s #$%02X",
+                      Instruction_operation_name(ins->op), encoding & 0xff);
     case AM_IMPLIED:
-      break;
+      return snprintf(buffer, buffer_size, "%s",
+                      Instruction_operation_name(ins->op));
     case AM_INDIRECT:
-      snprintf(operands, sizeof operands, "($%04X)", ltob_uint16(encoding));
-      break;
+      return snprintf(buffer, buffer_size, "%s ($%04X)",
+                      Instruction_operation_name(ins->op),
+                      ltob_uint16(encoding));
     case AM_INDIRECT_X:
-      snprintf(operands, sizeof operands, "($%02X,X)", encoding & 0xff);
-      break;
+      return snprintf(buffer, buffer_size, "%s ($%02X,X)",
+                      Instruction_operation_name(ins->op), encoding & 0xff);
     case AM_INDIRECT_Y:
-      snprintf(operands, sizeof operands, "($%02X),Y", encoding & 0xff);
-      break;
+      return snprintf(buffer, buffer_size, "%s ($%02X),Y",
+                      Instruction_operation_name(ins->op), encoding & 0xff);
     case AM_RELATIVE:
-      snprintf(operands, sizeof operands, "$%02X (%d)", encoding & 0xff,
-               (char)(encoding & 0xff));
-      break;
+      return snprintf(buffer, buffer_size, "%s $%02X (%d)",
+                      Instruction_operation_name(ins->op), encoding & 0xff,
+                      (char)(encoding & 0xff));
     case AM_ZERO_PAGE:
-      snprintf(operands, sizeof operands, "$%02X", encoding & 0xff);
-      break;
+      return snprintf(buffer, buffer_size, "%s $%02X",
+                      Instruction_operation_name(ins->op), encoding & 0xff);
     case AM_ZERO_PAGE_X:
-      snprintf(operands, sizeof operands, "$%02X,X", encoding & 0xff);
-      break;
+      return snprintf(buffer, buffer_size, "%s $%02X,X",
+                      Instruction_operation_name(ins->op), encoding & 0xff);
     case AM_ZERO_PAGE_Y:
-      snprintf(operands, sizeof operands, "$%02X,Y", encoding & 0xff);
-      break;
+      return snprintf(buffer, buffer_size, "%s $%02X,Y",
+                      Instruction_operation_name(ins->op), encoding & 0xff);
   }
 
-  return snprintf(buffer, buffer_size, "%s %s",
-                  Instruction_operation_name(ins->op), operands);
+  return 0;
 }

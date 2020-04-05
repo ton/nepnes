@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 
-static const char *operation_names[] = {
+static const char *operation_mnemonic[] = {
     [OP_ADC] = "ADC", [OP_AND] = "AND", [OP_ASL] = "ASL", [OP_BCC] = "BCC",
     [OP_BCS] = "BCS", [OP_BEQ] = "BEQ", [OP_BIT] = "BIT", [OP_BMI] = "BMI",
     [OP_BNE] = "BNE", [OP_BPL] = "BPL", [OP_BRK] = "BRK", [OP_BVC] = "BVC",
@@ -297,7 +297,7 @@ struct Instruction make_instruction(uint8_t opcode)
  */
 const char *Instruction_operation_name(enum Operation op)
 {
-  return operation_names[op];
+  return operation_mnemonic[op];
 }
 
 /*

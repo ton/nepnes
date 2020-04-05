@@ -32,7 +32,7 @@ START_TEST(test_bingo_get_rom_format)
   uint8_t *rom_data = load_rom("bingo.nes");
 
   enum RomFormat rf = rom_get_format(rom_data);
-  ck_assert_int_eq(rf, RomFormat_iNes);
+  ck_assert_int_eq(rf, RF_INES);
 
   free(rom_data);
 }
@@ -43,13 +43,13 @@ START_TEST(test_bingo_make_rom_header)
   uint8_t *rom_data = load_rom("bingo.nes");
 
   struct RomHeader header = rom_make_header(rom_data);
-  ck_assert_int_eq(header.rom_format, RomFormat_iNes);
+  ck_assert_int_eq(header.rom_format, RF_INES);
   ck_assert_int_eq(header.prg_rom_size, 2);
   ck_assert_int_eq(header.chr_rom_size, 1);
   ck_assert_int_eq(header.has_battery_backed_vram, 0);
   ck_assert_int_eq(header.has_trainer, 0);
-  ck_assert_int_eq(header.mapper, Mapper_NROM);
-  ck_assert_int_eq(header.mirroring, Mirroring_Horizontal);
+  ck_assert_int_eq(header.mapper, MAPPER_NROM);
+  ck_assert_int_eq(header.mirroring, MIRRORING_HORIZONTAL);
 
   free(rom_data);
 }
@@ -60,7 +60,7 @@ START_TEST(test_bingo_rom_prg_data)
   uint8_t *rom_data = load_rom("bingo.nes");
 
   struct RomHeader header = rom_make_header(rom_data);
-  ck_assert_int_eq(header.rom_format, RomFormat_iNes);
+  ck_assert_int_eq(header.rom_format, RF_INES);
 
   uint8_t *prg_data;
   size_t prg_data_size;
@@ -76,7 +76,7 @@ START_TEST(test_fail368_get_rom_format)
   uint8_t *rom_data = load_rom("nes-test-roms/nrom368/fail368.nes");
 
   enum RomFormat rf = rom_get_format(rom_data);
-  ck_assert_int_eq(rf, RomFormat_Nes20);
+  ck_assert_int_eq(rf, RF_NES20);
 
   free(rom_data);
 }
@@ -87,13 +87,13 @@ START_TEST(test_fail368_make_rom_header)
   uint8_t *rom_data = load_rom("nes-test-roms/nrom368/fail368.nes");
 
   struct RomHeader header = rom_make_header(rom_data);
-  ck_assert_int_eq(header.rom_format, RomFormat_Nes20);
+  ck_assert_int_eq(header.rom_format, RF_NES20);
   ck_assert_int_eq(header.prg_rom_size, 2);
   ck_assert_int_eq(header.chr_rom_size, 1);
   ck_assert_int_eq(header.has_battery_backed_vram, 0);
   ck_assert_int_eq(header.has_trainer, 0);
-  ck_assert_int_eq(header.mapper, Mapper_NROM);
-  ck_assert_int_eq(header.mirroring, Mirroring_Vertical);
+  ck_assert_int_eq(header.mapper, MAPPER_NROM);
+  ck_assert_int_eq(header.mirroring, MIRRORING_VERTICAL);
 
   free(rom_data);
 }

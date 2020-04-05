@@ -16,7 +16,7 @@ struct RomHeader rom_make_header(uint8_t header_data[16])
 
   if (header_data[6] & 0x8)
   {
-    header.mirroring = Mirroring_FourScreen;
+    header.mirroring = MIRRORING_FOUR_SCREEN;
   }
   else
   {
@@ -57,7 +57,7 @@ void rom_prg_data(struct RomHeader *header, uint8_t *rom_data,
 int write_rom_information(FILE *fp, uint8_t *rom_data)
 {
   struct RomHeader header = rom_make_header(rom_data);
-  if (header.rom_format == RomFormat_Unknown)
+  if (header.rom_format == RF_UNKNOWN)
   {
     return 1;
   }
@@ -66,8 +66,8 @@ int write_rom_information(FILE *fp, uint8_t *rom_data)
   const char *string_fmt = "; %-*s %s\n";
   const char *kb_fmt = "; %-*s %dKB\n";
 
-  fprintf(fp, string_fmt, left_width, "ROM format:",
-          header.rom_format == RomFormat_iNes ? "iNes" : "NES 2.0");
+  fprintf(fp, string_fmt, left_width,
+          "ROM format:", header.rom_format == RF_INES ? "iNes" : "NES 2.0");
 
   fprintf(fp, kb_fmt, left_width, "PRG ROM size:", header.prg_rom_size * 16);
   fprintf(fp, kb_fmt, left_width, "CHR ROM size:", header.chr_rom_size * 8);
@@ -90,8 +90,8 @@ enum RomFormat rom_get_format(uint8_t header[16])
   if (header[0] == 'N' && header[1] == 'E' && header[2] == 'S' &&
       header[3] == 0x1a)
   {
-    return (header[7] & 0xc) == 0x8 ? RomFormat_Nes20 : RomFormat_iNes;
+    return (header[7] & 0xc) == 0x8 ? RF_NES20 : RF_INES;
   }
 
-  return RomFormat_Unknown;
+  return RF_UNKNOWN;
 }

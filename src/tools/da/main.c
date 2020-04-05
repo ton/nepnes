@@ -23,7 +23,7 @@ int main(int argc, char **argv)
   printf("ROM size: %lu bytes\n", rom_size);
 
   struct RomHeader header = rom_make_header(rom_data);
-  if (header.rom_format == RomFormat_Unknown)
+  if (header.rom_format == RF_UNKNOWN)
   {
     quit("Can not open the ROM file '%s', unknown ROM format",
          options.rom_file_name);

@@ -21,13 +21,12 @@ int da_disassemble(FILE *fp, uint8_t *prg_data, size_t prg_size)
   {
     struct Instruction ins = make_instruction(*pc);
 
-    const int assembly_size = 14;
-
     /* In case of an unknown instruction, the calculated opcode of the
      * instruction will be zero. */
     if (ins.bytes == 0)
     {
-      fprintf(fp, "$%X: %*s (%02X)\n", rom_offset, assembly_size, "", *pc);
+      fprintf(fp, "$%X: %*s (%02X)\n", rom_offset, INSTRUCTION_BUFSIZE, "",
+              *pc);
 
       ++pc;
       ++rom_offset;
@@ -40,11 +39,8 @@ int da_disassemble(FILE *fp, uint8_t *prg_data, size_t prg_size)
         encoding = (encoding << 8) + (pc + i < end ? *(pc + i) : 0);
       }
 
-      char assembly[assembly_size + 1];
-      Instruction_print(assembly, sizeof assembly, &ins, encoding);
-
-      fprintf(fp, "$%X: %-*s (%0*X)\n", rom_offset, assembly_size, assembly,
-              ins.bytes * 2, encoding);
+      fprintf(fp, "$%X: %-*s (%0*X)\n", rom_offset, INSTRUCTION_BUFSIZE,
+              Instruction_print(&ins, encoding), ins.bytes * 2, encoding);
 
       pc += ins.bytes;
       rom_offset += ins.bytes;

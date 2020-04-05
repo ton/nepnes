@@ -223,7 +223,14 @@ struct Instruction
 
 /* Converts the encoding of an instruction to an opcode representation. */
 struct Instruction make_instruction(uint8_t opcode);
-int Instruction_print(char *buffer, size_t buffer_size, struct Instruction *ins,
-                      int32_t encoding);
+
+/*
+ * Size of the buffer that holds the textual representation of an instruction.
+ */
+enum
+{
+  INSTRUCTION_BUFSIZE = 14
+};
+const char *Instruction_print(struct Instruction *ins, int32_t encoding);
 
 #endif

@@ -4,6 +4,7 @@ add_subdirectory(vendor)
 
 add_library(libnepnes
   cpu.c
+  instruction.c
   io.c
   rom.c
   util.c

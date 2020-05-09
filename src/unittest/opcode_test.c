@@ -1,6 +1,6 @@
 #include "opcode_test.h"
 
-#include "cpu.h"
+#include "instruction.h"
 
 #include <check.h>
 

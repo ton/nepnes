@@ -3,13 +3,14 @@
 #include "util.h"
 
 #include <getopt.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 static void print_usage()
 {
-  printf("Usage: dbg -i|--input BINARY [-h|--help]\n");
+  printf("Usage: dbg -i|--input BINARY [-a|--address ADDRESS] [-h|--help]\n");
 }
 
 static void print_help()
@@ -18,6 +19,7 @@ static void print_help()
   print_usage();
   printf("\n");
   printf("\t-i BINARY     : BINARY file to debug\n");
+  printf("\t-a ADDRESS    : hexadecimal ADDRESS in memory where to load the contents of a BINARY file\n");
   printf("\t-h | --help   : shows this help message\n");
 }
 
@@ -26,6 +28,7 @@ void parse_options(struct Options *options, int argc, char **argv)
   struct option opts[] = {
       {"help", no_argument, NULL, 'h'},
       {"input", required_argument, NULL, 'i'},
+      {"address", required_argument, NULL, 'a'},
   };
 
   if (argc == 1)
@@ -36,13 +39,16 @@ void parse_options(struct Options *options, int argc, char **argv)
 
   int option_index = 0;
   char ch;
-  while ((ch = getopt_long(argc, argv, "hi:", opts, &option_index)) != -1)
+  while ((ch = getopt_long(argc, argv, "hi:a:", opts, &option_index)) != -1)
   {
     switch (ch)
     {
       case 'h':
         print_help();
         exit(1);
+        break;
+      case 'a':
+        sscanf(optarg, "%" SCNx16, &options->address);
         break;
       case 'i':
         options->binary_file_name = strdup(optarg);

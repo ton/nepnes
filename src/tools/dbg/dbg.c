@@ -20,7 +20,7 @@ void dbg_scroll_assembly(struct Debugger *debugger, struct Cpu *cpu, int lines)
  * overlaps the given address.
  */
 void dbg_scroll_assembly_to_address(struct Debugger *debugger, struct Cpu *cpu,
-                                    uint16_t address)
+                                    Address address)
 {
   /* We can not simply assign the requested address to the debugger state; but
    * need to normalize it such that the debugger address is set to the

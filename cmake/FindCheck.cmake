@@ -16,8 +16,7 @@
 #  BSD license.
 #  For details see the accompanying COPYING-CMAKE-SCRIPTS file.
 
-
-INCLUDE( FindPkgConfig )
+find_package(PkgConfig REQUIRED)
 
 # Take care about check.pc settings
 PKG_SEARCH_MODULE( CHECK check )
@@ -54,4 +53,3 @@ ENDIF( NOT CHECK_FOUND )
 
 # Hide advanced variables from CMake GUIs
 MARK_AS_ADVANCED( CHECK_INCLUDE_DIR CHECK_LIBRARIES )
-

@@ -145,7 +145,7 @@ int main(int argc, char **argv)
     */
   }
 
-  /* curses initialization */
+  /* Curses initialization. */
   initscr();
   cbreak();
   curs_set(0);
@@ -153,13 +153,14 @@ int main(int argc, char **argv)
   noecho();
   refresh();
 
-  /* create windows */
+  /* Create curses windows. */
   WINDOW *cpu_state_window = make_cpu_state_window();
   struct Window assembly_window = make_assembly_window();
 
   print_assembly(&debugger, &cpu, &assembly_window);
   print_cpu_state(&cpu, cpu_state_window);
 
+  /* Event loop; wait for user input. */
   bool quit = false;
   while (!quit)
   {
@@ -191,7 +192,7 @@ int main(int argc, char **argv)
         break;
       case ':':
         {
-          /* ask the user which address to jump to */
+          /* Ask the user which address to jump to. */
           Address address;
           if (user_query_address("Jump to address: $", &address) == 0)
           {
@@ -214,7 +215,7 @@ int main(int argc, char **argv)
     }
   }
 
-  // Cleanup curses related stuff.
+  /* Cleanup curses related stuff. */
   destroy_window(&assembly_window);
   delwin(cpu_state_window);
   endwin();

@@ -1,5 +1,5 @@
-#ifndef NEPNES_TOOLS_CLIEMU_OPTIONS_H
-#define NEPNES_TOOLS_CLIEMU_OPTIONS_H
+#ifndef NEPNES_TOOLS_DBG_OPTIONS_H
+#define NEPNES_TOOLS_DBG_OPTIONS_H
 
 struct Options
 {
@@ -10,4 +10,4 @@ struct Options
 void init_options(struct Options *options);
 void parse_options(struct Options *options, int argc, char **argv);
 
-#endif  // NEPNES_TOOLS_CLIEMU_OPTIONS_H
+#endif

@@ -191,16 +191,16 @@ int main(int argc, char **argv)
         }
         break;
       case ':':
+      {
+        /* Ask the user which address to jump to. */
+        Address address;
+        if (user_query_address("Jump to address: $", &address) == 0)
         {
-          /* Ask the user which address to jump to. */
-          Address address;
-          if (user_query_address("Jump to address: $", &address) == 0)
-          {
-            dbg_scroll_assembly_to_address(&debugger, &cpu, address);
-            print_assembly(&debugger, &cpu, &assembly_window);
-          }
+          dbg_scroll_assembly_to_address(&debugger, &cpu, address);
+          print_assembly(&debugger, &cpu, &assembly_window);
         }
-        break;
+      }
+      break;
       case 'j':
         dbg_scroll_assembly(&debugger, &cpu, 1);
         print_assembly(&debugger, &cpu, &assembly_window);

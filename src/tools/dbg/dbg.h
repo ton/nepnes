@@ -5,14 +5,16 @@
 
 struct Cpu;
 
+typedef uint16_t Address;
+
 /* Stores state of the debugger. */
 struct Debugger
 {
-  uint16_t assembly_address; /* first address in the assembly window */
+  Address assembly_address; /* first address in the assembly window */
 };
 
 void dbg_scroll_assembly(struct Debugger *debugger, struct Cpu *cpu, int lines);
 void dbg_scroll_assembly_to_address(struct Debugger *debugger, struct Cpu *cpu,
-                                    uint16_t address);
+                                    Address address);
 
 #endif

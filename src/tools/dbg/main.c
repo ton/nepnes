@@ -87,7 +87,7 @@ static void print_assembly(struct Debugger *debugger, struct Cpu *cpu,
 /*
  * Asks the user to input an address.
  */
-static int user_query_address(const char *question, uint16_t *address)
+static int user_query_address(const char *question, Address *address)
 {
   echo();
   curs_set(1);
@@ -192,7 +192,7 @@ int main(int argc, char **argv)
       case ':':
         {
           /* ask the user which address to jump to */
-          uint16_t address;
+          Address address;
           if (user_query_address("Jump to address: $", &address) == 0)
           {
             dbg_scroll_assembly_to_address(&debugger, &cpu, address);

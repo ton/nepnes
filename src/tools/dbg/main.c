@@ -134,15 +134,15 @@ int main(int argc, char **argv)
   }
   else
   {
-    // TODO(ton): load ROM data in memory?
-    /*
-    rom_prg_data(&header, binary_data, &debugger.prg_data,
-                 &debugger.prg_data_size);
+    uint8_t *prg_data;
+    size_t prg_data_size;
+    rom_prg_data(&header, binary_data, &prg_data, &prg_data_size);
 
-    printf("PRG ROM size: %lu bytes\n", debugger.prg_data_size);
-    printf("PRG offset in ROM data: %lu\n", (debugger.prg_data - binary_data));
+    printf("PRG ROM size: %lu bytes\n", prg_data_size);
+    printf("PRG offset in ROM data: %lu\n", (prg_data - binary_data));
     printf("\n");
-    */
+
+    memcpy(cpu.ram + options.address, prg_data, prg_data_size);
   }
 
   /* Curses initialization. */

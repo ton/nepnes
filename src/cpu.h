@@ -26,6 +26,6 @@ struct Cpu
 };
 
 int cpu_instruction_count(struct Cpu *cpu, uint16_t offset);
-uint16_t cpu_find_instruction_address(struct Cpu* cpu, int n);
+uint16_t cpu_find_instruction_address(struct Cpu *cpu, int n);
 
 #endif

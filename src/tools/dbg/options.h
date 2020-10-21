@@ -1,8 +1,11 @@
 #ifndef NEPNES_TOOLS_DBG_OPTIONS_H
 #define NEPNES_TOOLS_DBG_OPTIONS_H
 
+#include "dbg.h"
+
 struct Options
 {
+  Address address;
   char *binary_file_name;
   int print_help;
 };

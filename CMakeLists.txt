@@ -12,19 +12,20 @@ set(CMAKE_C_STANDARD 11)
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # Set the appropriate compiler flags.
-add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wall;-Wextra;-Wshadow;-Wpedantic;-Werror;-Wstrict-overflow;-fno-strict-aliasing;-march=native>")
+add_compile_options("$<$<CONFIG:DEBUG>:-Wall;-Wextra;-Wshadow;-Wno-unused-variable;-Wno-unused-function;-Wno-unused-parameter;-Werror;-Wstrict-overflow;-fno-strict-aliasing;-march=native>")
+add_compile_options("$<$<CONFIG:RELEASE>:-Wall;-Wextra;-Wshadow;-Wpedantic;-Werror;-Wstrict-overflow;-fno-strict-aliasing;-march=native>")
 
 # By default, include headers from src/.
 include_directories(src)
 
+find_package(PkgConfig REQUIRED)
 find_package(Check REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
-find_package(PkgConfig REQUIRED)
-
-pkg_check_modules(libzip REQUIRED IMPORTED_TARGET libzip)
 
 # TODO(ton): Need some platform specific check here.
 pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+pkg_check_modules(libzip REQUIRED IMPORTED_TARGET libzip)
+pkg_check_modules(notcurses REQUIRED IMPORTED_TARGET notcurses)
 
 add_subdirectory(src)

@@ -3,18 +3,14 @@
 #include "cpu.h"
 
 /*
- * Translates an address in memory to a debugger line number that starts at the
- * given address, or overlaps the given address.
+ * Initializes a debugger, given the CPU state, focuses the debugger on the
+ * instruction the program counter points to.
  */
-int dbg_address_to_line(struct Cpu *cpu, Address address)
+void dbg_init(struct Debugger *debugger, struct Cpu *cpu)
 {
-  /* We can not simply assign the requested address to the debugger state; but
-   * need to normalize it such that the debugger address is set to the
-   * instruction that starts or overlaps the requested address. */
-  Address assembly_address =
-      cpu_find_instruction_address(cpu, cpu_instruction_count(cpu, address));
-
-  return cpu_instruction_count(cpu, address);
+  debugger->pc_line = cpu_instruction_count(cpu, cpu->PC);
+  debugger->last_line = cpu_instruction_count(cpu, CPU_MAX_ADDRESS);
+  dbg_scroll_assembly_to_address(debugger, cpu, cpu->PC);
 }
 
 /*
@@ -24,6 +20,8 @@ void dbg_scroll_assembly(struct Debugger *debugger, int lines)
 {
   debugger->line += lines;
   if (debugger->line < 0) debugger->line = 0;
+  if (debugger->line > debugger->last_line)
+    debugger->line = debugger->last_line;
 }
 
 /*
@@ -33,5 +31,5 @@ void dbg_scroll_assembly(struct Debugger *debugger, int lines)
 void dbg_scroll_assembly_to_address(struct Debugger *debugger, struct Cpu *cpu,
                                     Address address)
 {
-  debugger->line = dbg_address_to_line(cpu, address);
+  debugger->line = cpu_instruction_count(cpu, address);
 }

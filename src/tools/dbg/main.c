@@ -52,7 +52,7 @@ static struct ncplane *make_cpu_state_plane(const int cols,
   opts.rows = box_height - 2;
   opts.cols = box_width - 2;
   opts.y = box_top + 1;
-  opts.horiz.x = box_left + 2;
+  opts.x = box_left + 2;
 
   ncplane_cursor_move_yx(std_plane, box_top, box_left);
   ncplane_rounded_box(std_plane, 0, 0, box_top + box_height - 1,
@@ -76,7 +76,7 @@ struct ncplane *make_user_input_plane(struct ncplane *std_plane,
    * way to deal with planes and boxes, include the box in the plane or not?
    */
   opts.y = ncplane_dim_y(debugger_plane) + 1;
-  opts.horiz.x = 0;
+  opts.x = 0;
 
   return ncplane_create(std_plane, &opts);
 }
@@ -160,7 +160,7 @@ static int user_query_address(struct notcurses *nc, struct ncplane *plane,
   plane_opts.rows = 1;
   plane_opts.cols = 5;
   plane_opts.y = 0;
-  plane_opts.horiz.x = strlen(question) + 1;
+  plane_opts.x = strlen(question) + 1;
 
   struct ncplane *reader_plane = ncplane_create(plane, &plane_opts);
 

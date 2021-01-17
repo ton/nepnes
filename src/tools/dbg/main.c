@@ -21,15 +21,19 @@
  * rounded border around the assembly plane on the standard notcurses plane.
  */
 static struct ncplane *make_debugger_plane(const int lines,
+                                           const int term_lines,
+                                           const int term_cols,
                                            struct ncplane *std_plane)
 {
   struct ncplane_options opts = {0};
-  opts.rows = lines - 2;
+  opts.x = 1;
+  opts.y = 1;
+  opts.rows = lines;
   opts.cols = 100;
 
   struct ncplane *debugger_plane = ncplane_create(std_plane, &opts);
 
-  ncplane_rounded_box(std_plane, 0, 0, ncplane_dim_y(debugger_plane),
+  ncplane_rounded_box(std_plane, 0, 0, term_lines - 2,
                       ncplane_dim_x(debugger_plane), 0);
 
   return debugger_plane;
@@ -62,23 +66,22 @@ static struct ncplane *make_cpu_state_plane(const int cols,
 }
 
 /*
- * Creates the plane where user input is requested for certain actions. It has
- * a height of one line and is always attached to the debug view plane.
+ * Creates the plane that displays the status line.
  */
-struct ncplane *make_user_input_plane(struct ncplane *std_plane,
-                                      struct ncplane *debugger_plane)
+static struct ncplane *make_status_line_plane(struct ncplane *std_plane)
 {
   struct ncplane_options opts = {0};
   opts.rows = 1;
-  opts.cols = ncplane_dim_x(debugger_plane);
-  /*
-   * TODO(ton): Inconvenient that we need to do +1 here, what is the canonical
-   * way to deal with planes and boxes, include the box in the plane or not?
-   */
-  opts.y = ncplane_dim_y(debugger_plane) + 1;
+  opts.cols = ncplane_dim_x(std_plane);
+  opts.y = ncplane_dim_y(std_plane) - 1;
   opts.x = 0;
 
-  return ncplane_create(std_plane, &opts);
+  nccell c = CELL_CHAR_INITIALIZER(' ');
+  cell_set_bg_rgb8(&c, 0x20, 0x20, 0x20);
+
+  struct ncplane *status_line_plane = ncplane_create(std_plane, &opts);
+  ncplane_set_base_cell(status_line_plane, &c);
+  return status_line_plane;
 }
 
 /*
@@ -94,12 +97,11 @@ static void print_cpu_state(struct Cpu *cpu, struct ncplane *plane)
 }
 
 /*
- * Prints the current state of the debugger in the main debugger view.
+ * Prints the assembly currently loaded in memory to the given notcurses plane.
  */
-static void print_assembly(struct Debugger *debugger, struct Cpu *cpu,
-                           struct ncplane *plane)
+static void print_assembly(struct Cpu *cpu, struct ncplane *plane)
 {
-  uint8_t *pc = cpu->ram + debugger->assembly_address;
+  uint8_t *pc = cpu->ram;
   const uint8_t *end = cpu->ram + sizeof cpu->ram;
 
   int line = 0;
@@ -113,7 +115,7 @@ static void print_assembly(struct Debugger *debugger, struct Cpu *cpu,
      */
     if (ins.bytes == 0)
     {
-      ncplane_printf_yx(plane, line + 1, 1, "$%04X: %*s (%02X)",
+      ncplane_printf_yx(plane, line, 0, "$%04X: %*s (%02X)",
                         (unsigned)(pc - cpu->ram), INSTRUCTION_BUFSIZE, "",
                         *pc);
       ++pc;
@@ -126,7 +128,7 @@ static void print_assembly(struct Debugger *debugger, struct Cpu *cpu,
         encoding = (encoding << 8) + (pc + i < end ? *(pc + i) : 0);
       }
 
-      ncplane_printf_yx(plane, line + 1, 1, "$%04X: %-*s (%0*X)",
+      ncplane_printf_yx(plane, line, 0, "$%04X: %-*s (%0*X)",
                         (unsigned)(pc - cpu->ram), INSTRUCTION_BUFSIZE,
                         Instruction_print(&ins, encoding), ins.bytes * 2,
                         encoding);
@@ -136,6 +138,30 @@ static void print_assembly(struct Debugger *debugger, struct Cpu *cpu,
 
     ++line;
   }
+}
+
+/*
+ * Prints the status line.
+ */
+static void print_status_line(struct Debugger *debugger, struct ncplane *plane)
+{
+  const int width = ncplane_dim_x(plane);
+  const char *help = "?: help";
+  ncplane_printf_yx(plane, 0, width - 8, help);
+}
+
+/*
+ * Prints a help screen in the status line.
+ */
+static void print_help(struct ncplane *plane)
+{
+  const int width = ncplane_dim_x(plane);
+  ncplane_erase(plane);
+  ncplane_putstr_aligned(
+      plane, 0, NCALIGN_LEFT,
+      " j/k: scroll up/down   C-B/C-F: page up/down   q: quit");
+  ncplane_putstr_aligned(plane, 0, NCALIGN_RIGHT,
+                         "press any key to close help ");
 }
 
 /*
@@ -182,7 +208,7 @@ static int user_query_address(struct notcurses *nc, struct ncplane *plane,
          c != NCKEY_ESC)
   {
     if (('0' <= c && c <= '9') || ('a' <= c && c <= 'f') ||
-        ('A' <= c && c <= 'F'))
+        ('A' <= c && c <= 'F') || c == NCKEY_BACKSPACE)
     {
       ncreader_offer_input(reader, &input);
       notcurses_render(nc);
@@ -254,25 +280,32 @@ int main(int argc, char **argv)
   }
 
   /* Create curses windows. */
-  int lines;
-  int cols;
-  notcurses_term_dim_yx(nc, &lines, &cols);
+  int term_lines;
+  int term_cols;
+  notcurses_term_dim_yx(nc, &term_lines, &term_cols);
 
   struct ncplane *std_plane = notcurses_stdplane(nc);
-  struct ncplane *debugger_plane = make_debugger_plane(lines, std_plane);
-  struct ncplane *cpu_state_plane = make_cpu_state_plane(cols, std_plane);
-  struct ncplane *input_plane =
-      make_user_input_plane(std_plane, debugger_plane);
+  struct ncplane *debugger_plane =
+      make_debugger_plane(sizeof(cpu.ram), term_lines, term_cols, std_plane);
+  struct ncplane *cpu_state_plane = make_cpu_state_plane(term_cols, std_plane);
+  struct ncplane *status_line_plane = make_status_line_plane(std_plane);
+
+  /* The standard plane is on top; easier with box drawing. */
+  ncplane_move_top(std_plane);
+  ncplane_move_top(status_line_plane);
+
+  print_assembly(&cpu, debugger_plane);
 
   // Event loop; wait for user input.
   struct ncinput input = {0};
   bool quit = false;
+
   while (!quit)
   {
-    print_assembly(&debugger, &cpu, debugger_plane);
+    ncplane_move_yx(debugger_plane, -debugger.line + 1, 1);
     print_cpu_state(&cpu, cpu_state_plane);
+    print_status_line(&debugger, status_line_plane);
     notcurses_render(nc);
-
     notcurses_getc_blocking(nc, &input);
     switch (input.id)
     {
@@ -285,21 +318,17 @@ int main(int argc, char **argv)
       case 'B':
         if (input.ctrl)
         {
-          dbg_scroll_assembly(&debugger, &cpu, -ncplane_dim_y(debugger_plane));
-          print_assembly(&debugger, &cpu, debugger_plane);
+          dbg_scroll_assembly(&debugger, -term_lines);
         }
         break;
       case 'F':
         if (input.ctrl)
         {
-          dbg_scroll_assembly(&debugger, &cpu, ncplane_dim_y(debugger_plane));
-          print_assembly(&debugger, &cpu, debugger_plane);
+          dbg_scroll_assembly(&debugger, term_lines);
         }
         break;
       case 'G':
         dbg_scroll_assembly_to_address(&debugger, &cpu, 0xffff);
-        ncplane_erase(debugger_plane);
-        print_assembly(&debugger, &cpu, debugger_plane);
         break;
       case 'g':
       {
@@ -307,33 +336,37 @@ int main(int argc, char **argv)
         ts.tv_sec = 1;
         if (notcurses_getc(nc, &ts, NULL, NULL) == 'g')
         {
-          dbg_scroll_assembly_to_address(&debugger, &cpu, 0);
-          print_assembly(&debugger, &cpu, debugger_plane);
+          dbg_scroll_assembly_to_address(&debugger, &cpu, 0x0);
         }
         break;
       }
       case ':':
       {
         Address address;
-        if (user_query_address(nc, input_plane, "Jump to address: $",
+        if (user_query_address(nc, status_line_plane, "Jump to address: $",
                                &address) == 0)
         {
           dbg_scroll_assembly_to_address(&debugger, &cpu, address);
-          print_assembly(&debugger, &cpu, debugger_plane);
         }
       }
       break;
       case 'j':
-        dbg_scroll_assembly(&debugger, &cpu, 1);
-        print_assembly(&debugger, &cpu, debugger_plane);
+        dbg_scroll_assembly(&debugger, 1);
         break;
       case 'k':
-        dbg_scroll_assembly(&debugger, &cpu, -1);
-        print_assembly(&debugger, &cpu, debugger_plane);
+        dbg_scroll_assembly(&debugger, -1);
         break;
       case 'q':
         quit = true;
         break;
+      case '?':
+      {
+        print_help(status_line_plane);
+        notcurses_render(nc);
+        notcurses_getc_blocking(nc, &input);
+        ncplane_erase(status_line_plane);
+      }
+      break;
     }
   }
 

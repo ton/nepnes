@@ -184,7 +184,7 @@ static int user_query_address(struct notcurses *nc, struct ncplane *plane,
    */
   struct ncplane_options plane_opts = {0};
   plane_opts.rows = 1;
-  plane_opts.cols = 5;
+  plane_opts.cols = 4;
   plane_opts.y = 0;
   plane_opts.x = strlen(question) + 1;
 

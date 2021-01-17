@@ -19,6 +19,20 @@
 #define VERSION "0.1" UC_ALPHA
 
 /*
+ * Draws the border next to the assembly plane. Also called in case of a resize
+ * event.
+ */
+static void draw_assembly_plane_border(struct ncplane *assembly_plane,
+                                       struct ncplane *std_plane,
+                                       int term_lines)
+{
+  nccell vline_cell = CELL_TRIVIAL_INITIALIZER;
+  cell_load(std_plane, &vline_cell, "\u2502");
+  ncplane_cursor_move_yx(std_plane, 0, ncplane_dim_x(assembly_plane));
+  ncplane_vline(std_plane, &vline_cell, term_lines - 1);
+}
+
+/*
  * Constructs the plane that contains a view on the memory of the machine, where
  * the values in memory are interpreted as instructions. This will also draw a
  * rounded border around the assembly plane on the standard notcurses plane.
@@ -34,9 +48,7 @@ static struct ncplane *make_assembly_plane(const int lines, const int y,
   opts.rows = lines;
   opts.cols = 88;
 
-  struct ncplane *assembly_plane = ncplane_create(std_plane, &opts);
-
-  return assembly_plane;
+  return ncplane_create(std_plane, &opts);
 }
 
 /*
@@ -47,22 +59,33 @@ static struct ncplane *make_assembly_plane(const int lines, const int y,
 static struct ncplane *make_cpu_state_plane(const int cols,
                                             struct ncplane *std_plane)
 {
-  const int box_width = 13;
-  const int box_height = 7;
-  const int box_left = cols - 1 - box_width;
+  const int box_width = 16;
+  const int box_height = 9;
+  const int box_left = cols - box_width;
   const int box_top = 0;
 
   struct ncplane_options opts = {0};
   opts.rows = box_height - 2;
   opts.cols = box_width - 2;
-  opts.y = box_top + 1;
+  opts.y = box_top;
   opts.x = box_left + 2;
 
-  ncplane_cursor_move_yx(std_plane, box_top, box_left);
-  ncplane_rounded_box(std_plane, 0, 0, box_top + box_height - 1,
-                      box_left + box_width, 0);
+  struct ncplane *cpu_state_plane = ncplane_create(std_plane, &opts);
+  ncplane_perimeter_rounded(cpu_state_plane, 0, 0, 0);
 
-  return ncplane_create(std_plane, &opts);
+  return cpu_state_plane;
+}
+
+/*
+ * Function called after a resize event occurs to properly position the status
+ * line within the new dimensions of the terminal window.
+ */
+static void status_line_plane_resize(struct ncplane *status_line_plane,
+                                     int lines, int cols)
+{
+  ncplane_erase(status_line_plane);
+  ncplane_resize_simple(status_line_plane, 1, cols);
+  ncplane_move_yx(status_line_plane, lines - 1, 0);
 }
 
 /*
@@ -110,11 +133,11 @@ static struct ncplane *make_pc_plane(struct ncplane *assembly_plane,
  */
 static void print_cpu_state(struct Cpu *cpu, struct ncplane *plane)
 {
-  ncplane_printf_yx(plane, 0, 0, " A:  $%02X", cpu->A);
-  ncplane_printf_yx(plane, 1, 0, " X:  $%02X", cpu->X);
-  ncplane_printf_yx(plane, 2, 0, " Y:  $%02X", cpu->Y);
-  ncplane_printf_yx(plane, 3, 0, " S:  $%02X", cpu->S);
-  ncplane_printf_yx(plane, 4, 0, "PC:  $%04X", cpu->PC);
+  ncplane_printf_aligned(plane, 1, NCALIGN_CENTER, " A:  $%02X  ", cpu->A);
+  ncplane_printf_aligned(plane, 2, NCALIGN_CENTER, " X:  $%02X  ", cpu->X);
+  ncplane_printf_aligned(plane, 3, NCALIGN_CENTER, " Y:  $%02X  ", cpu->Y);
+  ncplane_printf_aligned(plane, 4, NCALIGN_CENTER, " S:  $%02X  ", cpu->S);
+  ncplane_printf_aligned(plane, 5, NCALIGN_CENTER, "PC:  $%04X", cpu->PC);
 }
 
 /*
@@ -318,15 +341,12 @@ int main(int argc, char **argv)
   struct ncplane *status_line_plane = make_status_line_plane(std_plane);
   struct ncplane *pc_plane = make_pc_plane(assembly_plane, std_plane);
 
-  /* Draw a vertical line separating the assembly window from the rest of the
-   * UI. */
-  nccell vline_cell = CELL_TRIVIAL_INITIALIZER;
-  cell_load(std_plane, &vline_cell, "\u2502");
-  ncplane_cursor_move_yx(std_plane, 0, ncplane_dim_x(assembly_plane));
-  ncplane_vline(std_plane, &vline_cell, term_lines - 1);
-
   /* Status line is always on top. */
   ncplane_move_top(status_line_plane);
+
+  /* Draw a vertical line separating the assembly window from the rest of the
+   * UI. */
+  draw_assembly_plane_border(assembly_plane, std_plane, term_lines);
 
   /* Generate data for the assembly plane. */
   print_assembly(&cpu, assembly_plane);
@@ -362,6 +382,12 @@ int main(int argc, char **argv)
     notcurses_getc_blocking(nc, &input);
     switch (input.id)
     {
+      case NCKEY_RESIZE:
+        notcurses_render(nc);
+        notcurses_term_dim_yx(nc, &term_lines, &term_cols);
+        status_line_plane_resize(status_line_plane, term_lines, term_cols);
+        draw_assembly_plane_border(assembly_plane, std_plane, term_lines);
+        break;
       case 'L':
         if (input.ctrl)
         {
@@ -413,13 +439,11 @@ int main(int argc, char **argv)
         quit = true;
         break;
       case '?':
-      {
         print_help(status_line_plane);
         notcurses_render(nc);
         notcurses_getc_blocking(nc, &input);
         ncplane_erase(status_line_plane);
-      }
-      break;
+        break;
     }
   }
 

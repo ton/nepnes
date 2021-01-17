@@ -11,6 +11,8 @@
  * the PAL NES, the CPU and APU are contained within the RP2A07 chip.
  */
 
+#define CPU_MAX_ADDRESS 0xffff
+
 /*
  * Representation of the 6502 CPU.
  */
@@ -22,10 +24,12 @@ struct Cpu
   uint8_t S;   /* Stack Pointer */
   uint16_t PC; /* Program Counter */
 
-  uint8_t ram[0xffff + 1];
+  uint8_t ram[CPU_MAX_ADDRESS + 1];
 };
 
-int cpu_instruction_count(struct Cpu *cpu, uint16_t offset);
+typedef uint16_t Address;
+
+int cpu_instruction_count(struct Cpu *cpu, Address offset);
 uint16_t cpu_find_instruction_address(struct Cpu *cpu, int n);
 
 #endif

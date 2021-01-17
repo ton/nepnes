@@ -6,7 +6,7 @@
  * Returns the number of instructions starting from the first address in RAM,
  * up to the given address.
  */
-int cpu_instruction_count(struct Cpu *cpu, uint16_t address)
+int cpu_instruction_count(struct Cpu *cpu, Address address)
 {
   uint8_t *first = cpu->ram;
   uint8_t *last = cpu->ram + address;

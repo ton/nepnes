@@ -331,8 +331,7 @@ int main(int argc, char **argv)
 
   /* Set the program counter to the address where the ROM is loaded. */
   cpu.PC = options.address;
-  debugger.pc_line = dbg_address_to_line(&cpu, cpu.PC);
-  dbg_scroll_assembly_to_address(&debugger, &cpu, cpu.PC);
+  dbg_init(&debugger, &cpu);
 
   /* Event loop; wait for user input. */
   struct ncinput input = {0};
@@ -380,7 +379,7 @@ int main(int argc, char **argv)
         }
         break;
       case 'G':
-        dbg_scroll_assembly_to_address(&debugger, &cpu, 0xffff);
+        dbg_scroll_assembly_to_address(&debugger, &cpu, CPU_MAX_ADDRESS);
         break;
       case 'g':
       {

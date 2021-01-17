@@ -145,9 +145,7 @@ static void print_assembly(struct Cpu *cpu, struct ncplane *plane)
  */
 static void print_status_line(struct Debugger *debugger, struct ncplane *plane)
 {
-  const int width = ncplane_dim_x(plane);
-  const char *help = "?: help";
-  ncplane_printf_yx(plane, 0, width - 8, help);
+  ncplane_putstr_aligned(plane, 0, NCALIGN_RIGHT, "?: help ");
 }
 
 /*

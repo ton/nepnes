@@ -68,9 +68,6 @@ static struct ncplane *make_cpu_state_plane(const int cols,
 struct ncplane *make_user_input_plane(struct ncplane *std_plane,
                                       struct ncplane *debugger_plane)
 {
-  const int width = 100;
-  const int height = 1;
-
   struct ncplane_options opts = {0};
   opts.rows = 1;
   opts.cols = ncplane_dim_x(debugger_plane);

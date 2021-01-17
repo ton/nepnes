@@ -154,7 +154,7 @@ int main(int, char**)
 
     if (ui.show_open_file_dialog)
     {
-      const char* path{noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, nullptr, nullptr, nullptr)};
+      // const char* path{noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, nullptr, nullptr, nullptr)};
       // nfdchar_t* path = nullptr;
       // nfdresult_t result = NFD_OpenDialog(nullptr, nullptr, &path);
       // if (result == NFD_OKAY)

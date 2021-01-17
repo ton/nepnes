@@ -293,6 +293,8 @@ int main(int argc, char **argv)
   }
 
   notcurses_options opts = {0};
+  opts.flags = NCOPTION_SUPPRESS_BANNERS;
+
   struct notcurses *nc;
   if ((nc = notcurses_init(&opts, NULL)) == NULL)
   {

@@ -297,6 +297,10 @@ int main(int argc, char **argv)
   /* Generate data for the assembly plane. */
   print_assembly(&cpu, assembly_plane);
 
+  /* Set the program counter to the address where the ROM is loaded. */
+  cpu.PC = options.address;
+  dbg_scroll_assembly_to_address(&debugger, &cpu, cpu.PC);
+
   // Event loop; wait for user input.
   struct ncinput input = {0};
   bool quit = false;

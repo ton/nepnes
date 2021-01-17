@@ -20,7 +20,7 @@
  * the values in memory are interpreted as instructions. This will also draw a
  * rounded border around the assembly plane on the standard notcurses plane.
  */
-static struct ncplane *make_debugger_plane(const int lines,
+static struct ncplane *make_assembly_plane(const int lines,
                                            const int term_lines,
                                            const int term_cols,
                                            struct ncplane *std_plane)
@@ -31,12 +31,12 @@ static struct ncplane *make_debugger_plane(const int lines,
   opts.rows = lines;
   opts.cols = 100;
 
-  struct ncplane *debugger_plane = ncplane_create(std_plane, &opts);
+  struct ncplane *assembly_plane = ncplane_create(std_plane, &opts);
 
   ncplane_rounded_box(std_plane, 0, 0, term_lines - 2,
-                      ncplane_dim_x(debugger_plane), 0);
+                      ncplane_dim_x(assembly_plane), 0);
 
-  return debugger_plane;
+  return assembly_plane;
 }
 
 /*
@@ -285,8 +285,8 @@ int main(int argc, char **argv)
   notcurses_term_dim_yx(nc, &term_lines, &term_cols);
 
   struct ncplane *std_plane = notcurses_stdplane(nc);
-  struct ncplane *debugger_plane =
-      make_debugger_plane(sizeof(cpu.ram), term_lines, term_cols, std_plane);
+  struct ncplane *assembly_plane =
+      make_assembly_plane(sizeof(cpu.ram), term_lines, term_cols, std_plane);
   struct ncplane *cpu_state_plane = make_cpu_state_plane(term_cols, std_plane);
   struct ncplane *status_line_plane = make_status_line_plane(std_plane);
 
@@ -294,7 +294,8 @@ int main(int argc, char **argv)
   ncplane_move_top(std_plane);
   ncplane_move_top(status_line_plane);
 
-  print_assembly(&cpu, debugger_plane);
+  /* Generate data for the assembly plane. */
+  print_assembly(&cpu, assembly_plane);
 
   // Event loop; wait for user input.
   struct ncinput input = {0};
@@ -302,7 +303,7 @@ int main(int argc, char **argv)
 
   while (!quit)
   {
-    ncplane_move_yx(debugger_plane, -debugger.line + 1, 1);
+    ncplane_move_yx(assembly_plane, -debugger.line + 1, 1);
     print_cpu_state(&cpu, cpu_state_plane);
     print_status_line(&debugger, status_line_plane);
     notcurses_render(nc);

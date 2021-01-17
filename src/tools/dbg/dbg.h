@@ -10,8 +10,11 @@ typedef uint16_t Address;
 /* Stores state of the debugger. */
 struct Debugger
 {
-  int line; /* current line of assembly to display */
+  int line;    /* current focused line of assembly to display */
+  int pc_line; /* line of assembly the PC is pointing to */
 };
+
+int dbg_address_to_line(struct Cpu *cpu, Address address);
 
 void dbg_scroll_assembly(struct Debugger *debugger, int lines);
 void dbg_scroll_assembly_to_address(struct Debugger *debugger, struct Cpu *cpu,

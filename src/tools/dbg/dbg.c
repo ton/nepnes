@@ -3,6 +3,21 @@
 #include "cpu.h"
 
 /*
+ * Translates an address in memory to a debugger line number that starts at the
+ * given address, or overlaps the given address.
+ */
+int dbg_address_to_line(struct Cpu *cpu, Address address)
+{
+  /* We can not simply assign the requested address to the debugger state; but
+   * need to normalize it such that the debugger address is set to the
+   * instruction that starts or overlaps the requested address. */
+  Address assembly_address =
+      cpu_find_instruction_address(cpu, cpu_instruction_count(cpu, address));
+
+  return cpu_instruction_count(cpu, address);
+}
+
+/*
  * Scrolls the debugger by the given number of lines.
  */
 void dbg_scroll_assembly(struct Debugger *debugger, int lines)
@@ -18,11 +33,5 @@ void dbg_scroll_assembly(struct Debugger *debugger, int lines)
 void dbg_scroll_assembly_to_address(struct Debugger *debugger, struct Cpu *cpu,
                                     Address address)
 {
-  /* We can not simply assign the requested address to the debugger state; but
-   * need to normalize it such that the debugger address is set to the
-   * instruction that starts or overlaps the requested address. */
-  Address assembly_address =
-      cpu_find_instruction_address(cpu, cpu_instruction_count(cpu, address));
-
-  debugger->line = cpu_instruction_count(cpu, address);
+  debugger->line = dbg_address_to_line(cpu, address);
 }

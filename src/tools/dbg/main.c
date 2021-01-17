@@ -15,26 +15,26 @@
 #define KEY_CTRL_B '\2'
 #define KEY_CTRL_F '\6'
 
+#define UC_ALPHA "\u03b1"
+#define VERSION "0.1" UC_ALPHA
+
 /*
  * Constructs the plane that contains a view on the memory of the machine, where
  * the values in memory are interpreted as instructions. This will also draw a
  * rounded border around the assembly plane on the standard notcurses plane.
  */
-static struct ncplane *make_assembly_plane(const int lines,
-                                           const int term_lines,
+static struct ncplane *make_assembly_plane(const int lines, const int y,
+                                           const int x, const int term_lines,
                                            const int term_cols,
                                            struct ncplane *std_plane)
 {
   struct ncplane_options opts = {0};
-  opts.x = 1;
-  opts.y = 1;
+  opts.x = x;
+  opts.y = y;
   opts.rows = lines;
-  opts.cols = 100;
+  opts.cols = 88;
 
   struct ncplane *assembly_plane = ncplane_create(std_plane, &opts);
-
-  ncplane_rounded_box(std_plane, 0, 0, term_lines - 2,
-                      ncplane_dim_x(assembly_plane), 0);
 
   return assembly_plane;
 }
@@ -82,6 +82,27 @@ static struct ncplane *make_status_line_plane(struct ncplane *std_plane)
   struct ncplane *status_line_plane = ncplane_create(std_plane, &opts);
   ncplane_set_base_cell(status_line_plane, &c);
   return status_line_plane;
+}
+
+/*
+ * Creates a plane that will highlight the current instruction.
+ */
+static struct ncplane *make_pc_plane(struct ncplane *assembly_plane,
+                                     struct ncplane *std_plane)
+{
+  struct ncplane_options opts = {0};
+  opts.rows = 1;
+  opts.cols = ncplane_dim_x(assembly_plane);
+  opts.y = 1;
+  opts.x = 0;
+
+  nccell c = CELL_TRIVIAL_INITIALIZER;
+  cell_set_bg_rgb8(&c, 0xaa, 0xaa, 0xaa);
+  cell_set_fg_rgb8(&c, 0x30, 0x30, 0x30);
+
+  struct ncplane *pc_plane = ncplane_create(std_plane, &opts);
+  ncplane_set_base_cell(pc_plane, &c);
+  return pc_plane;
 }
 
 /*
@@ -145,7 +166,8 @@ static void print_assembly(struct Cpu *cpu, struct ncplane *plane)
  */
 static void print_status_line(struct Debugger *debugger, struct ncplane *plane)
 {
-  ncplane_putstr_aligned(plane, 0, NCALIGN_RIGHT, "?: help ");
+  ncplane_putstr_aligned(plane, 0, NCALIGN_RIGHT, "nepnes dbg v" VERSION " ");
+  ncplane_putstr_aligned(plane, 0, NCALIGN_LEFT, " ?: help");
 }
 
 /*
@@ -282,14 +304,26 @@ int main(int argc, char **argv)
   int term_cols;
   notcurses_term_dim_yx(nc, &term_lines, &term_cols);
 
+  /* Absolute top-left coordinates of the assembly plane. */
+  const int assembly_x = 1;
+  const int assembly_y = 0;
+
   struct ncplane *std_plane = notcurses_stdplane(nc);
   struct ncplane *assembly_plane =
-      make_assembly_plane(sizeof(cpu.ram), term_lines, term_cols, std_plane);
+      make_assembly_plane(sizeof(cpu.ram), assembly_y, assembly_x, term_lines,
+                          term_cols, std_plane);
   struct ncplane *cpu_state_plane = make_cpu_state_plane(term_cols, std_plane);
   struct ncplane *status_line_plane = make_status_line_plane(std_plane);
+  struct ncplane *pc_plane = make_pc_plane(assembly_plane, std_plane);
 
-  /* The standard plane is on top; easier with box drawing. */
-  ncplane_move_top(std_plane);
+  /* Draw a vertical line separating the assembly window from the rest of the
+   * UI. */
+  nccell vline_cell = CELL_TRIVIAL_INITIALIZER;
+  cell_load(std_plane, &vline_cell, "\u2502");
+  ncplane_cursor_move_yx(std_plane, 0, ncplane_dim_x(assembly_plane));
+  ncplane_vline(std_plane, &vline_cell, term_lines - 1);
+
+  /* Status line is always on top. */
   ncplane_move_top(status_line_plane);
 
   /* Generate data for the assembly plane. */
@@ -297,18 +331,33 @@ int main(int argc, char **argv)
 
   /* Set the program counter to the address where the ROM is loaded. */
   cpu.PC = options.address;
+  debugger.pc_line = dbg_address_to_line(&cpu, cpu.PC);
   dbg_scroll_assembly_to_address(&debugger, &cpu, cpu.PC);
 
-  // Event loop; wait for user input.
+  /* Event loop; wait for user input. */
   struct ncinput input = {0};
   bool quit = false;
-
   while (!quit)
   {
-    ncplane_move_yx(assembly_plane, -debugger.line + 1, 1);
+    /* Scroll the debugger window. */
+    ncplane_move_yx(assembly_plane, -debugger.line + assembly_y, assembly_x);
+
+    /* Scroll the pc plane. */
+    ncplane_move_yx(pc_plane, -(debugger.line - debugger.pc_line) + assembly_y,
+                    0);
+
+    /* Print the CPU state in the plane reserved for that, and highlight the
+     * line of assembly the PC is pointing to. */
     print_cpu_state(&cpu, cpu_state_plane);
+
+    /* Print the status line. */
+    /* TODO(ton): not needed to be printed every time. */
     print_status_line(&debugger, status_line_plane);
+
+    /* Flip! */
     notcurses_render(nc);
+
+    /* Read user input, and act accordingly. */
     notcurses_getc_blocking(nc, &input);
     switch (input.id)
     {

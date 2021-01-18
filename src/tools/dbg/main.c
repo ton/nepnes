@@ -38,8 +38,7 @@ static void draw_assembly_plane_border(struct ncplane *assembly_plane,
  * rounded border around the assembly plane on the standard notcurses plane.
  */
 static struct ncplane *make_assembly_plane(const int lines, const int y,
-                                           const int x, const int term_lines,
-                                           const int term_cols,
+                                           const int x,
                                            struct ncplane *std_plane)
 {
   struct ncplane_options opts = {0};
@@ -187,7 +186,7 @@ static void print_assembly(struct Cpu *cpu, struct ncplane *plane)
 /*
  * Prints the status line.
  */
-static void print_status_line(struct Debugger *debugger, struct ncplane *plane)
+static void print_status_line(struct ncplane *plane)
 {
   ncplane_putstr_aligned(plane, 0, NCALIGN_RIGHT, "nepnes dbg v" VERSION " ");
   ncplane_putstr_aligned(plane, 0, NCALIGN_LEFT, " ?: help");
@@ -198,7 +197,6 @@ static void print_status_line(struct Debugger *debugger, struct ncplane *plane)
  */
 static void print_help(struct ncplane *plane)
 {
-  const int width = ncplane_dim_x(plane);
   ncplane_erase(plane);
   ncplane_putstr_aligned(
       plane, 0, NCALIGN_LEFT,
@@ -335,8 +333,7 @@ int main(int argc, char **argv)
 
   struct ncplane *std_plane = notcurses_stdplane(nc);
   struct ncplane *assembly_plane =
-      make_assembly_plane(sizeof(cpu.ram), assembly_y, assembly_x, term_lines,
-                          term_cols, std_plane);
+      make_assembly_plane(sizeof(cpu.ram), assembly_y, assembly_x, std_plane);
   struct ncplane *cpu_state_plane = make_cpu_state_plane(term_cols, std_plane);
   struct ncplane *status_line_plane = make_status_line_plane(std_plane);
   struct ncplane *pc_plane = make_pc_plane(assembly_plane, std_plane);
@@ -373,7 +370,7 @@ int main(int argc, char **argv)
 
     /* Print the status line. */
     /* TODO(ton): not needed to be printed every time. */
-    print_status_line(&debugger, status_line_plane);
+    print_status_line(status_line_plane);
 
     /* Flip! */
     notcurses_render(nc);

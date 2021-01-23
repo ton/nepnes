@@ -19,7 +19,12 @@ static void print_help()
   print_usage();
   printf("\n");
   printf("\t-i BINARY     : BINARY file to debug\n");
-  printf("\t-a ADDRESS    : hexadecimal ADDRESS in memory where to load the contents of a BINARY file\n");
+  printf(
+      "\t-a ADDRESS    : hexadecimal ADDRESS in memory where to load the "
+      "contents of a BINARY file\n");
+  printf(
+      "\t-l LOGFILE    : Outputs CPU state to the given log file for every "
+      "instruction\n");
   printf("\t-h | --help   : shows this help message\n");
 }
 
@@ -29,6 +34,7 @@ void parse_options(struct Options *options, int argc, char **argv)
       {"help", no_argument, NULL, 'h'},
       {"input", required_argument, NULL, 'i'},
       {"address", required_argument, NULL, 'a'},
+      {"log", optional_argument, NULL, 'l'},
   };
 
   if (argc == 1)
@@ -39,7 +45,7 @@ void parse_options(struct Options *options, int argc, char **argv)
 
   int option_index = 0;
   char ch;
-  while ((ch = getopt_long(argc, argv, "hi:a:", opts, &option_index)) != -1)
+  while ((ch = getopt_long(argc, argv, "hi:a:l:", opts, &option_index)) != -1)
   {
     switch (ch)
     {
@@ -52,6 +58,9 @@ void parse_options(struct Options *options, int argc, char **argv)
         break;
       case 'i':
         options->binary_file_name = strdup(optarg);
+        break;
+      case 'l':
+        options->log_file_name = strdup(optarg);
         break;
     }
   }

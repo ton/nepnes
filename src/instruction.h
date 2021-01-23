@@ -226,6 +226,18 @@ enum
 {
   INSTRUCTION_BUFSIZE = 14
 };
-const char *Instruction_print(struct Instruction *ins, int32_t encoding);
+
+enum InstructionLayout
+{
+  IL_NES_DISASM,
+  IL_NINTENDULATOR,
+};
+
+struct Cpu;
+
+const char *instruction_print(struct Instruction *ins, int32_t encoding);
+const char *instruction_print_layout(struct Instruction *ins, int32_t encoding,
+                                     enum InstructionLayout layout,
+                                     struct Cpu *cpu);
 
 #endif

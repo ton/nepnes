@@ -19,6 +19,50 @@
 #define VERSION "0.1" UC_ALPHA
 
 /*
+ * Logs the current CPU instruction to the given file, in Nintendulator format
+ * so that it can be easily diffed with some verified output.
+ */
+void log_current_cpu_instruction(FILE *log_file, struct Cpu *cpu)
+{
+  uint8_t *pc = cpu->ram + cpu->PC;
+  const uint8_t *end = cpu->ram + sizeof cpu->ram;
+
+  struct Instruction ins = make_instruction(*pc);
+
+  uint32_t encoding = *pc;
+  for (int i = 1; i < ins.bytes; ++i)
+  {
+    encoding = (encoding << 8) + (pc + i < end ? *(pc + i) : 0);
+  }
+
+  char encoding_buf[9];
+  switch (ins.bytes)
+  {
+    case 1:
+      sprintf(encoding_buf, "%02X      ", (uint8_t)(encoding & 0x0000ff));
+      break;
+    case 2:
+      sprintf(encoding_buf, "%02X %02X   ",
+              (uint8_t)((encoding & 0x00ff00) >> 8),
+              (uint8_t)(encoding & 0x0000ff));
+      break;
+    case 3:
+      sprintf(encoding_buf, "%02X %02X %02X",
+              (uint8_t)((encoding & 0xff0000) >> 16),
+              (uint8_t)((encoding & 0x00ff00) >> 8),
+              (uint8_t)(encoding & 0x0000ff));
+      break;
+  }
+
+  fprintf(log_file,
+          "%X  %s  %-31s A:%02X X:%02X Y:%02X P:%02X SP:%02X CYC:%d\n", cpu->PC,
+          encoding_buf,
+          instruction_print_layout(&ins, encoding, IL_NINTENDULATOR, cpu),
+          cpu->A, cpu->X, cpu->Y, cpu->P, cpu->S, cpu->cycle);
+  fflush(log_file);
+}
+
+/*
  * Draws the border next to the assembly plane. Also called in case of a resize
  * event.
  */
@@ -58,8 +102,8 @@ static struct ncplane *make_assembly_plane(const int lines, const int y,
 static struct ncplane *make_cpu_state_plane(const int cols,
                                             struct ncplane *std_plane)
 {
-  const int box_width = 19;
-  const int box_height = 10;
+  const int box_width = 20;
+  const int box_height = 11;
   const int box_left = cols - box_width;
   const int box_top = 0;
 
@@ -134,18 +178,19 @@ static void print_cpu_state(struct Cpu *cpu, struct ncplane *plane)
 {
   const char flags[] = {'-', 'C', 'Z', 'I', 'D', '-', '-', 'O', 'N'};
 
-  ncplane_printf_yx(plane, 1, 1, "  A:  $%02X", cpu->A);
-  ncplane_printf_yx(plane, 2, 1, "  X:  $%02X", cpu->X);
-  ncplane_printf_yx(plane, 3, 1, "  Y:  $%02X", cpu->Y);
-  ncplane_printf_yx(plane, 4, 1, "  S:  $%02X", cpu->S);
-  ncplane_printf_yx(plane, 5, 1, " PC:  $%04X", cpu->PC);
-  ncplane_printf_yx(plane, 6, 1, "  P:  %c%c--%c%c%c%c",
-                         flags[((cpu->P & FLAGS_NEGATIVE) >> 7) * 8],
-                         flags[((cpu->P & FLAGS_OVERFLOW) >> 6) * 7],
-                         flags[((cpu->P & FLAGS_DECIMAL) >> 3) * 4],
-                         flags[((cpu->P & FLAGS_INTERRUPT_DISABLE) >> 2) * 3],
-                         flags[(cpu->P & FLAGS_ZERO)],
-                         flags[(cpu->P & FLAGS_CARRY)]);
+  ncplane_printf_yx(plane, 1, 1, "   A:  $%02X", cpu->A);
+  ncplane_printf_yx(plane, 2, 1, "   X:  $%02X", cpu->X);
+  ncplane_printf_yx(plane, 3, 1, "   Y:  $%02X", cpu->Y);
+  ncplane_printf_yx(plane, 4, 1, "   S:  $%02X", cpu->S);
+  ncplane_printf_yx(plane, 5, 1, "  PC:  $%04X", cpu->PC);
+  ncplane_printf_yx(plane, 6, 1, "   P:  %c%c--%c%c%c%c",
+                    flags[((cpu->P & FLAGS_NEGATIVE) >> 7) * 8],
+                    flags[((cpu->P & FLAGS_OVERFLOW) >> 6) * 7],
+                    flags[((cpu->P & FLAGS_DECIMAL) >> 3) * 4],
+                    flags[((cpu->P & FLAGS_INTERRUPT_DISABLE) >> 2) * 3],
+                    flags[(cpu->P & FLAGS_ZERO)],
+                    flags[(cpu->P & FLAGS_CARRY)]);
+  ncplane_printf_yx(plane, 7, 1, " CYC:  %d", cpu->cycle);
 }
 
 /*
@@ -182,7 +227,7 @@ static void print_assembly(struct Cpu *cpu, struct ncplane *plane)
 
       ncplane_printf_yx(plane, line, 0, "$%04X: %-*s (%0*X)",
                         (unsigned)(pc - cpu->ram), INSTRUCTION_BUFSIZE,
-                        Instruction_print(&ins, encoding), ins.bytes * 2,
+                        instruction_print(&ins, encoding), ins.bytes * 2,
                         encoding);
 
       pc += ins.bytes;
@@ -207,9 +252,12 @@ static void print_status_line(struct ncplane *plane)
 static void print_help(struct ncplane *plane)
 {
   ncplane_erase(plane);
-  ncplane_putstr_aligned(
-      plane, 0, NCALIGN_LEFT,
-      " j/k: scroll up/down   C-B/C-F: page up/down   q: quit");
+  ncplane_putstr_aligned(plane, 0, NCALIGN_LEFT,
+                         " j/k: scroll up/down   "
+                         "C-B/C-F: page up/down   "
+                         "r: run    "
+                         "n: next instruction   "
+                         "q: quit");
   ncplane_putstr_aligned(plane, 0, NCALIGN_RIGHT,
                          "press any key to close help ");
 }
@@ -331,12 +379,22 @@ int main(int argc, char **argv)
   }
 
   notcurses_options opts = {0};
-  opts.flags = NCOPTION_SUPPRESS_BANNERS;
+  /* opts.flags = NCOPTION_SUPPRESS_BANNERS; */
 
   struct notcurses *nc;
   if ((nc = notcurses_core_init(&opts, NULL)) == NULL)
   {
     return EXIT_FAILURE;
+  }
+
+  /* Create log file if specified. */
+  FILE *log_file = NULL;
+  if (options.log_file_name)
+  {
+    if ((log_file = fopen(options.log_file_name, "w")) == NULL)
+    {
+      quit_strerror("Could not create log file '%s'", options.log_file_name);
+    }
   }
 
   /* Create curses windows. */
@@ -368,8 +426,17 @@ int main(int argc, char **argv)
   /* Event loop; wait for user input. */
   struct ncinput input = {0};
   bool quit = false;
+  bool focus_pc = true;
+  bool run_mode = false;
   while (!quit)
   {
+    debugger.pc_line = cpu_instruction_count(&cpu, cpu.PC);
+
+    if (focus_pc)
+    {
+      dbg_scroll_assembly_to_pc(&debugger, &cpu);
+    }
+
     /* Scroll the debugger window. */
     ncplane_move_yx(assembly_plane, -debugger.line + assembly_y, assembly_x);
 
@@ -389,71 +456,101 @@ int main(int argc, char **argv)
     notcurses_render(nc);
 
     /* Read user input, and act accordingly. */
-    notcurses_getc_blocking(nc, &input);
-    switch (input.id)
+    if (run_mode)
     {
-      case NCKEY_RESIZE:
-        notcurses_render(nc);
-        notcurses_term_dim_yx(nc, &term_lines, &term_cols);
-        status_line_plane_resize(status_line_plane, term_lines, term_cols);
-        draw_assembly_plane_border(assembly_plane, std_plane, term_lines);
-        break;
-      case 'L':
-        if (input.ctrl)
-        {
-          notcurses_refresh(nc, NULL, NULL);
-        }
-        break;
-      case 'B':
-        if (input.ctrl)
-        {
-          dbg_scroll_assembly(&debugger, -term_lines);
-        }
-        break;
-      case 'F':
-        if (input.ctrl)
-        {
-          dbg_scroll_assembly(&debugger, term_lines);
-        }
-        break;
-      case 'G':
-        dbg_scroll_assembly_to_address(&debugger, &cpu, CPU_MAX_ADDRESS);
-        break;
-      case 'g':
+      if (log_file)
       {
-        struct timespec ts = {0};
-        ts.tv_sec = 1;
-        if (notcurses_getc(nc, &ts, NULL, NULL) == 'g')
-        {
-          dbg_scroll_assembly_to_address(&debugger, &cpu, 0x0);
-        }
-        break;
+        log_current_cpu_instruction(log_file, &cpu);
       }
-      case ':':
+      cpu_execute_next_instruction(&cpu);
+    }
+    else
+    {
+      notcurses_getc_blocking(nc, &input);
+      switch (input.id)
       {
-        Address address;
-        if (user_query_address(nc, status_line_plane, "Jump to address: $",
-                               &address) == 0)
+        case NCKEY_RESIZE:
+          notcurses_render(nc);
+          notcurses_term_dim_yx(nc, &term_lines, &term_cols);
+          status_line_plane_resize(status_line_plane, term_lines, term_cols);
+          draw_assembly_plane_border(assembly_plane, std_plane, term_lines);
+          break;
+        case 'n':
+          if (log_file)
+          {
+            log_current_cpu_instruction(log_file, &cpu);
+          }
+          cpu_execute_next_instruction(&cpu);
+          focus_pc = true;
+          break;
+        case 'r':
+          run_mode = true;
+          cpu_execute_next_instruction(&cpu);
+          focus_pc = true;
+          break;
+        case 'L':
+          if (input.ctrl)
+          {
+            notcurses_refresh(nc, NULL, NULL);
+          }
+          break;
+        case 'B':
+          if (input.ctrl)
+          {
+            dbg_scroll_assembly(&debugger, -term_lines);
+            focus_pc = false;
+          }
+          break;
+        case 'F':
+          if (input.ctrl)
+          {
+            dbg_scroll_assembly(&debugger, term_lines);
+            focus_pc = false;
+          }
+          break;
+        case 'G':
+          dbg_scroll_assembly_to_address(&debugger, &cpu, CPU_MAX_ADDRESS);
+          focus_pc = false;
+          break;
+        case 'g':
         {
-          dbg_scroll_assembly_to_address(&debugger, &cpu, address);
+          struct timespec ts = {0};
+          ts.tv_sec = 1;
+          if (notcurses_getc(nc, &ts, NULL, NULL) == 'g')
+          {
+            dbg_scroll_assembly_to_address(&debugger, &cpu, 0x0);
+            focus_pc = false;
+          }
+          break;
         }
+        case ':':
+        {
+          Address address;
+          if (user_query_address(nc, status_line_plane, "Jump to address: $",
+                                 &address) == 0)
+          {
+            dbg_scroll_assembly_to_address(&debugger, &cpu, address);
+          }
+        }
+        break;
+        case 'j':
+          dbg_scroll_assembly(&debugger, 1);
+          focus_pc = false;
+          break;
+        case 'k':
+          dbg_scroll_assembly(&debugger, -1);
+          focus_pc = false;
+          break;
+        case 'q':
+          quit = true;
+          break;
+        case '?':
+          print_help(status_line_plane);
+          notcurses_render(nc);
+          notcurses_getc_blocking(nc, &input);
+          ncplane_erase(status_line_plane);
+          break;
       }
-      break;
-      case 'j':
-        dbg_scroll_assembly(&debugger, 1);
-        break;
-      case 'k':
-        dbg_scroll_assembly(&debugger, -1);
-        break;
-      case 'q':
-        quit = true;
-        break;
-      case '?':
-        print_help(status_line_plane);
-        notcurses_render(nc);
-        notcurses_getc_blocking(nc, &input);
-        ncplane_erase(status_line_plane);
-        break;
     }
   }
 

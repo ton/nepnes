@@ -8,9 +8,8 @@
  */
 void dbg_init(struct Debugger *debugger, struct Cpu *cpu)
 {
-  debugger->pc_line = cpu_instruction_count(cpu, cpu->PC);
   debugger->last_line = cpu_instruction_count(cpu, CPU_MAX_ADDRESS);
-  dbg_scroll_assembly_to_address(debugger, cpu, cpu->PC);
+  debugger->scroll_offset = 3;
 }
 
 /*
@@ -31,5 +30,16 @@ void dbg_scroll_assembly(struct Debugger *debugger, int lines)
 void dbg_scroll_assembly_to_address(struct Debugger *debugger, struct Cpu *cpu,
                                     Address address)
 {
-  debugger->line = cpu_instruction_count(cpu, address);
+  debugger->line =
+      cpu_instruction_count(cpu, address) - debugger->scroll_offset;
+}
+
+/*
+ * Scrolls the assembly viewport to display the instruction that starts at or
+ * overlaps the program counter.
+ */
+void dbg_scroll_assembly_to_pc(struct Debugger *debugger, struct Cpu *cpu)
+{
+  debugger->line =
+      cpu_instruction_count(cpu, cpu->PC) - debugger->scroll_offset;
 }

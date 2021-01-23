@@ -1,5 +1,6 @@
 #include "instruction.h"
 
+#include "cpu.h"
 #include "util.h"
 
 #include <stdio.h>
@@ -333,13 +334,24 @@ const char *Instruction_operation_name(enum Operation op)
 }
 
 /*
- * Writes the assembly representation for the given instruction in the given
- * buffer. At most `buffer_size` - 1 bytes are written to the given buffer.
- * Returns the number of characters written if successful, or a negative value
- * if an error occurred. Returns a pointer to a statically allocated buffer of
- * maximum length INSTRUCTION_BUFSIZE.
+ * See `instruction_print_layout`. Prints an instruction to some statically
+ * allocated buffer using `nes-disasm` instruction layout.
  */
-const char *Instruction_print(struct Instruction *ins, int32_t encoding)
+const char *instruction_print(struct Instruction *ins, int32_t encoding)
+{
+  return instruction_print_layout(ins, encoding, IL_NES_DISASM, NULL);
+}
+
+/*
+ * Writes the assembly representation for the given instruction to a statically
+ * allocated buffer using the given instruction layout. Right now, two different
+ * layout types are supported, the one from `nes-disasm` and from
+ * 'Nintendulator'. The Nintendulator mode requires access to RAM, since it will
+ * print out values that are stored in the zero page.
+ */
+const char *instruction_print_layout(struct Instruction *ins, int32_t encoding,
+                                     enum InstructionLayout layout,
+                                     struct Cpu *cpu)
 {
   static char buffer[INSTRUCTION_BUFSIZE + 1];
 
@@ -382,13 +394,33 @@ const char *Instruction_print(struct Instruction *ins, int32_t encoding)
                Instruction_operation_name(ins->op), encoding & 0xff);
       break;
     case AM_RELATIVE:
-      snprintf(buffer, sizeof buffer, "%s $%02X (%d)",
-               Instruction_operation_name(ins->op), encoding & 0xff,
-               (char)(encoding & 0xff));
+      switch (layout)
+      {
+        case IL_NES_DISASM:
+          snprintf(buffer, sizeof buffer, "%s $%02X (%d)",
+                   Instruction_operation_name(ins->op), encoding & 0xff,
+                   (char)(encoding & 0xff));
+          break;
+        case IL_NINTENDULATOR:
+          snprintf(buffer, sizeof buffer, "%s $%02X",
+                   Instruction_operation_name(ins->op),
+                   cpu->PC + ins->bytes + (encoding & 0xff));
+          break;
+      }
       break;
     case AM_ZERO_PAGE:
-      snprintf(buffer, sizeof buffer, "%s $%02X",
-               Instruction_operation_name(ins->op), encoding & 0xff);
+      switch (layout)
+      {
+        case IL_NES_DISASM:
+          snprintf(buffer, sizeof buffer, "%s $%02X",
+                   Instruction_operation_name(ins->op), encoding & 0xff);
+          break;
+        case IL_NINTENDULATOR:
+          snprintf(buffer, sizeof buffer, "%s $%02X = %02d",
+                   Instruction_operation_name(ins->op), encoding & 0xff,
+                   cpu->ram[encoding & 0xff]);
+          break;
+      }
       break;
     case AM_ZERO_PAGE_X:
       snprintf(buffer, sizeof buffer, "%s $%02X,X",

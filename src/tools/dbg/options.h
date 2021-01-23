@@ -7,6 +7,7 @@ struct Options
 {
   Address address;
   char *binary_file_name;
+  char *log_file_name;
   int print_help;
 };
 

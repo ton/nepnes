@@ -11,11 +11,12 @@ bool nn_ends_with(const char *s, const char *needle);
 
 /* File and directory functionality. */
 char *nn_dirname(const char *filename);
-int nn_mkdirs(const char* path, mode_t mode);
+int nn_mkdirs(const char *path, mode_t mode);
 
 uint16_t ltob_uint16(uint16_t i);
 uint32_t ltob_uint32(uint32_t i);
 
+void nn_log(const char *fmt, ...);
 void quit(const char *fmt, ...);
 void quit_strerror(const char *fmt, ...);
 

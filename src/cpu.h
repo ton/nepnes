@@ -15,6 +15,7 @@
 
 enum Flags
 {
+  FLAGS_NONE = 0x00,
   FLAGS_CARRY = 0x01,
   FLAGS_ZERO = 0x02,
   FLAGS_INTERRUPT_DISABLE = 0x04,
@@ -36,12 +37,17 @@ struct Cpu
   uint16_t PC; /* Program Counter */
 
   uint8_t ram[CPU_MAX_ADDRESS + 1];
+
+  unsigned cycle; /* Number of cycles elapsed since execution */
 };
 
 typedef uint16_t Address;
 
+void cpu_execute_next_instruction(struct Cpu *cpu);
+
 int cpu_instruction_count(struct Cpu *cpu, Address offset);
 uint16_t cpu_find_instruction_address(struct Cpu *cpu, int n);
+
 void cpu_power_on(struct Cpu *cpu);
 void cpu_reset(struct Cpu *cpu);
 

@@ -1,6 +1,7 @@
 #include "util.h"
 
 #include <errno.h>
+#include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -108,6 +109,20 @@ int nn_mkdirs(const char *path, mode_t mode)
 }
 
 /*
+ * Logs a message to stderr.
+ */
+void nn_log(const char *fmt, ...)
+{
+  va_list ap;
+  va_start(ap, fmt);
+
+  vfprintf(stderr, fmt, ap);
+  fflush(stderr);  // in case stdout and stderr are the same
+
+  va_end(ap);
+}
+
+/*
  * Print a message to stderr, and exits the application.
  */
 void quit(const char *fmt, ...)
@@ -117,7 +132,7 @@ void quit(const char *fmt, ...)
   quit_optional_strerror(false, fmt, ap);
   va_end(ap);
 
-  exit(1);
+  kill(0, SIGTERM);
 }
 
 /*
@@ -131,7 +146,7 @@ void quit_strerror(const char *fmt, ...)
   quit_optional_strerror(true, fmt, ap);
   va_end(ap);
 
-  exit(1);
+  kill(0, SIGTERM);
 }
 
 static void quit_optional_strerror(bool append_strerror, const char *fmt,
@@ -144,9 +159,6 @@ static void quit_optional_strerror(bool append_strerror, const char *fmt,
              strerror(errno));
   strcat(buf, "\n");
 
-  fflush(stdout);  // in case stdout and stderr are the same
   fputs(buf, stderr);
-  fflush(NULL);  // flush all stdio streams
-
-  exit(1);
+  fflush(stderr);
 }

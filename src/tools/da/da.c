@@ -41,7 +41,7 @@ int da_disassemble(FILE *fp, uint8_t *prg_data, size_t prg_size)
       }
 
       fprintf(fp, "$%X: %-*s (%0*X)\n", rom_offset, INSTRUCTION_BUFSIZE,
-              Instruction_print(&ins, encoding), ins.bytes * 2, encoding);
+              instruction_print(&ins, encoding), ins.bytes * 2, encoding);
 
       pc += ins.bytes;
       rom_offset += ins.bytes;

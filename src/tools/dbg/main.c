@@ -58,8 +58,8 @@ static struct ncplane *make_assembly_plane(const int lines, const int y,
 static struct ncplane *make_cpu_state_plane(const int cols,
                                             struct ncplane *std_plane)
 {
-  const int box_width = 16;
-  const int box_height = 9;
+  const int box_width = 19;
+  const int box_height = 10;
   const int box_left = cols - box_width;
   const int box_top = 0;
 
@@ -132,11 +132,20 @@ static struct ncplane *make_pc_plane(struct ncplane *assembly_plane,
  */
 static void print_cpu_state(struct Cpu *cpu, struct ncplane *plane)
 {
-  ncplane_printf_aligned(plane, 1, NCALIGN_CENTER, " A:  $%02X  ", cpu->A);
-  ncplane_printf_aligned(plane, 2, NCALIGN_CENTER, " X:  $%02X  ", cpu->X);
-  ncplane_printf_aligned(plane, 3, NCALIGN_CENTER, " Y:  $%02X  ", cpu->Y);
-  ncplane_printf_aligned(plane, 4, NCALIGN_CENTER, " S:  $%02X  ", cpu->S);
-  ncplane_printf_aligned(plane, 5, NCALIGN_CENTER, "PC:  $%04X", cpu->PC);
+  const char flags[] = {'-', 'C', 'Z', 'I', 'D', '-', '-', 'O', 'N'};
+
+  ncplane_printf_yx(plane, 1, 1, "  A:  $%02X", cpu->A);
+  ncplane_printf_yx(plane, 2, 1, "  X:  $%02X", cpu->X);
+  ncplane_printf_yx(plane, 3, 1, "  Y:  $%02X", cpu->Y);
+  ncplane_printf_yx(plane, 4, 1, "  S:  $%02X", cpu->S);
+  ncplane_printf_yx(plane, 5, 1, " PC:  $%04X", cpu->PC);
+  ncplane_printf_yx(plane, 6, 1, "  P:  %c%c--%c%c%c%c",
+                         flags[((cpu->P & FLAGS_NEGATIVE) >> 7) * 8],
+                         flags[((cpu->P & FLAGS_OVERFLOW) >> 6) * 7],
+                         flags[((cpu->P & FLAGS_DECIMAL) >> 3) * 4],
+                         flags[((cpu->P & FLAGS_INTERRUPT_DISABLE) >> 2) * 3],
+                         flags[(cpu->P & FLAGS_ZERO)],
+                         flags[(cpu->P & FLAGS_CARRY)]);
 }
 
 /*
@@ -288,9 +297,17 @@ int main(int argc, char **argv)
 
   printf("Binary size: %lu bytes\n", binary_size);
 
+  /* Create the CPU and debugger state. Set the program counter to the address
+   * where the ROM is loaded. */
   struct Cpu cpu = {0};
-  struct Debugger debugger = {0};
+  cpu_power_on(&cpu);
+  cpu.PC = options.address;
 
+  /* Initialize the debugger state. */
+  struct Debugger debugger = {0};
+  dbg_init(&debugger, &cpu);
+
+  /* Load the cartridge into memory. */
   struct RomHeader header = rom_make_header(binary_data);
   if (header.rom_format == RF_UNKNOWN)
   {
@@ -347,10 +364,6 @@ int main(int argc, char **argv)
 
   /* Generate data for the assembly plane. */
   print_assembly(&cpu, assembly_plane);
-
-  /* Set the program counter to the address where the ROM is loaded. */
-  cpu.PC = options.address;
-  dbg_init(&debugger, &cpu);
 
   /* Event loop; wait for user input. */
   struct ncinput input = {0};

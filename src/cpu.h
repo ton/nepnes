@@ -13,6 +13,16 @@
 
 #define CPU_MAX_ADDRESS 0xffff
 
+enum Flags
+{
+  FLAGS_CARRY = 0x01,
+  FLAGS_ZERO = 0x02,
+  FLAGS_INTERRUPT_DISABLE = 0x04,
+  FLAGS_DECIMAL = 0x08,
+  FLAGS_OVERFLOW = 0x40,
+  FLAGS_NEGATIVE = 0x80,
+};
+
 /*
  * Representation of the 6502 CPU.
  */
@@ -22,6 +32,7 @@ struct Cpu
   uint8_t X;   /* X index register */
   uint8_t Y;   /* Y index register */
   uint8_t S;   /* Stack Pointer */
+  uint8_t P;   /* Status register */
   uint16_t PC; /* Program Counter */
 
   uint8_t ram[CPU_MAX_ADDRESS + 1];
@@ -31,5 +42,7 @@ typedef uint16_t Address;
 
 int cpu_instruction_count(struct Cpu *cpu, Address offset);
 uint16_t cpu_find_instruction_address(struct Cpu *cpu, int n);
+void cpu_power_on(struct Cpu *cpu);
+void cpu_reset(struct Cpu *cpu);
 
 #endif

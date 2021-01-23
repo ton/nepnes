@@ -7,5 +7,5 @@ add_executable(dbg
 target_link_libraries(dbg
   PRIVATE
   libnepnes
-  notcurses
+  notcurses-core
 )

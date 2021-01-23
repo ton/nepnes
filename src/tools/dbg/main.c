@@ -334,7 +334,7 @@ int main(int argc, char **argv)
   opts.flags = NCOPTION_SUPPRESS_BANNERS;
 
   struct notcurses *nc;
-  if ((nc = notcurses_init(&opts, NULL)) == NULL)
+  if ((nc = notcurses_core_init(&opts, NULL)) == NULL)
   {
     return EXIT_FAILURE;
   }

@@ -45,9 +45,6 @@ typedef uint16_t Address;
 
 void cpu_execute_next_instruction(struct Cpu *cpu);
 
-int cpu_instruction_count(struct Cpu *cpu, Address offset);
-uint16_t cpu_find_instruction_address(struct Cpu *cpu, int n);
-
 void cpu_power_on(struct Cpu *cpu);
 void cpu_reset(struct Cpu *cpu);
 

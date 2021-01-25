@@ -5,6 +5,20 @@
 #include <stdint.h>
 #include <sys/stat.h>
 
+#define MIN(a, b)                                                              \
+  ({                                                                           \
+    const __typeof__(a) _a = (a);                                              \
+    const __typeof__(b) _b = (b);                                              \
+    _a < _b ? _a : _b;                                                         \
+  })
+
+#define MAX(a, b)                                                              \
+  ({                                                                           \
+    const __typeof__(a) _a = (a);                                              \
+    const __typeof__(b) _b = (b);                                              \
+    _a < _b ? _b : _a;                                                         \
+  })
+
 /* String related functionality. */
 char *nn_strcat(const char *x, const char *y);
 bool nn_ends_with(const char *s, const char *needle);

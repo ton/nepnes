@@ -64,7 +64,7 @@ uint16_t dbg_line_to_address(struct Debugger *debugger, struct Cpu *cpu,
   }
 
   uint8_t *first = cpu->ram + debugger->prg_offset;
-  uint8_t *last = cpu->ram + sizeof(cpu->ram) + 1;
+  uint8_t *last = cpu->ram + sizeof(cpu->ram);
 
   int curr_line = debugger->prg_offset;
   while (curr_line < line && first < last)

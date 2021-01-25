@@ -416,7 +416,7 @@ const char *instruction_print_layout(struct Instruction *ins, int32_t encoding,
                    Instruction_operation_name(ins->op), encoding & 0xff);
           break;
         case IL_NINTENDULATOR:
-          snprintf(buffer, sizeof buffer, "%s $%02X = %02d",
+          snprintf(buffer, sizeof buffer, "%s $%02X = %02X",
                    Instruction_operation_name(ins->op), encoding & 0xff,
                    cpu->ram[encoding & 0xff]);
           break;

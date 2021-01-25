@@ -196,15 +196,27 @@ static void print_cpu_state(struct Cpu *cpu, struct ncplane *plane)
 /*
  * Prints the assembly currently loaded in memory to the given notcurses plane.
  */
-static void print_assembly(struct Cpu *cpu, struct ncplane *plane)
+static void print_assembly(struct Debugger *debugger, struct Cpu *cpu,
+                           struct ncplane *plane)
 {
-  uint8_t *pc = cpu->ram;
+  ncplane_erase(plane);
+
+  uint16_t address = dbg_line_to_address(debugger, cpu, debugger->line);
   const uint8_t *end = cpu->ram + sizeof cpu->ram;
 
-  int line = 0;
-  while (line < ncplane_dim_y(plane) && pc < end)
+  int y = 0;
+  int line = debugger->line;
+  const int last_line = MIN(line + ncplane_dim_y(plane), debugger->last_line);
+
+  while (line < last_line)
   {
-    struct Instruction ins = make_instruction(*pc);
+    struct Instruction ins = {0};
+
+    uint32_t prg_last_address = debugger->prg_offset + debugger->prg_size;
+    if (debugger->prg_offset <= address && address < prg_last_address)
+    {
+      ins = make_instruction(cpu->ram[address]);
+    }
 
     /*
      * In case of an unknown instruction, the calculated size of the instruction
@@ -212,28 +224,27 @@ static void print_assembly(struct Cpu *cpu, struct ncplane *plane)
      */
     if (ins.bytes == 0)
     {
-      ncplane_printf_yx(plane, line, 0, "$%04X: %*s (%02X)",
-                        (unsigned)(pc - cpu->ram), INSTRUCTION_BUFSIZE, "",
-                        *pc);
-      ++pc;
+      ncplane_printf_yx(plane, y, 0, "$%04X: %*s (%02X)", address,
+                        INSTRUCTION_BUFSIZE, "", cpu->ram[address]);
+      ++address;
     }
     else
     {
-      uint32_t encoding = *pc;
+      uint32_t encoding = cpu->ram[address];
       for (int i = 1; i < ins.bytes; ++i)
       {
-        encoding = (encoding << 8) + (pc + i < end ? *(pc + i) : 0);
+        encoding = (encoding << 8) + cpu->ram[address + i];
       }
 
-      ncplane_printf_yx(plane, line, 0, "$%04X: %-*s (%0*X)",
-                        (unsigned)(pc - cpu->ram), INSTRUCTION_BUFSIZE,
-                        instruction_print(&ins, encoding), ins.bytes * 2,
-                        encoding);
+      ncplane_printf_yx(plane, y, 0, "$%04X: %-*s (%0*X)", address,
+                        INSTRUCTION_BUFSIZE, instruction_print(&ins, encoding),
+                        ins.bytes * 2, encoding);
 
-      pc += ins.bytes;
+      address += ins.bytes;
     }
 
     ++line;
+    ++y;
   }
 }
 
@@ -255,6 +266,7 @@ static void print_help(struct ncplane *plane)
   ncplane_putstr_aligned(plane, 0, NCALIGN_LEFT,
                          " j/k: scroll up/down   "
                          "C-B/C-F: page up/down   "
+                         "f: focus PC   "
                          "r: run    "
                          "n: next instruction   "
                          "q: quit");
@@ -351,9 +363,8 @@ int main(int argc, char **argv)
   cpu_power_on(&cpu);
   cpu.PC = options.address;
 
-  /* Initialize the debugger state. */
-  struct Debugger debugger = {0};
-  dbg_init(&debugger, &cpu);
+  uint16_t prg_offset = 0;
+  size_t prg_size = 0;
 
   /* Load the cartridge into memory. */
   struct RomHeader header = rom_make_header(binary_data);
@@ -368,15 +379,19 @@ int main(int argc, char **argv)
   else
   {
     uint8_t *prg_data;
-    size_t prg_data_size;
-    rom_prg_data(&header, binary_data, &prg_data, &prg_data_size);
+    rom_prg_data(&header, binary_data, &prg_data, &prg_size);
 
-    printf("PRG ROM size: %lu bytes\n", prg_data_size);
+    printf("PRG ROM size: %lu bytes\n", prg_size);
     printf("PRG offset in ROM data: %lu\n", (prg_data - binary_data));
     printf("\n");
 
-    memcpy(cpu.ram + options.address, prg_data, prg_data_size);
+    prg_offset = options.address;
+    memcpy(cpu.ram + prg_offset, prg_data, prg_size);
   }
+
+  /* Initialize the debugger state. */
+  struct Debugger debugger = {0};
+  dbg_init(&debugger, &cpu, prg_offset, prg_size);
 
   notcurses_options opts = {0};
   /* opts.flags = NCOPTION_SUPPRESS_BANNERS; */
@@ -408,7 +423,7 @@ int main(int argc, char **argv)
 
   struct ncplane *std_plane = notcurses_stdplane(nc);
   struct ncplane *assembly_plane =
-      make_assembly_plane(sizeof(cpu.ram), assembly_y, assembly_x, std_plane);
+      make_assembly_plane(term_lines - 1, assembly_y, assembly_x, std_plane);
   struct ncplane *cpu_state_plane = make_cpu_state_plane(term_cols, std_plane);
   struct ncplane *status_line_plane = make_status_line_plane(std_plane);
   struct ncplane *pc_plane = make_pc_plane(assembly_plane, std_plane);
@@ -420,9 +435,6 @@ int main(int argc, char **argv)
    * UI. */
   draw_assembly_plane_border(assembly_plane, std_plane, term_lines);
 
-  /* Generate data for the assembly plane. */
-  print_assembly(&cpu, assembly_plane);
-
   /* Event loop; wait for user input. */
   struct ncinput input = {0};
   bool quit = false;
@@ -430,19 +442,19 @@ int main(int argc, char **argv)
   bool run_mode = false;
   while (!quit)
   {
-    debugger.pc_line = cpu_instruction_count(&cpu, cpu.PC);
-
     if (focus_pc)
     {
       dbg_scroll_assembly_to_pc(&debugger, &cpu);
     }
 
-    /* Scroll the debugger window. */
-    ncplane_move_yx(assembly_plane, -debugger.line + assembly_y, assembly_x);
+    print_assembly(&debugger, &cpu, assembly_plane);
 
-    /* Scroll the pc plane. */
-    ncplane_move_yx(pc_plane, -(debugger.line - debugger.pc_line) + assembly_y,
-                    0);
+    /* Scroll the PC plane. */
+    ncplane_move_yx(
+        pc_plane,
+        -(debugger.line - dbg_address_to_line(&debugger, &cpu, cpu.PC)) +
+            assembly_y,
+        0);
 
     /* Print the CPU state in the plane reserved for that, and highlight the
      * line of assembly the PC is pointing to. */
@@ -485,7 +497,6 @@ int main(int argc, char **argv)
           break;
         case 'r':
           run_mode = true;
-          cpu_execute_next_instruction(&cpu);
           focus_pc = true;
           break;
         case 'L':
@@ -500,6 +511,10 @@ int main(int argc, char **argv)
             dbg_scroll_assembly(&debugger, -term_lines);
             focus_pc = false;
           }
+          break;
+        case 'f':
+          // Focus program counter.
+          dbg_scroll_assembly_to_pc(&debugger, &cpu);
           break;
         case 'F':
           if (input.ctrl)

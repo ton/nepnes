@@ -394,7 +394,7 @@ int main(int argc, char **argv)
   dbg_init(&debugger, &cpu, prg_offset, prg_size);
 
   notcurses_options opts = {0};
-  /* opts.flags = NCOPTION_SUPPRESS_BANNERS; */
+  opts.flags = NCOPTION_SUPPRESS_BANNERS;
 
   struct notcurses *nc;
   if ((nc = notcurses_core_init(&opts, NULL)) == NULL)

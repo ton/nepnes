@@ -202,7 +202,6 @@ static void print_assembly(struct Debugger *debugger, struct Cpu *cpu,
   ncplane_erase(plane);
 
   uint16_t address = dbg_line_to_address(debugger, cpu, debugger->line);
-  const uint8_t *end = cpu->ram + sizeof cpu->ram;
 
   int y = 0;
   int line = debugger->line;

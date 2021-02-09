@@ -5,19 +5,8 @@
 #include <stdint.h>
 #include <sys/stat.h>
 
-#define MIN(a, b)                                                              \
-  ({                                                                           \
-    const __typeof__(a) _a = (a);                                              \
-    const __typeof__(b) _b = (b);                                              \
-    _a < _b ? _a : _b;                                                         \
-  })
-
-#define MAX(a, b)                                                              \
-  ({                                                                           \
-    const __typeof__(a) _a = (a);                                              \
-    const __typeof__(b) _b = (b);                                              \
-    _a < _b ? _b : _a;                                                         \
-  })
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
 
 /* String related functionality. */
 char *nn_strcat(const char *x, const char *y);

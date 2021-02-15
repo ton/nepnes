@@ -13,6 +13,9 @@
 
 #define CPU_MAX_ADDRESS 0xffff
 
+/*
+ * Enumeration of the flag values.
+ */
 enum Flags
 {
   FLAGS_NONE = 0x00,
@@ -20,8 +23,28 @@ enum Flags
   FLAGS_ZERO = 0x02,
   FLAGS_INTERRUPT_DISABLE = 0x04,
   FLAGS_DECIMAL = 0x08,
+  FLAGS_BIT_4 = 0x10,
+  FLAGS_BIT_5 = 0x20,
   FLAGS_OVERFLOW = 0x40,
   FLAGS_NEGATIVE = 0x80,
+
+  FLAGS_BRK_PHP_PUSH = 0x30, /* bit 4 and 5 are set in case the flags are pushed
+                                because of PHP/BRK */
+};
+
+/*
+ * Enumeration of the bit indexes of the various flags.
+ */
+enum FlagsBit
+{
+  FLAGS_BIT_CARRY = 0,
+  FLAGS_BIT_ZERO = 1,
+  FLAGS_BIT_INTERRUPT_DISABLE = 2,
+  FLAGS_BIT_DECIMAL = 3,
+  FLAGS_BIT_BIT_4 = 4,
+  FLAGS_BIT_BIT_5 = 5,
+  FLAGS_BIT_OVERFLOW = 6,
+  FLAGS_BIT_NEGATIVE = 7
 };
 
 /*

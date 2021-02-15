@@ -331,7 +331,7 @@ static int user_query_address(struct notcurses *nc, struct ncplane *plane,
   char *contents;
   ncreader_destroy(reader, &contents);
   const int is_success =
-      c != NCKEY_ESC && sscanf(contents, "%4hx", address) == 1 ? 0 : -1;
+      (c != NCKEY_ESC && sscanf(contents, "%4hx", address) == 1) ? 0 : -1;
 
   free(contents);
   ncplane_erase(plane);
@@ -544,6 +544,7 @@ int main(int argc, char **argv)
                                  &address) == 0)
           {
             dbg_scroll_assembly_to_address(&debugger, &cpu, address);
+            focus_pc = false;
           }
         }
         break;

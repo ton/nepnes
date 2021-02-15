@@ -176,16 +176,18 @@ static struct ncplane *make_pc_plane(struct ncplane *assembly_plane,
  */
 static void print_cpu_state(struct Cpu *cpu, struct ncplane *plane)
 {
-  const char flags[] = {'-', 'C', 'Z', 'I', 'D', '-', '-', 'O', 'N'};
+  const char flags[] = {'-', 'C', 'Z', 'I', 'D', 'B', 'B', 'O', 'N'};
 
   ncplane_printf_yx(plane, 1, 1, "   A:  $%02X", cpu->A);
   ncplane_printf_yx(plane, 2, 1, "   X:  $%02X", cpu->X);
   ncplane_printf_yx(plane, 3, 1, "   Y:  $%02X", cpu->Y);
   ncplane_printf_yx(plane, 4, 1, "   S:  $%02X", cpu->S);
   ncplane_printf_yx(plane, 5, 1, "  PC:  $%04X", cpu->PC);
-  ncplane_printf_yx(plane, 6, 1, "   P:  %c%c--%c%c%c%c",
+  ncplane_printf_yx(plane, 6, 1, "   P:  %c%c%c%c%c%c%c%c",
                     flags[((cpu->P & FLAGS_NEGATIVE) >> 7) * 8],
                     flags[((cpu->P & FLAGS_OVERFLOW) >> 6) * 7],
+                    flags[((cpu->P & FLAGS_BIT_5) >> 5) * 6],
+                    flags[((cpu->P & FLAGS_BIT_4) >> 4) * 5],
                     flags[((cpu->P & FLAGS_DECIMAL) >> 3) * 4],
                     flags[((cpu->P & FLAGS_INTERRUPT_DISABLE) >> 2) * 3],
                     flags[(cpu->P & FLAGS_ZERO)],

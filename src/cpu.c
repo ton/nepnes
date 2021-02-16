@@ -357,6 +357,28 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0x88:
+      /*
+       * DEY - Decrement Y Register
+       *
+       * Decrements the value in the Y register, and sets the zero and negative
+       * flags appropriately.
+       */
+      cpu->Y--;
+      cpu_set_zero_negative_flags(cpu, cpu->Y);
+      cpu->PC += instruction.bytes;
+      break;
+    case 0x8A:
+      /*
+       * TXA - Transfer X to Accumulator
+       *
+       * Copies the current value of the X register to the accumulator, and sets
+       * the zero and negative flags appropriately.
+       */
+      cpu->A = cpu->X;
+      cpu_set_zero_negative_flags(cpu, cpu->A);
+      cpu->PC += instruction.bytes;
+      break;
     case 0x90:
       // BCC - Branch if Carry Clear
       //
@@ -371,6 +393,17 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       {
         cpu->PC += instruction.bytes;
       }
+      break;
+    case 0x98:
+      /*
+       * TYA - Transfer Y to Accumulator
+       *
+       * Copies the current value of the Y register to the accumulator, and sets
+       * the zero and negative flags appropriately.
+       */
+      cpu->A = cpu->Y;
+      cpu_set_zero_negative_flags(cpu, cpu->A);
+      cpu->PC += instruction.bytes;
       break;
     case 0xA0:
       /*
@@ -394,6 +427,17 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_set_zero_negative_flags(cpu, cpu->X);
       cpu->PC += instruction.bytes;
       break;
+    case 0xA8:
+      /*
+       * TAY - Transfer Accumulator to Y
+       *
+       * Copies the current value of the accumulator to the Y register, and sets
+       * the zero and negative flags appropriately.
+       */
+      cpu->Y = cpu->A;
+      cpu_set_zero_negative_flags(cpu, cpu->Y);
+      cpu->PC += instruction.bytes;
+      break;
     case 0xA9:
       // LDA - Load Accumulator (immediate)
       //
@@ -401,6 +445,17 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       // negative flags as appropriate.
       cpu->A = cpu->ram[cpu->PC + 1];
       cpu_set_zero_negative_flags(cpu, cpu->A);
+      cpu->PC += instruction.bytes;
+      break;
+    case 0xAA:
+      /*
+       * TAX - Transfer Accumulator to X
+       *
+       * Copies the current value of the accumulator to the X register, and sets
+       * the zero and negative flags appropriately.
+       */
+      cpu->X = cpu->A;
+      cpu_set_zero_negative_flags(cpu, cpu->X);
       cpu->PC += instruction.bytes;
       break;
     case 0xB0:
@@ -425,6 +480,17 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        * Clears the overflow flag.
        */
       BIT_CLEAR(cpu->P, FLAGS_BIT_OVERFLOW);
+      cpu->PC += instruction.bytes;
+      break;
+    case 0xBA:
+      /*
+       * TSX - Transfer Stack Pointer to X
+       *
+       * Copies the current value of the stack pointer (S register) to the X
+       * register, and sets the zero and negative flags appropriately.
+       */
+      cpu->X = cpu->S;
+      cpu_set_zero_negative_flags(cpu, cpu->X);
       cpu->PC += instruction.bytes;
       break;
     case 0xC0:
@@ -470,6 +536,17 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0xCA:
+      /*
+       * DEX - Decrement X Register
+       *
+       * Decrements the value in the X register, and sets the zero and negative
+       * flags appropriately.
+       */
+      cpu->X--;
+      cpu_set_zero_negative_flags(cpu, cpu->X);
+      cpu->PC += instruction.bytes;
+      break;
     case 0xD0:
       // BNE - Branch if Not Equal (relative)
       //
@@ -509,6 +586,17 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         BIT_SET_IF((cpu->X - value) & 0x80, cpu->P, FLAGS_BIT_NEGATIVE);
         cpu->PC += instruction.bytes;
       }
+      break;
+    case 0xE8:
+      /*
+       * INX - Increment X Register
+       *
+       * Increments the value in the X register, and sets the zero and negative
+       * flags appropriately.
+       */
+      cpu->X++;
+      cpu_set_zero_negative_flags(cpu, cpu->X);
+      cpu->PC += instruction.bytes;
       break;
     case 0xE9:
       /*

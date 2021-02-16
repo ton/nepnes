@@ -358,9 +358,26 @@ const char *instruction_print_layout(struct Instruction *ins, int32_t encoding,
   switch (ins->addressing_mode)
   {
     case AM_ABSOLUTE:
-      snprintf(buffer, sizeof buffer, "%s $%04X",
-               Instruction_operation_name(ins->op), ltob_uint16(encoding));
-      break;
+    {
+      /* TODO(ton): apparently the value at the absolute memory address is only
+       * printed for a select number of instructions? Verify this by checking
+       * the Nintendulator sources. */
+      const bool print_address_value =
+          layout == IL_NINTENDULATOR &&
+          (ins->op == OP_STX || ins->op == OP_LDX || ins->op == OP_LDA);
+      if (print_address_value)
+      {
+        snprintf(buffer, sizeof buffer, "%s $%04X = %02X",
+                 Instruction_operation_name(ins->op), ltob_uint16(encoding),
+                 cpu->ram[ltob_uint16(encoding)]);
+      }
+      else
+      {
+        snprintf(buffer, sizeof buffer, "%s $%04X",
+                 Instruction_operation_name(ins->op), ltob_uint16(encoding));
+      }
+    }
+    break;
     case AM_ABSOLUTE_X:
       snprintf(buffer, sizeof buffer, "%s $%04X,X",
                Instruction_operation_name(ins->op), ltob_uint16(encoding));

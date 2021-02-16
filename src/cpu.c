@@ -45,9 +45,9 @@ static void cpu_push_8b(struct Cpu *cpu, uint8_t i)
  */
 static uint16_t cpu_pop_16b(struct Cpu *cpu)
 {
-  uint16_t i;
   cpu->S += 2;
-  memcpy(&i, cpu->ram + STACK_OFFSET + cpu->S, 2);
+  uint16_t i;
+  memcpy(&i, cpu->ram + STACK_OFFSET + cpu->S - 1, 2);
   return i;
 }
 
@@ -56,7 +56,7 @@ static uint16_t cpu_pop_16b(struct Cpu *cpu)
  */
 static void cpu_push_16b(struct Cpu *cpu, uint16_t i)
 {
-  memcpy(cpu->ram + STACK_OFFSET + cpu->S, &i, 2);
+  memcpy(cpu->ram + STACK_OFFSET + cpu->S - 1, &i, 2);
   cpu->S -= 2;
 }
 

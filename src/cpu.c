@@ -159,10 +159,12 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu->PC += instruction.bytes;
       break;
     case 0x10:
-      // BPL - Branch if Positive
-      //
-      // If the negative flag is clear then add the relative displacement to the
-      // program counter to cause a branch to a new location.
+      /*
+       * BPL - Branch if Positive
+       *
+       * If the negative flag is clear then add the relative displacement to the
+       * program counter to cause a branch to a new location.
+       */
       if (!(cpu->P & FLAGS_NEGATIVE))
       {
         cpu->PC += instruction.bytes + cpu->ram[cpu->PC + 1];
@@ -174,31 +176,37 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       }
       break;
     case 0x18:
-      // CLC - Clear Carry Flag
-      //
-      // Sets the carry flag to zero.
+      /*
+       * CLC - Clear Carry Flag
+       *
+       * Sets the carry flag to zero.
+       */
       cpu->P &= ~FLAGS_CARRY;
       cpu->PC += instruction.bytes;
       break;
     case 0x20:
-      // JSR - Jump to Subroutine
-      //
-      // The JSR instruction pushes the address (minus one) of the return point
-      // on to the stack and then sets the program counter to the target memory
-      // address.
+      /*
+       * JSR - Jump to Subroutine
+       *
+       * The JSR instruction pushes the address (minus one) of the return point
+       * on to the stack and then sets the program counter to the target memory
+       * address.
+       */
 
-      // Push next instruction address (-1) onto the stack.
+      /* Push next instruction address (-1) onto the stack. */
       cpu_push_16b(cpu, cpu->PC + instruction.bytes - 1);
       cpu->PC = *(uint16_t *)(cpu->ram + cpu->PC + 1);
       break;
     case 0x24:
-      // BIT - Bit Test (zero page)
-      //
-      // This instructions is used to test if one or more bits are set in a
-      // target memory location. The mask pattern in A is AND'ed with the value
-      // in memory to set or clear the zero flag, but the result is not kept.
-      // Bits 7 and 6 of the value from memory are copied into the N and V
-      // flags.
+      /*
+       * BIT - Bit Test (zero page)
+       *
+       * This instructions is used to test if one or more bits are set in a
+       * target memory location. The mask pattern in A is AND'ed with the value
+       * in memory to set or clear the zero flag, but the result is not kept.
+       * Bits 7 and 6 of the value from memory are copied into the N and V
+       * flags.
+       */
       {
         const uint8_t address = cpu->ram[cpu->PC + 1];
         const uint8_t value = cpu->ram[address];
@@ -239,16 +247,20 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu->PC += instruction.bytes;
       break;
     case 0x38:
-      // SEC - Set Carry Flag
-      //
-      // Sets the carry flag to one.
+      /*
+       * SEC - Set Carry Flag
+       *
+       * Sets the carry flag to one.
+       */
       cpu->P |= FLAGS_CARRY;
       cpu->PC += instruction.bytes;
       break;
     case 0x4C:
-      // JMP - Jump (absolute)
-      //
-      // Sets the program counter to the address specified by the operand.
+      /*
+       * JMP - Jump (absolute)
+       *
+       * Sets the program counter to the address specified by the operand.
+       */
       cpu->PC = *(uint16_t *)(cpu->ram + cpu->PC + 1);
       break;
     case 0x48:
@@ -273,10 +285,12 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu->PC += instruction.bytes;
       break;
     case 0x50:
-      // BVC - Branch if Overflow Clear
-      //
-      // If the overflow flag is clear then add the relative displacement to the
-      // program counter to cause a branch to a new location.
+      /*
+       * BVC - Branch if Overflow Clear
+       *
+       * If the overflow flag is clear then add the relative displacement to the
+       * program counter to cause a branch to a new location.
+       */
       if (!(cpu->P & FLAGS_OVERFLOW))
       {
         cpu->PC += instruction.bytes + cpu->ram[cpu->PC + 1];
@@ -288,19 +302,23 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       }
       break;
     case 0x60:
-      // RTS - Return from Subroutine
-      //
-      // The RTS instruction is used at the end of a subroutine to return to the
-      // calling routine. It pulls the program counter (minus one) from the
-      // stack.
+      /*
+       * RTS - Return from Subroutine
+       *
+       * The RTS instruction is used at the end of a subroutine to return to the
+       * calling routine. It pulls the program counter (minus one) from the
+       * stack.
+       */
       cpu->PC = cpu_pop_16b(cpu);
       cpu->PC += instruction.bytes;
       break;
     case 0x68:
-      // PLA - Pull Accumulator
-      //
-      // Pulls an 8bit value from the stack and into the accumulator. The zero
-      // and negative flags are set as appropriate.
+      /*
+       * PLA - Pull Accumulator
+       *
+       * Pulls an 8bit value from the stack and into the accumulator. The zero
+       * and negative flags are set as appropriate.
+       */
       cpu->A = cpu_pop_8b(cpu);
       cpu_set_zero_negative_flags(cpu, cpu->A);
       cpu->PC += instruction.bytes;
@@ -316,10 +334,12 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu->PC += instruction.bytes;
       break;
     case 0x70:
-      // BVS - Branch if Overflow Set
-      //
-      // If the overflow flag is set then add the relative displacement to the
-      // program counter to cause a branch to a new location.
+      /*
+       * BVS - Branch if Overflow Set
+       *
+       * If the overflow flag is set then add the relative displacement to the
+       * program counter to cause a branch to a new location.
+       */
       if (cpu->P & FLAGS_OVERFLOW)
       {
         cpu->PC += instruction.bytes + cpu->ram[cpu->PC + 1];
@@ -331,16 +351,20 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       }
       break;
     case 0x78:
-      // SEI - Set Interrupt Disable
-      //
-      // Set the interrupt disable flag to one.
+      /*
+       * SEI - Set Interrupt Disable
+       *
+       * Set the interrupt disable flag to one.
+       */
       cpu->P |= FLAGS_INTERRUPT_DISABLE;
       cpu->PC += instruction.bytes;
       break;
     case 0x85:
-      // STA - Store Accumulator (zero page)
-      //
-      // Stores the contents of the accumulator into memory.
+      /*
+       * STA - Store Accumulator (zero page)
+       *
+       * Stores the contents of the accumulator into memory.
+       */
       {
         uint8_t address = cpu->ram[cpu->PC + 1];
         cpu->ram[address] = cpu->A;
@@ -348,9 +372,11 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       }
       break;
     case 0x86:
-      // STX - Store X Register (zero page)
-      //
-      // Stores the contents of the X register into memory.
+      /*
+       * STX - Store X Register (zero page)
+       *
+       * Stores the contents of the X register into memory.
+       */
       {
         uint8_t address = cpu->ram[cpu->PC + 1];
         cpu->ram[address] = cpu->X;
@@ -380,10 +406,12 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu->PC += instruction.bytes;
       break;
     case 0x90:
-      // BCC - Branch if Carry Clear
-      //
-      // If the carry flag is clear then add the relative displacement to the
-      // program counter to cause a branch to a new location.
+      /*
+       * BCC - Branch if Carry Clear
+       *
+       * If the carry flag is clear then add the relative displacement to the
+       * program counter to cause a branch to a new location.
+       */
       if (!(cpu->P & FLAGS_CARRY))
       {
         cpu->PC += instruction.bytes + cpu->ram[cpu->PC + 1];
@@ -439,10 +467,12 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu->PC += instruction.bytes;
       break;
     case 0xA9:
-      // LDA - Load Accumulator (immediate)
-      //
-      // Loads a byte of memory into the accumulator setting the zero and
-      // negative flags as appropriate.
+      /*
+       * LDA - Load Accumulator (immediate)
+       *
+       * Loads a byte of memory into the accumulator setting the zero and
+       * negative flags as appropriate.
+       */
       cpu->A = cpu->ram[cpu->PC + 1];
       cpu_set_zero_negative_flags(cpu, cpu->A);
       cpu->PC += instruction.bytes;
@@ -459,10 +489,12 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu->PC += instruction.bytes;
       break;
     case 0xB0:
-      // BCS - Branch if Carry Set (relative)
-      //
-      // If the carry flag is set then add the relative displacement to the
-      // program counter to cause a branch to a new location.
+      /*
+       * BCS - Branch if Carry Set (relative)
+       *
+       * If the carry flag is set then add the relative displacement to the
+       * program counter to cause a branch to a new location.
+       */
       if (cpu->P & FLAGS_CARRY)
       {
         cpu->PC += instruction.bytes + cpu->ram[cpu->PC + 1];
@@ -548,10 +580,12 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu->PC += instruction.bytes;
       break;
     case 0xD0:
-      // BNE - Branch if Not Equal (relative)
-      //
-      // If the zero flag is clear then add the relative displacement to the
-      // program counter to cause a branch to a new location.
+      /*
+       * BNE - Branch if Not Equal (relative)
+       *
+       * If the zero flag is clear then add the relative displacement to the
+       * program counter to cause a branch to a new location.
+       */
       if (!(cpu->P & FLAGS_ZERO))
       {
         cpu->PC += instruction.bytes + cpu->ram[cpu->PC + 1];
@@ -626,17 +660,21 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu->PC += instruction.bytes;
       break;
     case 0xEA:
-      // NOP - No Operation
-      //
-      // The NOP instruction causes no changes to the processor other than the
-      // normal incrementing of the program counter to the next instruction.
+      /*
+       * NOP - No Operation
+       *
+       * The NOP instruction causes no changes to the processor other than the
+       * normal incrementing of the program counter to the next instruction.
+       */
       cpu->PC += instruction.bytes;
       break;
     case 0xF0:
-      // BEQ - Branch if Equal
-      //
-      // If the zero flag is set then add the relative displacement to the
-      // program counter to cause a branch to a new location.
+      /*
+       * BEQ - Branch if Equal
+       *
+       * If the zero flag is set then add the relative displacement to the
+       * program counter to cause a branch to a new location.
+       */
       if (cpu->P & FLAGS_ZERO)
       {
         cpu->PC += instruction.bytes + cpu->ram[cpu->PC + 1];

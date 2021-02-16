@@ -405,6 +405,19 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_set_zero_negative_flags(cpu, cpu->A);
       cpu->PC += instruction.bytes;
       break;
+    case 0x8E:
+      /*
+       * STX - Store X Register (absolute)
+       *
+       * Stores the contents of the X register into memory.
+       */
+      {
+        uint16_t address;
+        memcpy(&address, cpu->ram + cpu->PC + 1, 2);
+        cpu->ram[address] = cpu->X;
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x90:
       /*
        * BCC - Branch if Carry Clear
@@ -431,6 +444,16 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        */
       cpu->A = cpu->Y;
       cpu_set_zero_negative_flags(cpu, cpu->A);
+      cpu->PC += instruction.bytes;
+      break;
+    case 0x9A:
+      /*
+       * TXS - Transfer X to Stack Pointer
+       *
+       * Copies the current value of the X register to the stack pointer (S
+       * register).
+       */
+      cpu->S = cpu->X;
       cpu->PC += instruction.bytes;
       break;
     case 0xA0:
@@ -487,6 +510,36 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu->X = cpu->A;
       cpu_set_zero_negative_flags(cpu, cpu->X);
       cpu->PC += instruction.bytes;
+      break;
+    case 0xAD:
+      /*
+       * LDA - Load Accumulator (absolute)
+       *
+       * Loads a byte of memory into the accumulator setting the zero and
+       * negative flags as appropriate.
+       */
+      {
+        uint16_t address;
+        memcpy(&address, cpu->ram + cpu->PC + 1, 2);
+        cpu->A = cpu->ram[address];
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0xAE:
+      /*
+       * LDX - Load X Register (absolute)
+       *
+       * Loads a byte of memory into the X register, setting the zero and
+       * negative flags as appropriate.
+       */
+      {
+        uint16_t address;
+        memcpy(&address, cpu->ram + cpu->PC + 1, 2);
+        cpu->X = cpu->ram[address];
+        cpu_set_zero_negative_flags(cpu, cpu->X);
+        cpu->PC += instruction.bytes;
+      }
       break;
     case 0xB0:
       /*

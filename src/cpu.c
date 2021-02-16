@@ -255,7 +255,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu->P |= FLAGS_CARRY;
       cpu->PC += instruction.bytes;
       break;
-    case 0x4C:
+    case 0x4c:
       /*
        * JMP - Jump (absolute)
        *
@@ -394,7 +394,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_set_zero_negative_flags(cpu, cpu->Y);
       cpu->PC += instruction.bytes;
       break;
-    case 0x8A:
+    case 0x8a:
       /*
        * TXA - Transfer X to Accumulator
        *
@@ -405,7 +405,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_set_zero_negative_flags(cpu, cpu->A);
       cpu->PC += instruction.bytes;
       break;
-    case 0x8E:
+    case 0x8e:
       /*
        * STX - Store X Register (absolute)
        *
@@ -446,7 +446,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_set_zero_negative_flags(cpu, cpu->A);
       cpu->PC += instruction.bytes;
       break;
-    case 0x9A:
+    case 0x9a:
       /*
        * TXS - Transfer X to Stack Pointer
        *
@@ -456,7 +456,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu->S = cpu->X;
       cpu->PC += instruction.bytes;
       break;
-    case 0xA0:
+    case 0xa0:
       /*
        * LDY - Load Y Register (immediate)
        *
@@ -467,7 +467,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_set_zero_negative_flags(cpu, cpu->Y);
       cpu->PC += instruction.bytes;
       break;
-    case 0xA2:
+    case 0xa2:
       /*
        * LDX - Load X Register (immediate)
        *
@@ -478,7 +478,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_set_zero_negative_flags(cpu, cpu->X);
       cpu->PC += instruction.bytes;
       break;
-    case 0xA8:
+    case 0xa8:
       /*
        * TAY - Transfer Accumulator to Y
        *
@@ -489,7 +489,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_set_zero_negative_flags(cpu, cpu->Y);
       cpu->PC += instruction.bytes;
       break;
-    case 0xA9:
+    case 0xa9:
       /*
        * LDA - Load Accumulator (immediate)
        *
@@ -500,7 +500,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_set_zero_negative_flags(cpu, cpu->A);
       cpu->PC += instruction.bytes;
       break;
-    case 0xAA:
+    case 0xaa:
       /*
        * TAX - Transfer Accumulator to X
        *
@@ -511,7 +511,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_set_zero_negative_flags(cpu, cpu->X);
       cpu->PC += instruction.bytes;
       break;
-    case 0xAD:
+    case 0xad:
       /*
        * LDA - Load Accumulator (absolute)
        *
@@ -526,7 +526,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
-    case 0xAE:
+    case 0xae:
       /*
        * LDX - Load X Register (absolute)
        *
@@ -541,7 +541,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
-    case 0xB0:
+    case 0xb0:
       /*
        * BCS - Branch if Carry Set (relative)
        *
@@ -558,7 +558,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
-    case 0xB8:
+    case 0xb8:
       /*
        * CLV - Clear Overflow Flag
        *
@@ -567,7 +567,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       BIT_CLEAR(cpu->P, FLAGS_BIT_OVERFLOW);
       cpu->PC += instruction.bytes;
       break;
-    case 0xBA:
+    case 0xba:
       /*
        * TSX - Transfer Stack Pointer to X
        *
@@ -578,7 +578,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_set_zero_negative_flags(cpu, cpu->X);
       cpu->PC += instruction.bytes;
       break;
-    case 0xC0:
+    case 0xc0:
       /*
        * CPY - Compare Y Register
        *
@@ -594,7 +594,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
-    case 0xC8:
+    case 0xc8:
       /*
        * INY - Increment Y Register
        *
@@ -605,7 +605,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_set_zero_negative_flags(cpu, cpu->Y);
       cpu->PC += instruction.bytes;
       break;
-    case 0xC9:
+    case 0xc9:
       /*
        * CMP - Compare
        *
@@ -621,7 +621,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
-    case 0xCA:
+    case 0xca:
       /*
        * DEX - Decrement X Register
        *
@@ -632,7 +632,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_set_zero_negative_flags(cpu, cpu->X);
       cpu->PC += instruction.bytes;
       break;
-    case 0xD0:
+    case 0xd0:
       /*
        * BNE - Branch if Not Equal (relative)
        *
@@ -649,7 +649,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
-    case 0xD8:
+    case 0xd8:
       /*
        * CLD - Clear Decimal Mode
        *
@@ -658,7 +658,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       BIT_CLEAR(cpu->P, FLAGS_BIT_DECIMAL);
       cpu->PC += instruction.bytes;
       break;
-    case 0xE0:
+    case 0xe0:
       /*
        * CPX - Compare X Register
        *
@@ -674,7 +674,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
-    case 0xE8:
+    case 0xe8:
       /*
        * INX - Increment X Register
        *
@@ -685,7 +685,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_set_zero_negative_flags(cpu, cpu->X);
       cpu->PC += instruction.bytes;
       break;
-    case 0xE9:
+    case 0xe9:
       /*
        * SBC - Subtract With Carry (immediate)
        *
@@ -712,7 +712,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_addc(cpu, ~(cpu->ram[cpu->PC + 1]));
       cpu->PC += instruction.bytes;
       break;
-    case 0xEA:
+    case 0xea:
       /*
        * NOP - No Operation
        *
@@ -721,7 +721,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        */
       cpu->PC += instruction.bytes;
       break;
-    case 0xF0:
+    case 0xf0:
       /*
        * BEQ - Branch if Equal
        *
@@ -738,7 +738,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
-    case 0xF8:
+    case 0xf8:
       /*
        * SED - Set Decimal Flag
        *

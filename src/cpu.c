@@ -72,6 +72,56 @@ static void cpu_set_zero_negative_flags(struct Cpu *cpu, uint8_t x)
 }
 
 /*
+ * Performs an 8-bit add with carry, adding the given value to the accumulator
+ * register.
+ */
+static void cpu_addc(struct Cpu *cpu, uint8_t v)
+{
+  /* The overflow flag is set in case the signed result of the addition does not
+   * fit in the range -128 to 127. In case of signed addition, the operands are
+   * encoded in two's complement. In the table below, we consider addition of
+   * two two's complement numbers `u` and `v`, where `u7` and `v7` represent the
+   * sign bits of `u` and `v` respectively, and `c` represents the carry bit
+   * that results from adding the most significant bits of the (signed)
+   * representation of `u` and `v`, thus the result of adding bit 6 of both `u`
+   * and `v`. `C` is the resulting carry bit, r7 is the sign bit of the result
+   * value (the 7-th bit), and `V` is the overflow bit.
+   *
+   *   u7    v7    c6 | r7   C    V
+   *  ----------------+--------------
+   *   0     0     0  | 0    0    0    (no unsigned carry, no signed overflow)
+   *   0     0     1  | 1    0    1    (no unsigned carry, signed overflow)
+   *   0     1     0  | 1    0    0    (no unsigned carry no signed overflow)
+   *   0     1     1  | 0    1    0    (unsigned carry, no signed overflow)
+   *   1     0     0  | 1    0    0    (no unsigned carry, no signed overflow)
+   *   1     0     1  | 0    1    0    (unsigned carry, no signed overflow)
+   *   1     1     0  | 0    1    1    (unsigned carry, signed overflow)
+   *   1     1     1  | 1    1    0    (unsigned carry, no signed overflow)
+   *
+   * From this table, it is trivial to derive a formula for the overflow bit:
+   *
+   *   (!u7 && !v7 && c6) || (u7 && v7 && !c6)
+   *
+   * or from the result:
+   *
+   *   (!u7 && !v7 && r7) || (u7 && v7 && !r7)
+   *
+   * Thus, in case the sign bit of the inputs is the same, but differs from the
+   * sign bit of the result, overflow occurs:
+   *
+   *   (u ^ r) & (v ^ r) & 0x80
+   */
+  const uint8_t u = cpu->A;
+  const uint16_t r = u + v + (cpu->P & FLAGS_CARRY);
+
+  BIT_SET_IF((u ^ r) & (v ^ r) & 0x80, cpu->P, FLAGS_BIT_OVERFLOW);
+  BIT_SET_IF(r > 0xff, cpu->P, FLAGS_BIT_CARRY);
+
+  cpu->A = (r & 0xff);
+  cpu_set_zero_negative_flags(cpu, cpu->A);
+}
+
+/*
  * Executes the instruction currently pointed to by the program counter register
  * (PC). Updates register state, updates cycle count.
  */
@@ -262,26 +312,8 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        * Adds the contents of a memory location to the accumulator together with
        * the carry bit. If overflow occurs, the carry bit is set.
        */
-      {
-        const uint8_t value = cpu->ram[cpu->PC + 1];
-        const uint16_t result = cpu->A + value + (cpu->P & FLAGS_CARRY);
-
-        const bool sign_a = cpu->A & 0x80;
-        const bool sign_value = value & 0x80;
-        const bool sign_result = result & 0x80;
-
-        /*
-         * TODO(ton): below is not enough!
-         */
-        BIT_SET_IF(sign_a == sign_value && sign_a != sign_result, cpu->P,
-                   FLAGS_BIT_OVERFLOW);
-        BIT_SET_IF(result > 0xff, cpu->P, FLAGS_BIT_CARRY);
-
-        cpu->A = (result & 0xff);
-        cpu_set_zero_negative_flags(cpu, cpu->A);
-
-        cpu->PC += instruction.bytes;
-      }
+      cpu_addc(cpu, cpu->ram[cpu->PC + 1]);
+      cpu->PC += instruction.bytes;
       break;
     case 0x70:
       // BVS - Branch if Overflow Set
@@ -485,27 +517,25 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        * Subtracts the contents of a memory location from the accumulator
        * together with the not of the carry bit. If overflow occurs, the carry
        * bit is clear.
+       *
+       * Note that SBC is simply ADC, with the value at the memory location
+       * changed to one's complement. To see why this is, SBC is defined as:
+       *
+       *   SBC = A - v - B
+       *
+       * where `v` is some value in memory, and `B` is the borrow bit. B is
+       * defined as the inverse of the carry flag: (1 - C). Thus:
+       *
+       *   SBC = A - v - (1 - C)
+       *   SBC = A - v - (1 - C) + 256
+       *   SBC = A - v - C + 255
+       *   SBC = A + (255 - v) + C
+       *
+       * here, 255 - v is simply the one's complement of v. Note that adding 256
+       * to an 8bit value does not change the 8bit value.
        */
-      {
-        const uint8_t value = cpu->ram[cpu->PC + 1];
-        const int16_t result = cpu->A - value - (1 - (cpu->P & FLAGS_CARRY));
-
-        const bool sign_a = cpu->A & 0x80;
-        const bool sign_value = value & 0x80;
-        const bool sign_result = result & 0x80;
-
-        /*
-         * TODO(ton): below is not enough!
-         */
-        BIT_SET_IF(sign_a == sign_value && sign_a != sign_result, cpu->P,
-                   FLAGS_BIT_OVERFLOW);
-        BIT_SET_IF(cpu->A >= value, cpu->P, FLAGS_BIT_CARRY);
-
-        cpu->A = (result & 0xff);
-        cpu_set_zero_negative_flags(cpu, cpu->A);
-
-        cpu->PC += instruction.bytes;
-      }
+      cpu_addc(cpu, ~(cpu->ram[cpu->PC + 1]));
+      cpu->PC += instruction.bytes;
       break;
     case 0xEA:
       // NOP - No Operation

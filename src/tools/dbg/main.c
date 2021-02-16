@@ -269,6 +269,7 @@ static void print_help(struct ncplane *plane)
                          "C-B/C-F: page up/down   "
                          "f: focus PC   "
                          "r: run    "
+                         "c: break at cycle   "
                          "n: next instruction   "
                          "q: quit");
   ncplane_putstr_aligned(plane, 0, NCALIGN_RIGHT,
@@ -341,6 +342,71 @@ static int user_query_address(struct notcurses *nc, struct ncplane *plane,
   return is_success;
 }
 
+/*
+ * Asks the user to input an unsigned =number.
+ */
+static int user_query_number(struct notcurses *nc, struct ncplane *plane,
+                             const char *question, unsigned *number)
+{
+  /* Convert plane coordinates to global coordinates to show the cursor at the
+   * right position. */
+  int y = 0;
+  int x = strlen(question) + 1;
+  ncplane_translate(plane, NULL, &y, &x);
+
+  ncplane_printf_yx(plane, 0, 1, question);
+  notcurses_cursor_enable(nc, y, x);
+
+  /*
+   * Create reader plane.
+   */
+  struct ncplane_options plane_opts = {0};
+  plane_opts.rows = 1;
+  plane_opts.cols = 4;
+  plane_opts.y = 0;
+  plane_opts.x = strlen(question) + 1;
+
+  struct ncplane *reader_plane = ncplane_create(plane, &plane_opts);
+
+  /*
+   * Create reader itself.
+   */
+  struct ncreader_options reader_opts = {0};
+  reader_opts.flags = NCREADER_OPTION_CURSOR;
+
+  struct ncreader *reader = ncreader_create(reader_plane, &reader_opts);
+  notcurses_render(nc);
+
+  /*
+   * Query user input, only hexadecimal characters and Enter/Escape are allowed.
+   */
+  char32_t c;
+  struct ncinput input;
+  while ((c = notcurses_getc_blocking(nc, &input)) != NCKEY_ENTER &&
+         c != NCKEY_ESC)
+  {
+    if (('0' <= c && c <= '9') || c == NCKEY_BACKSPACE)
+    {
+      ncreader_offer_input(reader, &input);
+      notcurses_render(nc);
+    }
+  }
+
+  /*
+   * Retrieve user input in case the user did not press escape, and try to
+   * convert to some hexadecimal address.
+   */
+  char *contents;
+  ncreader_destroy(reader, &contents);
+  const int is_success =
+      (c != NCKEY_ESC && sscanf(contents, "%u", number) == 1) ? 0 : -1;
+
+  free(contents);
+  ncplane_erase(plane);
+
+  return is_success;
+}
+
 int main(int argc, char **argv)
 {
   setlocale(LC_ALL, "");
@@ -395,7 +461,7 @@ int main(int argc, char **argv)
   dbg_init(&debugger, &cpu, prg_offset, prg_size);
 
   notcurses_options opts = {0};
-  opts.flags = NCOPTION_SUPPRESS_BANNERS;
+  /* opts.flags = NCOPTION_SUPPRESS_BANNERS; */
 
   struct notcurses *nc;
   if ((nc = notcurses_core_init(&opts, NULL)) == NULL)
@@ -440,7 +506,8 @@ int main(int argc, char **argv)
   struct ncinput input = {0};
   bool quit = false;
   bool focus_pc = true;
-  bool run_mode = false;
+  bool interactive_mode = true;
+  unsigned break_at_cycle = 0;
   while (!quit)
   {
     if (focus_pc)
@@ -468,17 +535,9 @@ int main(int argc, char **argv)
     /* Flip! */
     notcurses_render(nc);
 
-    /* Read user input, and act accordingly. */
-    if (run_mode)
+    if (interactive_mode)
     {
-      if (log_file)
-      {
-        log_current_cpu_instruction(log_file, &cpu);
-      }
-      cpu_execute_next_instruction(&cpu);
-    }
-    else
-    {
+      /* Read user input, and act accordingly. */
       notcurses_getc_blocking(nc, &input);
       switch (input.id)
       {
@@ -497,7 +556,8 @@ int main(int argc, char **argv)
           focus_pc = true;
           break;
         case 'r':
-          run_mode = true;
+          interactive_mode = false;
+          break_at_cycle = 0;
           focus_pc = true;
           break;
         case 'L':
@@ -539,6 +599,16 @@ int main(int argc, char **argv)
           }
           break;
         }
+        case 'c':
+        {
+          if (user_query_number(nc, status_line_plane,
+                                "Break at cycle: ", &break_at_cycle) == 0)
+          {
+            focus_pc = true;
+            interactive_mode = false;
+          }
+        }
+        break;
         case ':':
         {
           Address address;
@@ -567,6 +637,20 @@ int main(int argc, char **argv)
           notcurses_getc_blocking(nc, &input);
           ncplane_erase(status_line_plane);
           break;
+      }
+    }
+    else /* !interactive_mode */
+    {
+      if (log_file)
+      {
+        log_current_cpu_instruction(log_file, &cpu);
+      }
+
+      cpu_execute_next_instruction(&cpu);
+
+      if (break_at_cycle > 0 && cpu.cycle >= break_at_cycle)
+      {
+        interactive_mode = true;
       }
     }
   }

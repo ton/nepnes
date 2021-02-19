@@ -26,6 +26,6 @@ find_package(OpenGL REQUIRED)
 # TODO(ton): Need some platform specific check here.
 pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
 pkg_check_modules(libzip REQUIRED IMPORTED_TARGET libzip)
-pkg_check_modules(notcurses notcurses>=2.2.0 REQUIRED IMPORTED_TARGET notcurses notcurses-core)
+pkg_check_modules(notcurses notcurses>=2.2.2 REQUIRED IMPORTED_TARGET notcurses notcurses-core)
 
 add_subdirectory(src)

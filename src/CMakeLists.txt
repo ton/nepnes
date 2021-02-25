@@ -9,6 +9,7 @@ add_library(libnepnes
   rom.c
   util.c
   tools/da/da.c
+  tools/dbg/flat_set.c
 )
 
 target_link_libraries(libnepnes

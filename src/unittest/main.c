@@ -1,4 +1,5 @@
 #include "da_test.h"
+#include "flat_set_test.h"
 #include "opcode_test.h"
 #include "rom_test.h"
 
@@ -12,6 +13,7 @@ int main(void)
   suite_add_tcase(suite, make_da_test_case());
   suite_add_tcase(suite, make_opcode_test_case());
   suite_add_tcase(suite, make_rom_test_case());
+  suite_add_tcase(suite, make_flat_set_test_case());
 
   SRunner *sr = srunner_create(suite);
   srunner_set_fork_status(sr, CK_NOFORK);

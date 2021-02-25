@@ -1,5 +1,6 @@
 add_executable(nepnes_test
   da_test.c
+  flat_set_test.c
   main.c
   rom_test.c
   opcode_test.c

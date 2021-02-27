@@ -364,7 +364,8 @@ const char *instruction_print_layout(struct Instruction *ins, int32_t encoding,
        * the Nintendulator sources. */
       const bool print_address_value =
           layout == IL_NINTENDULATOR &&
-          (ins->op == OP_STX || ins->op == OP_LDX || ins->op == OP_LDA);
+          (ins->op == OP_STX || ins->op == OP_LDX || ins->op == OP_LDA ||
+           ins->op == OP_STA);
       if (print_address_value)
       {
         snprintf(buffer, sizeof buffer, "%s $%04X = %02X",

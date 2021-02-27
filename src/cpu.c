@@ -158,6 +158,23 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_set_zero_negative_flags(cpu, cpu->A);
       cpu->PC += instruction.bytes;
       break;
+    case 0x0a:
+      /*
+       * ASL - Arithmetic Shift Left (accumulator)
+       *
+       * This operation shifts all the bits of the accumulator or memory
+       * contents one bit left. Bit 0 is set to 0 and bit 7 is placed in the
+       * carry flag. The effect of this operation is to multiply the memory
+       * contents by 2 (ignoring 2's complement considerations), setting the
+       * carry if the result will not fit in 8 bits. The zero and negative flags
+       * are set according to the calculated value.
+       */
+      BIT_SET_IF(cpu->A & 0x80, cpu->P, FLAGS_BIT_CARRY);
+      cpu->A <<= 1;
+      cpu->A &= 0xfe;
+      cpu_set_zero_negative_flags(cpu, cpu->A);
+      cpu->PC += instruction.bytes;
+      break;
     case 0x10:
       /*
        * BPL - Branch if Positive
@@ -236,6 +253,24 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_set_zero_negative_flags(cpu, cpu->A);
       cpu->PC += instruction.bytes;
       break;
+    case 0x2a:
+      /*
+       * ROL - Rotate Left (accumulator)
+       *
+       * Move each of the bits in A one place to the left. Bit 0 is filled with
+       * the current value of the carry flag whilst the old bit 7 becomes the
+       * new carry flag value. The zero and negative flags are set as
+       * appropriate.
+       */
+      {
+        const uint8_t new_carry = cpu->A & 0x80;
+        cpu->A <<= 1;
+        BIT_SET_IF(cpu->P & FLAGS_CARRY, cpu->A, 0);
+        BIT_SET_IF(new_carry, cpu->P, FLAGS_BIT_CARRY);
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x30:
       /*
        * BMI - Branch If Minus (relative)
@@ -253,6 +288,31 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        * Sets the carry flag to one.
        */
       cpu->P |= FLAGS_CARRY;
+      cpu->PC += instruction.bytes;
+      break;
+    case 0x40:
+      /*
+       * RTI - Return from Interrupt
+       *
+       * The RTI instruction is used at the end of an interrupt processing
+       * routine. It pulls the processor flags from the stack followed by the
+       * program counter. When popping the CPU status flags, bits 4 and 5, the
+       * 'B-flag' is ignored.
+       */
+      cpu->P = (cpu_pop_8b(cpu) & 0xcf) | (cpu->P & 0x30);
+      cpu->PC = cpu_pop_16b(cpu);
+      break;
+    case 0x4a:
+      /*
+       * LSR - Logical Shift Right (accumulator)
+       *
+       * Each of the bits in A is shifted one place to the right. The bit that
+       * was in bit 0 is shifted into the carry flag. Bit 7 is set to zero. The
+       * zero and negative flags are set according to the calculated value.
+       */
+      BIT_SET_IF(cpu->A & 0x01, cpu->P, FLAGS_BIT_CARRY);
+      cpu->A = (cpu->A >> 1) & 0x7f;
+      cpu_set_zero_negative_flags(cpu, cpu->A);
       cpu->PC += instruction.bytes;
       break;
     case 0x4c:
@@ -333,6 +393,24 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_addc(cpu, cpu->ram[cpu->PC + 1]);
       cpu->PC += instruction.bytes;
       break;
+    case 0x6a:
+      /*
+       * ROR - Rotate Right (accumulator)
+       *
+       * Move each of the bits in A one place to the right. Bit 7 is filled with
+       * the current value of the carry flag whilst the old bit 0 becomes the
+       * new carry flag value. The zero and negative flags are set as
+       * appropriate.
+       */
+      {
+        const uint8_t new_carry = cpu->A & 0x01;
+        cpu->A >>= 1;
+        BIT_SET_IF(cpu->P & FLAGS_CARRY, cpu->A, 7);
+        BIT_SET_IF(new_carry, cpu->P, FLAGS_BIT_CARRY);
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x70:
       /*
        * BVS - Branch if Overflow Set
@@ -405,6 +483,19 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_set_zero_negative_flags(cpu, cpu->A);
       cpu->PC += instruction.bytes;
       break;
+    case 0x8d:
+      /*
+       * STA - Store Accumulator (absolute)
+       *
+       * Stores the contents of the accumulator into memory.
+       */
+      {
+        uint16_t address;
+        memcpy(&address, cpu->ram + cpu->PC + 1, 2);
+        cpu->ram[address] = cpu->A;
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x8e:
       /*
        * STX - Store X Register (absolute)
@@ -467,6 +558,21 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_set_zero_negative_flags(cpu, cpu->Y);
       cpu->PC += instruction.bytes;
       break;
+    case 0xa1:
+      /*
+       * LDA - Load Accumulator (indirect, X)
+       *
+       * Loads a byte of memory into the accumulator setting the zero and
+       * negative flags as appropriate.
+       */
+      {
+        uint16_t address;
+        memcpy(&address, cpu->ram + cpu->PC + 1, 2);
+        cpu->A = cpu->ram[address + cpu->X];
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0xa2:
       /*
        * LDX - Load X Register (immediate)
@@ -476,6 +582,17 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        */
       cpu->X = cpu->ram[cpu->PC + 1];
       cpu_set_zero_negative_flags(cpu, cpu->X);
+      cpu->PC += instruction.bytes;
+      break;
+    case 0xa5:
+      /*
+       * LDA - Load Accumulator (zero page)
+       *
+       * Loads a byte of memory into the accumulator setting the zero and
+       * negative flags as appropriate.
+       */
+      cpu->A = cpu->ram[cpu->ram[cpu->PC + 1]];
+      cpu_set_zero_negative_flags(cpu, cpu->A);
       cpu->PC += instruction.bytes;
       break;
     case 0xa8:

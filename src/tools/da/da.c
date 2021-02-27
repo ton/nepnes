@@ -26,8 +26,7 @@ int da_disassemble(FILE *fp, uint8_t *prg_data, size_t prg_size)
      * instruction will be zero. */
     if (ins.bytes == 0)
     {
-      fprintf(fp, "$%X: %*s (%02X)\n", rom_offset, INSTRUCTION_BUFSIZE, "",
-              *pc);
+      fprintf(fp, "$%X: %*s (%02X)\n", rom_offset, INSTRUCTION_BUFSIZE, "", *pc);
 
       ++pc;
       ++rom_offset;

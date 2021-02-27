@@ -9,7 +9,7 @@ AllowShortFunctionsOnASingleLine: None
 DerivePointerAlignment: false
 PointerAlignment: Right
 
-ColumnLimit: 80
+ColumnLimit: 100
 
 BreakBeforeBraces: Allman
 

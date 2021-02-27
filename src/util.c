@@ -10,8 +10,7 @@
 
 static const int MAXLINE = 120;
 
-static void quit_optional_strerror(bool append_strerror, const char *fmt,
-                                   va_list ap);
+static void quit_optional_strerror(bool append_strerror, const char *fmt, va_list ap);
 
 /*
  * Converts a 16-bit number from little to big endian.
@@ -149,8 +148,6 @@ void quit_strerror(const char *fmt, ...)
   kill(0, SIGTERM);
 }
 
-static void quit_optional_strerror(bool append_strerror, const char *fmt,
-                                   va_list ap)
 /* Returns a timestamp with microseconds precision. */
 timestamp_t get_timestamp()
 {
@@ -159,12 +156,12 @@ timestamp_t get_timestamp()
   return now.tv_usec + (timestamp_t)now.tv_sec * 1000000;
 }
 
+static void quit_optional_strerror(bool append_strerror, const char *fmt, va_list ap)
 {
   char buf[MAXLINE];
   vsnprintf(buf, MAXLINE - 1, fmt, ap);
   if (append_strerror)
-    snprintf(buf + strlen(buf), MAXLINE - strlen(buf) - 1, ": %s",
-             strerror(errno));
+    snprintf(buf + strlen(buf), MAXLINE - strlen(buf) - 1, ": %s", strerror(errno));
   strcat(buf, "\n");
 
   fputs(buf, stderr);

@@ -4,9 +4,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 
-#define MIN(a,b) (((a)<(b))?(a):(b))
-#define MAX(a,b) (((a)>(b))?(a):(b))
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
 /* String related functionality. */
 char *nn_strcat(const char *x, const char *y);

@@ -12,13 +12,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-static const char nes_test_roms_path[] =
-    "src/unittest/input/roms/nes-test-roms/";
-static const char nes_test_roms_ref_path[] =
-    "src/unittest/reference/da/nes-test-roms/";
+static const char nes_test_roms_path[] = "src/unittest/input/roms/nes-test-roms/";
+static const char nes_test_roms_ref_path[] = "src/unittest/reference/da/nes-test-roms/";
 
-static int disassemble_rom(const char *rom_filename, const struct stat *sb,
-                           int type_flag)
+static int disassemble_rom(const char *rom_filename, const struct stat *sb, int type_flag)
 {
   (void)sb;
 
@@ -32,8 +29,7 @@ static int disassemble_rom(const char *rom_filename, const struct stat *sb,
   size_t rom_size = 0;
   if (read_all(rom_filename, &rom_data, &rom_size) == -1)
   {
-    quit_strerror("Could not open the given ROM file '%s' for reading",
-                  rom_filename);
+    quit_strerror("Could not open the given ROM file '%s' for reading", rom_filename);
   }
 
   struct RomHeader header = rom_make_header(rom_data);
@@ -43,8 +39,8 @@ static int disassemble_rom(const char *rom_filename, const struct stat *sb,
 
   /* Calculate the filename of the reference file, relative to the path of the
    * ROMS. */
-  char *ref_filename = nn_strcat(nes_test_roms_ref_path,
-                                 rom_filename + sizeof(nes_test_roms_path) - 1);
+  char *ref_filename =
+      nn_strcat(nes_test_roms_ref_path, rom_filename + sizeof(nes_test_roms_path) - 1);
   memcpy(ref_filename + strlen(ref_filename) - 4, ".ref", 4);
 
   /* Calculate the reference file path. */
@@ -65,8 +61,7 @@ static int disassemble_rom(const char *rom_filename, const struct stat *sb,
     /* Create the reference file. */
     if ((ref_fp = fopen(ref_filename, "w")) == NULL)
     {
-      quit_strerror("Could not open reference file '%s' for writing",
-                    ref_filename);
+      quit_strerror("Could not open reference file '%s' for writing", ref_filename);
     }
 
     /* Write assembly to the reference file. */
@@ -78,8 +73,7 @@ static int disassemble_rom(const char *rom_filename, const struct stat *sb,
      * da_disassemble(). */
     if ((ref_fp = fopen(ref_filename, "r")) == NULL)
     {
-      quit_strerror("Could not open reference file '%s' for reading",
-                    ref_filename);
+      quit_strerror("Could not open reference file '%s' for reading", ref_filename);
     }
 
     /* Disassemble the ROM in memory. */
@@ -94,8 +88,7 @@ static int disassemble_rom(const char *rom_filename, const struct stat *sb,
     unsigned line_number = 0;
     char line[MAX_LINE];
     char ref_line[MAX_LINE];
-    while (fgets(line, sizeof line, fp) &&
-           fgets(ref_line, sizeof ref_line, ref_fp) &&
+    while (fgets(line, sizeof line, fp) && fgets(ref_line, sizeof ref_line, ref_fp) &&
            strncmp(line, ref_line, MAX_LINE) == 0)
     {
       ++line_number;

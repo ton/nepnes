@@ -1,6 +1,8 @@
 #ifndef NEPNES_CPU_H
 #define NEPNES_CPU_H
 
+#include "nn.h"
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -52,19 +54,17 @@ enum FlagsBit
  */
 struct Cpu
 {
-  uint8_t A;   /* Accumulator */
-  uint8_t X;   /* X index register */
-  uint8_t Y;   /* Y index register */
-  uint8_t S;   /* Stack Pointer */
-  uint8_t P;   /* Status register */
-  uint16_t PC; /* Program Counter */
+  uint8_t A;  /* Accumulator */
+  uint8_t X;  /* X index register */
+  uint8_t Y;  /* Y index register */
+  uint8_t S;  /* Stack Pointer */
+  uint8_t P;  /* Status register */
+  Address PC; /* Program Counter */
 
   uint8_t ram[CPU_MAX_ADDRESS + 1];
 
   unsigned cycle; /* Number of cycles elapsed since execution */
 };
-
-typedef uint16_t Address;
 
 void cpu_execute_next_instruction(struct Cpu *cpu);
 

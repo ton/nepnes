@@ -358,8 +358,7 @@ enum Tv
 /* Converts a TV enumeration value to string. */
 static inline const char *tv_to_string(enum Tv tv)
 {
-  static const char *strings[] = {
-      [TV_NTSC] = "NTSC", [TV_PAL] = "PAL", [TV_DUAL] = "Dual"};
+  static const char *strings[] = {[TV_NTSC] = "NTSC", [TV_PAL] = "PAL", [TV_DUAL] = "Dual"};
   return strings[tv];
 }
 
@@ -385,19 +384,18 @@ enum ConsoleType
 /* Converts a console type enumeration value to string. */
 static inline const char *console_type_to_string(enum ConsoleType console_type)
 {
-  static const char *strings[] = {
-      [CT_NES_FAMICOM] = "NES / Famicom / Dendy",
-      [CT_VS_SYSTEM] = "VS System",
-      [CT_PLAYCHOICE_10] = "Playchoice-10",
-      [CT_BIT_CORPORATION_CREATOR] = "Bit Corporation Creator",
-      [CT_VT01_MONOCHROME] = "VT01 Monochrome",
-      [CT_VT01_RED_CYAN] = "VT01 Red/Cyan",
-      [CT_VT02] = "VT02",
-      [CT_VT03] = "VT03",
-      [CT_VT09] = "VT09",
-      [CT_VT32] = "VT32",
-      [CT_VT369] = "VT369",
-      [CT_UM6578] = "UM6578"};
+  static const char *strings[] = {[CT_NES_FAMICOM] = "NES / Famicom / Dendy",
+                                  [CT_VS_SYSTEM] = "VS System",
+                                  [CT_PLAYCHOICE_10] = "Playchoice-10",
+                                  [CT_BIT_CORPORATION_CREATOR] = "Bit Corporation Creator",
+                                  [CT_VT01_MONOCHROME] = "VT01 Monochrome",
+                                  [CT_VT01_RED_CYAN] = "VT01 Red/Cyan",
+                                  [CT_VT02] = "VT02",
+                                  [CT_VT03] = "VT03",
+                                  [CT_VT09] = "VT09",
+                                  [CT_VT32] = "VT32",
+                                  [CT_VT369] = "VT369",
+                                  [CT_UM6578] = "UM6578"};
   return strings[console_type];
 }
 
@@ -493,8 +491,8 @@ struct RomHeader
 };
 
 struct RomHeader rom_make_header(uint8_t header_data[16]);
-void rom_prg_data(struct RomHeader *header, uint8_t *rom_data,
-                  uint8_t **prg_data, size_t *prg_data_size);
+void rom_prg_data(struct RomHeader *header, uint8_t *rom_data, uint8_t **prg_data,
+                  size_t *prg_data_size);
 
 enum RomFormat rom_get_format(uint8_t rom_header[16]);
 int write_rom_information(FILE *fp, uint8_t *rom_data);

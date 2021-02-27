@@ -118,8 +118,7 @@ size_t flat_set_remove(struct flat_set *flat_set, int n)
     return flat_set->size;
   }
 
-  memmove(flat_set->data + i, flat_set->data + i + 1,
-          sizeof(int) * (flat_set->size - i));
+  memmove(flat_set->data + i, flat_set->data + i + 1, sizeof(int) * (flat_set->size - i));
   flat_set->size--;
 
   return i;

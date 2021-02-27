@@ -1,28 +1,27 @@
-#include "cpu.h"
+#include "assembly_pane.h"
+#include "breakpoints_pane.h"
+#include "cpu_pane.h"
 #include "dbg.h"
-#include "instruction.h"
-#include "io.h"
+#include "flat_set.h"
 #include "options.h"
-#include "rom.h"
-#include "util.h"
+#include "status_pane.h"
 
 #include <assert.h>
+#include <cpu.h>
+#include <instruction.h>
+#include <io.h>
 #include <locale.h>
 #include <notcurses/notcurses.h>
+#include <rom.h>
 #include <stdlib.h>
 #include <string.h>
-
-#define KEY_CTRL_B '\2'
-#define KEY_CTRL_F '\6'
-
-#define UC_ALPHA "\u03b1"
-#define VERSION "0.1" UC_ALPHA
+#include <util.h>
 
 /*
  * Logs the current CPU instruction to the given file, in Nintendulator format
  * so that it can be easily diffed with some verified output.
  */
-void log_current_cpu_instruction(FILE *log_file, struct Cpu *cpu)
+static void log_current_cpu_instruction(FILE *log_file, struct Cpu *cpu)
 {
   uint8_t *pc = cpu->ram + cpu->PC;
   const uint8_t *end = cpu->ram + sizeof cpu->ram;
@@ -42,245 +41,55 @@ void log_current_cpu_instruction(FILE *log_file, struct Cpu *cpu)
       sprintf(encoding_buf, "%02X      ", (uint8_t)(encoding & 0x0000ff));
       break;
     case 2:
-      sprintf(encoding_buf, "%02X %02X   ",
-              (uint8_t)((encoding & 0x00ff00) >> 8),
+      sprintf(encoding_buf, "%02X %02X   ", (uint8_t)((encoding & 0x00ff00) >> 8),
               (uint8_t)(encoding & 0x0000ff));
       break;
     case 3:
-      sprintf(encoding_buf, "%02X %02X %02X",
-              (uint8_t)((encoding & 0xff0000) >> 16),
-              (uint8_t)((encoding & 0x00ff00) >> 8),
-              (uint8_t)(encoding & 0x0000ff));
+      sprintf(encoding_buf, "%02X %02X %02X", (uint8_t)((encoding & 0xff0000) >> 16),
+              (uint8_t)((encoding & 0x00ff00) >> 8), (uint8_t)(encoding & 0x0000ff));
       break;
   }
 
-  fprintf(log_file,
-          "%X  %s  %-31s A:%02X X:%02X Y:%02X P:%02X SP:%02X CYC:%d\n", cpu->PC,
-          encoding_buf,
-          instruction_print_layout(&ins, encoding, IL_NINTENDULATOR, cpu),
-          cpu->A, cpu->X, cpu->Y, cpu->P, cpu->S, cpu->cycle);
+  fprintf(log_file, "%X  %s  %-31s A:%02X X:%02X Y:%02X P:%02X SP:%02X CYC:%d\n", cpu->PC,
+          encoding_buf, instruction_print_layout(&ins, encoding, IL_NINTENDULATOR, cpu), cpu->A,
+          cpu->X, cpu->Y, cpu->P, cpu->S, cpu->cycle);
   fflush(log_file);
 }
 
 /*
- * Draws the border next to the assembly plane. Also called in case of a resize
- * event.
+ * Toggles focus between the given panes. Only one pane can have focus at the
+ * same time. The breakpoints pane can not receive focus in case no breakpoints
+ * are set.
  */
-static void draw_assembly_plane_border(struct ncplane *assembly_plane,
-                                       struct ncplane *std_plane,
-                                       int term_lines)
+static void toggle_focus(struct assembly_pane *assembly_pane,
+                         struct breakpoints_pane *breakpoints_pane, struct Debugger *debugger)
 {
-  nccell vline_cell = CELL_TRIVIAL_INITIALIZER;
-  cell_load(std_plane, &vline_cell, "\u2502");
-  ncplane_cursor_move_yx(std_plane, 0, ncplane_dim_x(assembly_plane));
-  ncplane_vline(std_plane, &vline_cell, term_lines - 1);
-}
-
-/*
- * Constructs the plane that contains a view on the memory of the machine, where
- * the values in memory are interpreted as instructions. This will also draw a
- * rounded border around the assembly plane on the standard notcurses plane.
- */
-static struct ncplane *make_assembly_plane(const int lines, const int y,
-                                           const int x,
-                                           struct ncplane *std_plane)
-{
-  struct ncplane_options opts = {0};
-  opts.x = x;
-  opts.y = y;
-  opts.rows = lines;
-  opts.cols = 88;
-
-  return ncplane_create(std_plane, &opts);
-}
-
-/*
- * Constructs the plane that contains a view of the CPU state (register values,
- * program counter, etc.). This will also draw a rounded border around the newly
- * created plane on the standard notcurses plane.
- */
-static struct ncplane *make_cpu_state_plane(const int cols,
-                                            struct ncplane *std_plane)
-{
-  const int box_width = 20;
-  const int box_height = 11;
-  const int box_left = cols - box_width;
-  const int box_top = 0;
-
-  struct ncplane_options opts = {0};
-  opts.rows = box_height - 2;
-  opts.cols = box_width - 2;
-  opts.y = box_top;
-  opts.x = box_left + 2;
-
-  struct ncplane *cpu_state_plane = ncplane_create(std_plane, &opts);
-  ncplane_perimeter_rounded(cpu_state_plane, 0, 0, 0);
-
-  return cpu_state_plane;
+  if (assembly_pane->has_focus && debugger->breakpoints.size > 0)
+  {
+    assembly_pane_set_focus(assembly_pane, false);
+    breakpoints_pane_set_focus(breakpoints_pane, true);
+  }
+  else
+  {
+    assembly_pane_set_focus(assembly_pane, true);
+    breakpoints_pane_set_focus(breakpoints_pane, false);
+  }
 }
 
 /*
  * Function called after a resize event occurs to properly position the status
  * line within the new dimensions of the terminal window.
  */
-static void status_line_plane_resize(struct ncplane *status_line_plane,
-                                     int lines, int cols)
+static void resize_panes(struct status_pane *status_pane, int term_rows, int term_cols)
 {
-  ncplane_erase(status_line_plane);
-  ncplane_resize_simple(status_line_plane, 1, cols);
-  ncplane_move_yx(status_line_plane, lines - 1, 0);
-}
-
-/*
- * Creates the plane that displays the status line.
- */
-static struct ncplane *make_status_line_plane(struct ncplane *std_plane)
-{
-  struct ncplane_options opts = {0};
-  opts.rows = 1;
-  opts.cols = ncplane_dim_x(std_plane);
-  opts.y = ncplane_dim_y(std_plane) - 1;
-  opts.x = 0;
-
-  nccell c = CELL_CHAR_INITIALIZER(' ');
-  cell_set_bg_rgb8(&c, 0x20, 0x20, 0x20);
-
-  struct ncplane *status_line_plane = ncplane_create(std_plane, &opts);
-  ncplane_set_base_cell(status_line_plane, &c);
-  return status_line_plane;
-}
-
-/*
- * Creates a plane that will highlight the current instruction.
- */
-static struct ncplane *make_pc_plane(struct ncplane *assembly_plane,
-                                     struct ncplane *std_plane)
-{
-  struct ncplane_options opts = {0};
-  opts.rows = 1;
-  opts.cols = ncplane_dim_x(assembly_plane);
-  opts.y = 1;
-  opts.x = 0;
-
-  nccell c = CELL_TRIVIAL_INITIALIZER;
-  cell_set_bg_rgb8(&c, 0xaa, 0xaa, 0xaa);
-  cell_set_fg_rgb8(&c, 0x30, 0x30, 0x30);
-
-  struct ncplane *pc_plane = ncplane_create(std_plane, &opts);
-  ncplane_set_base_cell(pc_plane, &c);
-  return pc_plane;
-}
-
-/*
- * Prints all relevant CPU state data in the given CPU assembly plane.
- */
-static void print_cpu_state(struct Cpu *cpu, struct ncplane *plane)
-{
-  const char flags[] = {'-', 'C', 'Z', 'I', 'D', 'B', 'B', 'O', 'N'};
-
-  ncplane_printf_yx(plane, 1, 1, "   A:  $%02X", cpu->A);
-  ncplane_printf_yx(plane, 2, 1, "   X:  $%02X", cpu->X);
-  ncplane_printf_yx(plane, 3, 1, "   Y:  $%02X", cpu->Y);
-  ncplane_printf_yx(plane, 4, 1, "   S:  $%02X", cpu->S);
-  ncplane_printf_yx(plane, 5, 1, "  PC:  $%04X", cpu->PC);
-  ncplane_printf_yx(plane, 6, 1, "   P:  %c%c%c%c%c%c%c%c",
-                    flags[((cpu->P & FLAGS_NEGATIVE) >> 7) * 8],
-                    flags[((cpu->P & FLAGS_OVERFLOW) >> 6) * 7],
-                    flags[((cpu->P & FLAGS_BIT_5) >> 5) * 6],
-                    flags[((cpu->P & FLAGS_BIT_4) >> 4) * 5],
-                    flags[((cpu->P & FLAGS_DECIMAL) >> 3) * 4],
-                    flags[((cpu->P & FLAGS_INTERRUPT_DISABLE) >> 2) * 3],
-                    flags[(cpu->P & FLAGS_ZERO)],
-                    flags[(cpu->P & FLAGS_CARRY)]);
-  ncplane_printf_yx(plane, 7, 1, " CYC:  %d", cpu->cycle);
-}
-
-/*
- * Prints the assembly currently loaded in memory to the given notcurses plane.
- */
-static void print_assembly(struct Debugger *debugger, struct Cpu *cpu,
-                           struct ncplane *plane)
-{
-  ncplane_erase(plane);
-
-  uint16_t address = dbg_line_to_address(debugger, cpu, debugger->line);
-
-  int y = 0;
-  int line = debugger->line;
-  const int last_line = MIN(line + ncplane_dim_y(plane), debugger->last_line);
-
-  while (line < last_line)
-  {
-    struct Instruction ins = {0};
-
-    uint32_t prg_last_address = debugger->prg_offset + debugger->prg_size;
-    if (debugger->prg_offset <= address && address < prg_last_address)
-    {
-      ins = make_instruction(cpu->ram[address]);
-    }
-
-    /*
-     * In case of an unknown instruction, the calculated size of the instruction
-     * will be zero.
-     */
-    if (ins.bytes == 0)
-    {
-      ncplane_printf_yx(plane, y, 0, "$%04X: %*s (%02X)", address,
-                        INSTRUCTION_BUFSIZE, "", cpu->ram[address]);
-      ++address;
-    }
-    else
-    {
-      uint32_t encoding = cpu->ram[address];
-      for (int i = 1; i < ins.bytes; ++i)
-      {
-        encoding = (encoding << 8) + cpu->ram[address + i];
-      }
-
-      ncplane_printf_yx(plane, y, 0, "$%04X: %-*s (%0*X)", address,
-                        INSTRUCTION_BUFSIZE, instruction_print(&ins, encoding),
-                        ins.bytes * 2, encoding);
-
-      address += ins.bytes;
-    }
-
-    ++line;
-    ++y;
-  }
-}
-
-/*
- * Prints the status line.
- */
-static void print_status_line(struct ncplane *plane)
-{
-  ncplane_putstr_aligned(plane, 0, NCALIGN_RIGHT, "nepnes dbg v" VERSION " ");
-  ncplane_putstr_aligned(plane, 0, NCALIGN_LEFT, " ?: help");
-}
-
-/*
- * Prints a help screen in the status line.
- */
-static void print_help(struct ncplane *plane)
-{
-  ncplane_erase(plane);
-  ncplane_putstr_aligned(plane, 0, NCALIGN_LEFT,
-                         " j/k: scroll up/down   "
-                         "C-B/C-F: page up/down   "
-                         "f: focus PC   "
-                         "r: run    "
-                         "c: break at cycle   "
-                         "n: next instruction   "
-                         "q: quit");
-  ncplane_putstr_aligned(plane, 0, NCALIGN_RIGHT,
-                         "press any key to close help ");
+  status_pane_resize(status_pane, term_rows, term_cols);
 }
 
 /*
  * Asks the user to input an address.
  */
-static int user_query_address(struct notcurses *nc, struct ncplane *plane,
-                              const char *question, Address *address)
+static int user_query_address(struct notcurses *nc, struct ncplane *plane, const char *question,
+                              Address *address)
 {
   /* Convert plane coordinates to global coordinates to show the cursor at the
    * right position. */
@@ -316,11 +125,10 @@ static int user_query_address(struct notcurses *nc, struct ncplane *plane,
    */
   char32_t c;
   struct ncinput input;
-  while ((c = notcurses_getc_blocking(nc, &input)) != NCKEY_ENTER &&
-         c != NCKEY_ESC)
+  while ((c = notcurses_getc_blocking(nc, &input)) != NCKEY_ENTER && c != NCKEY_ESC)
   {
-    if (('0' <= c && c <= '9') || ('a' <= c && c <= 'f') ||
-        ('A' <= c && c <= 'F') || c == NCKEY_BACKSPACE)
+    if (('0' <= c && c <= '9') || ('a' <= c && c <= 'f') || ('A' <= c && c <= 'F') ||
+        c == NCKEY_BACKSPACE)
     {
       ncreader_offer_input(reader, &input);
       notcurses_render(nc);
@@ -333,73 +141,7 @@ static int user_query_address(struct notcurses *nc, struct ncplane *plane,
    */
   char *contents;
   ncreader_destroy(reader, &contents);
-  const int is_success =
-      (c != NCKEY_ESC && sscanf(contents, "%4hx", address) == 1) ? 0 : -1;
-
-  free(contents);
-  ncplane_erase(plane);
-
-  return is_success;
-}
-
-/*
- * Asks the user to input an unsigned =number.
- */
-static int user_query_number(struct notcurses *nc, struct ncplane *plane,
-                             const char *question, unsigned *number)
-{
-  /* Convert plane coordinates to global coordinates to show the cursor at the
-   * right position. */
-  int y = 0;
-  int x = strlen(question) + 1;
-  ncplane_translate(plane, NULL, &y, &x);
-
-  ncplane_printf_yx(plane, 0, 1, question);
-  notcurses_cursor_enable(nc, y, x);
-
-  /*
-   * Create reader plane.
-   */
-  struct ncplane_options plane_opts = {0};
-  plane_opts.rows = 1;
-  plane_opts.cols = 4;
-  plane_opts.y = 0;
-  plane_opts.x = strlen(question) + 1;
-
-  struct ncplane *reader_plane = ncplane_create(plane, &plane_opts);
-
-  /*
-   * Create reader itself.
-   */
-  struct ncreader_options reader_opts = {0};
-  reader_opts.flags = NCREADER_OPTION_CURSOR;
-
-  struct ncreader *reader = ncreader_create(reader_plane, &reader_opts);
-  notcurses_render(nc);
-
-  /*
-   * Query user input, only hexadecimal characters and Enter/Escape are allowed.
-   */
-  char32_t c;
-  struct ncinput input;
-  while ((c = notcurses_getc_blocking(nc, &input)) != NCKEY_ENTER &&
-         c != NCKEY_ESC)
-  {
-    if (('0' <= c && c <= '9') || c == NCKEY_BACKSPACE)
-    {
-      ncreader_offer_input(reader, &input);
-      notcurses_render(nc);
-    }
-  }
-
-  /*
-   * Retrieve user input in case the user did not press escape, and try to
-   * convert to some hexadecimal address.
-   */
-  char *contents;
-  ncreader_destroy(reader, &contents);
-  const int is_success =
-      (c != NCKEY_ESC && sscanf(contents, "%u", number) == 1) ? 0 : -1;
+  const int is_success = (c != NCKEY_ESC && sscanf(contents, "%4hx", address) == 1) ? 0 : -1;
 
   free(contents);
   ncplane_erase(plane);
@@ -418,8 +160,7 @@ int main(int argc, char **argv)
   size_t binary_size = 0;
   if (read_all(options.binary_file_name, &binary_data, &binary_size) == -1)
   {
-    quit_strerror("Could not open the given ROM file '%s' for reading",
-                  options.binary_file_name);
+    quit_strerror("Could not open the given ROM file '%s' for reading", options.binary_file_name);
   }
 
   printf("Binary size: %lu bytes\n", binary_size);
@@ -457,11 +198,10 @@ int main(int argc, char **argv)
   }
 
   /* Initialize the debugger state. */
-  struct Debugger debugger = {0};
-  dbg_init(&debugger, &cpu, prg_offset, prg_size);
+  struct Debugger debugger = make_debugger(prg_offset, prg_size);
 
   notcurses_options opts = {0};
-  /* opts.flags = NCOPTION_SUPPRESS_BANNERS; */
+  opts.flags = NCOPTION_SUPPRESS_BANNERS;
 
   struct notcurses *nc;
   if ((nc = notcurses_core_init(&opts, NULL)) == NULL)
@@ -479,58 +219,53 @@ int main(int argc, char **argv)
     }
   }
 
-  /* Create curses windows. */
-  int term_lines;
+  int term_rows;
   int term_cols;
-  notcurses_term_dim_yx(nc, &term_lines, &term_cols);
+  notcurses_term_dim_yx(nc, &term_rows, &term_cols);
+
+  /* Create notcurses planes. */
+  struct ncplane *std_plane = notcurses_stdplane(nc);
 
   /* Absolute top-left coordinates of the assembly plane. */
-  const int assembly_x = 1;
+  const int assembly_x = 0;
   const int assembly_y = 0;
+  const int assembly_cols = 80;
+  struct assembly_pane assembly_pane = make_assembly_pane(std_plane, &debugger, &cpu, term_rows - 1,
+                                                          assembly_cols, assembly_y, assembly_x);
+  assembly_pane.has_focus = true;
+  assembly_pane_scroll_to_pc(&assembly_pane, &debugger, &cpu);
 
-  struct ncplane *std_plane = notcurses_stdplane(nc);
-  struct ncplane *assembly_plane =
-      make_assembly_plane(term_lines - 1, assembly_y, assembly_x, std_plane);
-  struct ncplane *cpu_state_plane = make_cpu_state_plane(term_cols, std_plane);
-  struct ncplane *status_line_plane = make_status_line_plane(std_plane);
-  struct ncplane *pc_plane = make_pc_plane(assembly_plane, std_plane);
+  struct breakpoints_pane breakpoints_pane = make_breakpoints_pane(std_plane, &debugger, 9, 30);
+
+  struct cpu_pane cpu_pane = make_cpu_pane(9, 20, std_plane);
+  struct status_pane status_pane = make_status_pane(std_plane);
+
+  /* Move the CPU state plane to the upper right corner. */
+  const int cpu_state_plane_x = term_cols - ncplane_dim_x(cpu_pane.decoration_plane);
+  ncplane_move_yx(cpu_pane.decoration_plane, 0, cpu_state_plane_x);
+
+  /* Move the breakpoints plane to the left of the CPU state plane. */
+  const int breakpoints_plane_x =
+      cpu_state_plane_x - ncplane_dim_x(breakpoints_pane.decoration_plane);
+  ncplane_move_yx(breakpoints_pane.decoration_plane, 0, breakpoints_plane_x);
 
   /* Status line is always on top. */
-  ncplane_move_top(status_line_plane);
-
-  /* Draw a vertical line separating the assembly window from the rest of the
-   * UI. */
-  draw_assembly_plane_border(assembly_plane, std_plane, term_lines);
+  ncplane_move_top(status_pane.plane);
 
   /* Event loop; wait for user input. */
   struct ncinput input = {0};
   bool quit = false;
-  bool focus_pc = true;
   bool interactive_mode = true;
-  unsigned break_at_cycle = 0;
+
   while (!quit)
   {
-    if (focus_pc)
-    {
-      dbg_scroll_assembly_to_pc(&debugger, &cpu);
-    }
+    /* TODO(ton): the following planes do not need to be printed every frame?
+     * Check out how notcurses handles this in their demos. */
 
-    print_assembly(&debugger, &cpu, assembly_plane);
-
-    /* Scroll the PC plane. */
-    ncplane_move_yx(
-        pc_plane,
-        -(debugger.line - dbg_address_to_line(&debugger, &cpu, cpu.PC)) +
-            assembly_y,
-        0);
-
-    /* Print the CPU state in the plane reserved for that, and highlight the
-     * line of assembly the PC is pointing to. */
-    print_cpu_state(&cpu, cpu_state_plane);
-
-    /* Print the status line. */
-    /* TODO(ton): not needed to be printed every time. */
-    print_status_line(status_line_plane);
+    assembly_pane_update(&assembly_pane);
+    breakpoints_pane_update(&breakpoints_pane, &debugger, &cpu);
+    cpu_pane_update(&cpu_pane, &cpu);
+    status_pane_update(&status_pane);
 
     /* Flip! */
     notcurses_render(nc);
@@ -542,100 +277,153 @@ int main(int argc, char **argv)
       switch (input.id)
       {
         case NCKEY_RESIZE:
+          notcurses_term_dim_yx(nc, &term_rows, &term_cols);
           notcurses_render(nc);
-          notcurses_term_dim_yx(nc, &term_lines, &term_cols);
-          status_line_plane_resize(status_line_plane, term_lines, term_cols);
-          draw_assembly_plane_border(assembly_plane, std_plane, term_lines);
+          resize_panes(&status_pane, term_rows, term_cols);
+          /* status_line_plane_resize(status_line_plane, term_rows, term_cols); */
+          /* assembly_pane_resize(&assembly_pane, std_plane, term_rows); */
           break;
-        case 'n':
+        case '\t':
+          toggle_focus(&assembly_pane, &breakpoints_pane, &debugger);
+          break;
+        case NCKEY_SPACE: /* toggle breakpoint at cursor */
+          debugger_toggle_breakpoint_at(
+              &debugger, assembly_pane_cursor_address(&assembly_pane, &debugger, &cpu));
+          break;
+        case 'c': /* remove all breakpoints */
+          flat_set_clear(&debugger.breakpoints);
+
+          /* In case the breakpoints pane was in focus, focus the assembly pane
+           * instead. */
+          if (breakpoints_pane.has_focus)
+          {
+            breakpoints_pane_set_focus(&breakpoints_pane, false);
+            assembly_pane_set_focus(&assembly_pane, true);
+          }
+          break;
+        case 'd': /* remove selected breakpoint */
+        {
+          /* Remove the selected breakpoint. */
+          int idx;
+          if ((idx = breakpoints_pane_selected_breakpoint(&breakpoints_pane)) >= 0)
+          {
+            if (idx > 0 && idx == (int)debugger.breakpoints.size - 1)
+            {
+              breakpoints_pane_move_cursor(&breakpoints_pane, -1);
+            }
+
+            debugger_toggle_breakpoint_at(&debugger, debugger.breakpoints.data[idx]);
+
+            /* In case no more breakpoints remain, automatically shift focus to
+             * the assembly pane. */
+            if (debugger.breakpoints.size == 0)
+            {
+              breakpoints_pane_set_focus(&breakpoints_pane, false);
+              assembly_pane_set_focus(&assembly_pane, true);
+            }
+          }
+        }
+        break;
+        case 'n': /* next instruction (step) */
           if (log_file)
           {
             log_current_cpu_instruction(log_file, &cpu);
           }
           cpu_execute_next_instruction(&cpu);
-          focus_pc = true;
+          assembly_pane_scroll_to_pc(&assembly_pane, &debugger, &cpu);
           break;
-        case 'r':
+        case 'r': /* run */
           interactive_mode = false;
-          break_at_cycle = 0;
-          focus_pc = true;
           break;
-        case 'L':
+        case 'L': /* refresh screen */
           if (input.ctrl)
           {
             notcurses_refresh(nc, NULL, NULL);
           }
           break;
-        case 'B':
-          if (input.ctrl)
+        case 'B': /* page up */
+          if (input.ctrl && assembly_pane.has_focus)
           {
-            dbg_scroll_assembly(&debugger, -term_lines);
-            focus_pc = false;
+            assembly_pane_move_cursor(&assembly_pane, -term_rows);
+          }
+          else if (!input.ctrl) /* set breakpoint */
+          {
+            uint16_t address;
+            if (user_query_address(nc, status_pane.plane, "Break at address: ", &address) == 0)
+            {
+              debugger_toggle_breakpoint_at(&debugger, address);
+            }
           }
           break;
-        case 'f':
-          // Focus program counter.
-          dbg_scroll_assembly_to_pc(&debugger, &cpu);
-          break;
-        case 'F':
-          if (input.ctrl)
+        case 'F': /* page down */
+          if (assembly_pane.has_focus)
           {
-            dbg_scroll_assembly(&debugger, term_lines);
-            focus_pc = false;
+            if (input.ctrl)
+            {
+              assembly_pane_move_cursor(&assembly_pane, term_rows);
+            }
+            else /* focus program counter */
+            {
+              assembly_pane_scroll_to_address(&assembly_pane, &debugger, &cpu, cpu.PC);
+            }
           }
           break;
-        case 'G':
-          dbg_scroll_assembly_to_address(&debugger, &cpu, CPU_MAX_ADDRESS);
-          focus_pc = false;
+        case 'G': /* scroll to bottom */
+          if (assembly_pane.has_focus)
+          {
+            assembly_pane_scroll_to_address(&assembly_pane, &debugger, &cpu, CPU_MAX_ADDRESS);
+          }
           break;
-        case 'g':
+        case 'g': /* scroll to top */
         {
-          struct timespec ts = {0};
-          ts.tv_sec = 1;
-          if (notcurses_getc(nc, &ts, NULL, NULL) == 'g')
+          if (assembly_pane.has_focus)
           {
-            dbg_scroll_assembly_to_address(&debugger, &cpu, 0x0);
-            focus_pc = false;
+            struct timespec ts = {0};
+            ts.tv_sec = 1;
+            if (notcurses_getc(nc, &ts, NULL, NULL) == 'g')
+            {
+              assembly_pane_scroll_to_address(&assembly_pane, &debugger, &cpu, 0x0);
+            }
           }
           break;
         }
-        case 'c':
-        {
-          if (user_query_number(nc, status_line_plane,
-                                "Break at cycle: ", &break_at_cycle) == 0)
-          {
-            focus_pc = true;
-            interactive_mode = false;
-          }
-        }
-        break;
-        case ':':
+        case ':': /* jump to address */
         {
           Address address;
-          if (user_query_address(nc, status_line_plane, "Jump to address: $",
-                                 &address) == 0)
+          if (user_query_address(nc, status_pane.plane, "Jump to address: $", &address) == 0)
           {
-            dbg_scroll_assembly_to_address(&debugger, &cpu, address);
-            focus_pc = false;
+            assembly_pane_scroll_to_address(&assembly_pane, &debugger, &cpu, address);
           }
         }
         break;
-        case 'j':
-          dbg_scroll_assembly(&debugger, 1);
-          focus_pc = false;
+        case 'j': /* scroll one line down */
+          if (assembly_pane.has_focus)
+          {
+            assembly_pane_move_cursor(&assembly_pane, 1);
+          }
+          else if (breakpoints_pane.has_focus)
+          {
+            breakpoints_pane_move_cursor(&breakpoints_pane, 1);
+          }
           break;
-        case 'k':
-          dbg_scroll_assembly(&debugger, -1);
-          focus_pc = false;
+        case 'k': /* scroll one line up */
+          if (assembly_pane.has_focus)
+          {
+            assembly_pane_move_cursor(&assembly_pane, -1);
+          }
+          else if (breakpoints_pane.has_focus)
+          {
+            breakpoints_pane_move_cursor(&breakpoints_pane, -1);
+          }
           break;
-        case 'q':
+        case 'q': /* quit */
           quit = true;
           break;
-        case '?':
-          print_help(status_line_plane);
+        case '?': /* show help */
+          status_pane_print_help(&status_pane);
           notcurses_render(nc);
           notcurses_getc_blocking(nc, &input);
-          ncplane_erase(status_line_plane);
+          ncplane_erase(status_pane.plane);
           break;
       }
     }
@@ -647,13 +435,11 @@ int main(int argc, char **argv)
       }
 
       cpu_execute_next_instruction(&cpu);
-
-      if (break_at_cycle > 0 && cpu.cycle >= break_at_cycle)
-      {
-        interactive_mode = true;
-      }
+      assembly_pane_scroll_to_pc(&assembly_pane, &debugger, &cpu);
+      interactive_mode = debugger_has_breakpoint_at(&debugger, cpu.PC);
     }
   }
 
   notcurses_stop(nc);
+  destroy_debugger(&debugger);
 }

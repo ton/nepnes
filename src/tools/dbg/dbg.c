@@ -2,29 +2,34 @@
 
 #include "cpu.h"
 #include "instruction.h"
+#include "util.h"
 
 /*
- * Initializes a debugger, given the CPU state, focuses the debugger on the
- * instruction the program counter points to.
+ * Creates a debugger.
  */
-void dbg_init(struct Debugger *debugger, struct Cpu *cpu, uint16_t prg_offset,
-              size_t prg_size)
+struct Debugger make_debugger(Address prg_offset, size_t prg_size)
 {
-  debugger->scroll_offset = 3;
-  debugger->prg_offset = prg_offset;
-  debugger->prg_size = prg_size;
-  debugger->last_line = dbg_address_to_line(debugger, cpu, CPU_MAX_ADDRESS);
-
-  dbg_scroll_assembly_to_pc(debugger, cpu);
+  struct Debugger debugger = {prg_offset, prg_size, {0}};
+  debugger.breakpoints = make_flat_set(16);
+  return debugger;
 }
 
 /*
- * Converts a memory address to a line number in the debugger. The line number
- * will display the data at the given address, or that overlaps the given
- * address.
+ * Frees dynamically allocated memory for a debugger object.
  */
-int dbg_address_to_line(struct Debugger *debugger, struct Cpu *cpu,
-                        uint16_t address)
+void destroy_debugger(struct Debugger *debugger)
+{
+  destroy_flat_set(&debugger->breakpoints);
+}
+
+/*
+ * Converts a memory address to an instruction offset in memory. Thus, the given
+ * address is converted to a number that indicates that the instruction that is
+ * located at the address, or that overlaps the given address, is the n-th
+ * instruction in memory.
+ */
+int dbg_address_to_instruction_offset(const struct Debugger *debugger, const struct Cpu *cpu,
+                                      Address address)
 {
   /* Each data memory location is displayed on a single line. In case we are in
    * the data segment, just return the address as the line number. */
@@ -33,19 +38,19 @@ int dbg_address_to_line(struct Debugger *debugger, struct Cpu *cpu,
     return address;
   }
 
-  uint8_t *first = cpu->ram + debugger->prg_offset;
-  uint8_t *last = cpu->ram + address;
+  const uint8_t *first = cpu->ram + debugger->prg_offset;
+  const uint8_t *last = cpu->ram + address;
 
-  int line = debugger->prg_offset;
+  int offset = debugger->prg_offset;
   while (first < last)
   {
     first += instruction_size(*first);
-    ++line;
+    ++offset;
   }
 
   /* In case we jumped past the requested address, the address is contained
    * within an instruction, and we have to compensate. */
-  return first > last ? line - 1 : line;
+  return first > last ? offset - 1 : offset;
 }
 
 /*
@@ -53,61 +58,48 @@ int dbg_address_to_line(struct Debugger *debugger, struct Cpu *cpu,
  * will display the data at the given address, or that overlaps the given
  * address.
  */
-uint16_t dbg_line_to_address(struct Debugger *debugger, struct Cpu *cpu,
-                             int line)
+Address dbg_instruction_offset_to_address(const struct Debugger *debugger, const struct Cpu *cpu,
+                                          uint16_t offset)
 {
   /* Each data memory location is displayed on a single line. In case we are in
    * the data segment, just return the address as the line number. */
-  if (line <= debugger->prg_offset || debugger->prg_size == 0)
+  if (offset <= debugger->prg_offset || debugger->prg_size == 0)
   {
-    return line;
+    return offset;
   }
 
-  uint8_t *first = cpu->ram + debugger->prg_offset;
-  uint8_t *last = cpu->ram + sizeof(cpu->ram);
+  const uint8_t *first = cpu->ram + debugger->prg_offset;
+  const uint8_t *last = cpu->ram + sizeof(cpu->ram);
 
-  int curr_line = debugger->prg_offset;
-  while (curr_line < line && first < last)
+  int curr_offset = debugger->prg_offset;
+  while (curr_offset < offset && first < last)
   {
     first += instruction_size(*first);
-    ++curr_line;
+    ++curr_offset;
   }
 
-  /* In case we jumped past the requested address, the address is contained
-   * within an instruction, and we have to compensate. */
-  return (first > last ? last : first) - cpu->ram;
+  /* In case we jumped past the valid memory range, limit to the last address.
+   * TODO(ton): incorrect...the last instruction might no be on $FFFF.
+   */
+  return (first < last ? first : last - 1) - cpu->ram;
 }
 
 /*
- * Scrolls the debugger by the given number of lines.
+ * Returns whether a breakpoint is current set for the given address.
  */
-void dbg_scroll_assembly(struct Debugger *debugger, int lines)
+bool debugger_has_breakpoint_at(struct Debugger *debugger, Address address)
 {
-  debugger->line += lines;
-  if (debugger->line < 0) debugger->line = 0;
-  if (debugger->line > debugger->last_line)
-    debugger->line = debugger->last_line;
+  return flat_set_contains(&debugger->breakpoints, address);
 }
 
 /*
- * Scrolls the assembly viewport to display the instruction that starts at or
- * overlaps the given address.
+ * Toggles a breakpoint for the given memory address. In case a breakpoint is
+ * already set for the given address, removes it, otherwise, sets it. Returns
+ * the index of the breakpoint that was added or removed.
  */
-void dbg_scroll_assembly_to_address(struct Debugger *debugger, struct Cpu *cpu,
-                                    Address address)
+size_t debugger_toggle_breakpoint_at(struct Debugger *debugger, Address address)
 {
-  debugger->line =
-      dbg_address_to_line(debugger, cpu, address) - debugger->scroll_offset;
-  if (debugger->line < 0) debugger->line = 0;
-  if (debugger->line > debugger->last_line)
-    debugger->line = debugger->last_line;
-}
-
-/*
- * Scrolls the assembly viewport to display the instruction that starts at or
- * overlaps the program counter.
- */
-void dbg_scroll_assembly_to_pc(struct Debugger *debugger, struct Cpu *cpu)
-{
-  dbg_scroll_assembly_to_address(debugger, cpu, cpu->PC);
+  return flat_set_contains(&debugger->breakpoints, address)
+             ? flat_set_remove(&debugger->breakpoints, address)
+             : flat_set_insert(&debugger->breakpoints, address);
 }

@@ -2,35 +2,33 @@
 #define NEPNES_DBG_H
 
 #include "cpu.h"
+#include "flat_set.h"
 
 #include <stdint.h>
 
 /* Stores state of the debugger. */
 struct Debugger
 {
-  int line;              /* current focused line of assembly to display */
-  int last_line;         /* line number of the last line of assembly */
-  uint8_t scroll_offset; /* minimal number of lines to keep above and below the
-                            PC line */
-
-  /* The following is used by the debugger which parts of the memory should be
-   * interpreted as program data. This may not be sufficient! */
+  /*
+   * The following is used by the debugger to determine which parts of the
+   * memory should be interpreted as program data. This may not be sufficient!
+   */
 
   uint16_t prg_offset; /* start of the program data */
   size_t prg_size;     /* size of the program data */
+
+  struct flat_set breakpoints;
 };
 
-void dbg_init(struct Debugger *debugger, struct Cpu *cpu, uint16_t prg_address,
-              size_t prg_data_size);
+struct Debugger make_debugger(Address prg_offset, size_t prg_size);
+void destroy_debugger(struct Debugger *debugger);
 
-int dbg_address_to_line(struct Debugger *debugger, struct Cpu *cpu,
-                        uint16_t address);
-uint16_t dbg_line_to_address(struct Debugger *debugger, struct Cpu *cpu,
-                             int line);
+Address dbg_instruction_offset_to_address(const struct Debugger *debugger, const struct Cpu *cpu,
+                                          uint16_t offset);
+int dbg_address_to_instruction_offset(const struct Debugger *debugger, const struct Cpu *cpu,
+                                      Address address);
 
-void dbg_scroll_assembly(struct Debugger *debugger, int lines);
-void dbg_scroll_assembly_to_address(struct Debugger *debugger, struct Cpu *cpu,
-                                    Address address);
-void dbg_scroll_assembly_to_pc(struct Debugger *debugger, struct Cpu *cpu);
+bool debugger_has_breakpoint_at(struct Debugger *debugger, Address address);
+size_t debugger_toggle_breakpoint_at(struct Debugger *debugger, Address address);
 
 #endif

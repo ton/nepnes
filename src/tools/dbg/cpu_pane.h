@@ -8,7 +8,7 @@
 
 struct ncplane;
 
-struct Cpu;
+struct cpu;
 
 /* Stores state of the assembly pane. This deals primarily with presentation
  * logic, using notcurses as the back end. */
@@ -19,6 +19,6 @@ struct cpu_pane
 };
 
 struct cpu_pane make_cpu_pane(const int lines, const int cols, struct ncplane *std_plane);
-void cpu_pane_update(struct cpu_pane *pane, struct Cpu *cpu);
+void cpu_pane_update(struct cpu_pane *pane, struct cpu *cpu);
 
 #endif

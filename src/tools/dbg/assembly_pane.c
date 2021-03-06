@@ -1,7 +1,7 @@
 #include "assembly_pane.h"
 
 #include "cpu.h"
-#include "dbg.h"
+#include "debugger.h"
 #include "instruction.h"
 #include "util.h"
 
@@ -64,8 +64,8 @@ static struct ncplane *make_line_plane(struct ncplane *assembly_plane, uint8_t f
  * the values in memory are interpreted as instructions. This will also draw a
  * rounded border around the assembly plane on the standard notcurses plane.
  */
-struct assembly_pane make_assembly_pane(struct ncplane *std_plane, struct Debugger *debugger,
-                                        struct Cpu *cpu, const int lines, const int cols,
+struct assembly_pane make_assembly_pane(struct ncplane *std_plane, struct debugger *debugger,
+                                        struct cpu *cpu, const int lines, const int cols,
                                         const int y, const int x)
 {
   struct assembly_pane pane;
@@ -92,7 +92,7 @@ struct assembly_pane make_assembly_pane(struct ncplane *std_plane, struct Debugg
   pane.first_offset = 0;
   /* TODO(ton): in case a program writes to PRG ROM mapped memory, this needs to
    * be recalculated! */
-  pane.last_offset = dbg_address_to_instruction_offset(debugger, cpu, CPU_MAX_ADDRESS);
+  pane.last_offset = debugger_address_to_instruction_offset(debugger, cpu, CPU_MAX_ADDRESS);
   pane.scroll_offset = 3;
   pane.has_focus = false;
 
@@ -190,8 +190,8 @@ void assembly_pane_update(struct assembly_pane *pane)
   /* Position the breakpoints. */
   for (size_t i = 0; i < pane->debugger->breakpoints.size; ++i)
   {
-    const int bp_offset = dbg_address_to_instruction_offset(pane->debugger, pane->cpu,
-                                                            pane->debugger->breakpoints.data[i]);
+    const int bp_offset = debugger_address_to_instruction_offset(
+        pane->debugger, pane->cpu, pane->debugger->breakpoints.data[i]);
     struct ncplane *breakpoint_plane = pane->breakpoint_planes[i];
     ncplane_move_yx(breakpoint_plane, bp_offset - pane->first_offset, 0);
   }
@@ -215,10 +215,11 @@ void assembly_pane_resize(struct assembly_pane *pane, struct ncplane *std_plane,
 /*
  * Returns the address where the cursor is positioned.
  */
-Address assembly_pane_cursor_address(struct assembly_pane *pane, struct Debugger *debugger,
-                                     struct Cpu *cpu)
+Address assembly_pane_cursor_address(struct assembly_pane *pane, struct debugger *debugger,
+                                     struct cpu *cpu)
 {
-  return dbg_instruction_offset_to_address(debugger, cpu, pane->first_offset + pane->cursor_offset);
+  return debugger_instruction_offset_to_address(debugger, cpu,
+                                                pane->first_offset + pane->cursor_offset);
 }
 
 /*
@@ -235,7 +236,8 @@ void assembly_pane_move_cursor(struct assembly_pane *pane, int offset)
   if (pane->cursor_offset < 0)
   {
     pane->first_offset = MAX(0, pane->first_offset + pane->cursor_offset);
-    pane->first = dbg_instruction_offset_to_address(pane->debugger, pane->cpu, pane->first_offset);
+    pane->first =
+        debugger_instruction_offset_to_address(pane->debugger, pane->cpu, pane->first_offset);
     pane->cursor_offset = 0;
   }
   else if (offset > 0)
@@ -252,7 +254,7 @@ void assembly_pane_move_cursor(struct assembly_pane *pane, int offset)
     {
       pane->first_offset += pane->cursor_offset - last_cursor_offset;
       pane->first =
-          dbg_instruction_offset_to_address(pane->debugger, pane->cpu, pane->first_offset);
+          debugger_instruction_offset_to_address(pane->debugger, pane->cpu, pane->first_offset);
       pane->cursor_offset = last_cursor_offset;
     }
   }
@@ -264,13 +266,13 @@ void assembly_pane_move_cursor(struct assembly_pane *pane, int offset)
  * Scrolls the assembly pane to display the instruction that starts at or
  * overlaps the given address.
  */
-void assembly_pane_scroll_to_address(struct assembly_pane *pane, struct Debugger *debugger,
-                                     struct Cpu *cpu, Address address)
+void assembly_pane_scroll_to_address(struct assembly_pane *pane, struct debugger *debugger,
+                                     struct cpu *cpu, Address address)
 {
   const int prev_first_offset = pane->first_offset;
 
   pane->first = address;
-  pane->first_offset = dbg_address_to_instruction_offset(debugger, cpu, address);
+  pane->first_offset = debugger_address_to_instruction_offset(debugger, cpu, address);
   pane->cursor_offset = 0;
 
   assembly_pane_update_line_planes(pane, prev_first_offset - pane->first_offset);
@@ -281,13 +283,13 @@ void assembly_pane_scroll_to_address(struct assembly_pane *pane, struct Debugger
  * points to. This will also update the location of the bar that highlights the
  * instruction at the address the program counter is pointing to.
  */
-void assembly_pane_scroll_to_pc(struct assembly_pane *pane, struct Debugger *debugger,
-                                struct Cpu *cpu)
+void assembly_pane_scroll_to_pc(struct assembly_pane *pane, struct debugger *debugger,
+                                struct cpu *cpu)
 {
   assembly_pane_scroll_to_address(pane, debugger, cpu, cpu->PC);
 
   /* Position the PC plane. */
-  const int pc_offset = dbg_address_to_instruction_offset(debugger, cpu, cpu->PC);
+  const int pc_offset = debugger_address_to_instruction_offset(debugger, cpu, cpu->PC);
   ncplane_move_yx(pane->pc_plane, pc_offset - pane->first_offset, 0);
 }
 

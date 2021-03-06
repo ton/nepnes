@@ -52,7 +52,7 @@ enum FlagsBit
 /*
  * Representation of the 6502 CPU.
  */
-struct Cpu
+struct cpu
 {
   uint8_t A;  /* Accumulator */
   uint8_t X;  /* X index register */
@@ -66,9 +66,9 @@ struct Cpu
   unsigned cycle; /* Number of cycles elapsed since execution */
 };
 
-void cpu_execute_next_instruction(struct Cpu *cpu);
+void cpu_execute_next_instruction(struct cpu *cpu);
 
-void cpu_power_on(struct Cpu *cpu);
-void cpu_reset(struct Cpu *cpu);
+void cpu_power_on(struct cpu *cpu);
+void cpu_reset(struct cpu *cpu);
 
 #endif

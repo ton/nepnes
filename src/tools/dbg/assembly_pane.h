@@ -1,23 +1,23 @@
 #ifndef NEPNES_ASSEMBLY_PANE_H
 #define NEPNES_ASSEMBLY_PANE_H
 
-#include "dbg.h"
 #include "nn.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 struct ncplane;
 
-struct Cpu;
-struct Debugger;
+struct cpu;
+struct debugger;
 
 /* Stores state of the assembly pane. This deals primarily with presentation
  * logic, using notcurses as the back end. */
 struct assembly_pane
 {
-  const struct Debugger *debugger; /* non-owning pointer to the debugger state */
-  const struct Cpu *cpu;           /* non-owning pointer to the CPU state */
+  const struct debugger *debugger; /* non-owning pointer to the debugger state */
+  const struct cpu *cpu;           /* non-owning pointer to the CPU state */
 
   Address first; /* first address to display */
 
@@ -41,21 +41,21 @@ struct assembly_pane
   size_t breakpoint_planes_capacity;
 };
 
-struct assembly_pane make_assembly_pane(struct ncplane *std_plane, struct Debugger *debugger,
-                                        struct Cpu *cpu, const int lines, const int cols,
+struct assembly_pane make_assembly_pane(struct ncplane *std_plane, struct debugger *debugger,
+                                        struct cpu *cpu, const int lines, const int cols,
                                         const int y, const int x);
 void destroy_assembly_pane(struct assembly_pane *pane);
 
 void assembly_pane_update(struct assembly_pane *pane);
 void assembly_pane_resize(struct assembly_pane *pane, struct ncplane *std_plane, const int lines);
 
-Address assembly_pane_cursor_address(struct assembly_pane *pane, struct Debugger *debugger,
-                                     struct Cpu *cpu);
+Address assembly_pane_cursor_address(struct assembly_pane *pane, struct debugger *debugger,
+                                     struct cpu *cpu);
 void assembly_pane_move_cursor(struct assembly_pane *pane, int offset);
-void assembly_pane_scroll_to_address(struct assembly_pane *pane, struct Debugger *debugger,
-                                     struct Cpu *cpu, Address address);
-void assembly_pane_scroll_to_pc(struct assembly_pane *pane, struct Debugger *debugger,
-                                struct Cpu *cpu);
+void assembly_pane_scroll_to_address(struct assembly_pane *pane, struct debugger *debugger,
+                                     struct cpu *cpu, Address address);
+void assembly_pane_scroll_to_pc(struct assembly_pane *pane, struct debugger *debugger,
+                                struct cpu *cpu);
 
 void assembly_pane_set_focus(struct assembly_pane *pane, bool has_focus);
 

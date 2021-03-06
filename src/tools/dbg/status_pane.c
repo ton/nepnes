@@ -1,7 +1,7 @@
 #include "status_pane.h"
 
 #include "cpu.h"
-#include "dbg.h"
+#include "debugger.h"
 #include "instruction.h"
 #include "nc.h"
 #include "util.h"

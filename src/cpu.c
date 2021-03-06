@@ -25,7 +25,7 @@
 /*
  * Pops an 8-bit value from the stack.
  */
-static uint8_t cpu_pop_8b(struct Cpu *cpu)
+static uint8_t cpu_pop_8b(struct cpu *cpu)
 {
   cpu->S += 1;
   return cpu->ram[STACK_OFFSET + cpu->S];
@@ -34,7 +34,7 @@ static uint8_t cpu_pop_8b(struct Cpu *cpu)
 /*
  * Pushes an 8-bit value to the stack.
  */
-static void cpu_push_8b(struct Cpu *cpu, uint8_t i)
+static void cpu_push_8b(struct cpu *cpu, uint8_t i)
 {
   cpu->ram[STACK_OFFSET + cpu->S] = i;
   --cpu->S;
@@ -43,7 +43,7 @@ static void cpu_push_8b(struct Cpu *cpu, uint8_t i)
 /*
  * Pops a 16-bit value from the stack.
  */
-static uint16_t cpu_pop_16b(struct Cpu *cpu)
+static uint16_t cpu_pop_16b(struct cpu *cpu)
 {
   cpu->S += 2;
   uint16_t i;
@@ -54,7 +54,7 @@ static uint16_t cpu_pop_16b(struct Cpu *cpu)
 /*
  * Pushes a 16-bit value on to the stack.
  */
-static void cpu_push_16b(struct Cpu *cpu, uint16_t i)
+static void cpu_push_16b(struct cpu *cpu, uint16_t i)
 {
   memcpy(cpu->ram + STACK_OFFSET + cpu->S - 1, &i, 2);
   cpu->S -= 2;
@@ -65,7 +65,7 @@ static void cpu_push_16b(struct Cpu *cpu, uint16_t i)
  * accordingly. The zero flag is set in case the value in the accumulator is
  * zero. The negative flag is set in case bit 7 of the accumulator is set.
  */
-static void cpu_set_zero_negative_flags(struct Cpu *cpu, uint8_t x)
+static void cpu_set_zero_negative_flags(struct cpu *cpu, uint8_t x)
 {
   BIT_SET_IF(x == 0, cpu->P, FLAGS_BIT_ZERO);
   BIT_SET_IF(x & 0x80, cpu->P, FLAGS_BIT_NEGATIVE);
@@ -75,7 +75,7 @@ static void cpu_set_zero_negative_flags(struct Cpu *cpu, uint8_t x)
  * Performs an 8-bit add with carry, adding the given value to the accumulator
  * register.
  */
-static void cpu_addc(struct Cpu *cpu, uint8_t v)
+static void cpu_addc(struct cpu *cpu, uint8_t v)
 {
   /* The overflow flag is set in case the signed result of the addition does not
    * fit in the range -128 to 127. In case of signed addition, the operands are
@@ -125,7 +125,7 @@ static void cpu_addc(struct Cpu *cpu, uint8_t v)
  * Executes the instruction currently pointed to by the program counter register
  * (PC). Updates register state, updates cycle count.
  */
-void cpu_execute_next_instruction(struct Cpu *cpu)
+void cpu_execute_next_instruction(struct cpu *cpu)
 {
   const struct Instruction instruction = make_instruction(cpu->ram[cpu->PC]);
 
@@ -875,7 +875,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
 /*
  * Initializes the CPU to its initial state after power on (for a NES).
  */
-void cpu_power_on(struct Cpu *cpu)
+void cpu_power_on(struct cpu *cpu)
 {
   cpu->A = 0;
   cpu->X = 0;
@@ -895,7 +895,7 @@ void cpu_power_on(struct Cpu *cpu)
 /*
  * Initializes the CPU to its documented state after a reset (for a NES).
  */
-void cpu_power_reset(struct Cpu *cpu)
+void cpu_power_reset(struct cpu *cpu)
 {
   cpu->S -= 3;
   cpu->P |= FLAGS_INTERRUPT_DISABLE;

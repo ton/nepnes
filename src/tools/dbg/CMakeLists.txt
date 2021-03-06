@@ -2,7 +2,7 @@ add_executable(dbg
   assembly_pane.c
   breakpoints_pane.c
   cpu_pane.c
-  dbg.c
+  debugger.c
   flat_set.c
   main.c
   nc.c

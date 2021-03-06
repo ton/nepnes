@@ -1,9 +1,10 @@
-#include "cpu.h"
 #include "da.h"
-#include "io.h"
 #include "options.h"
-#include "rom.h"
-#include "util.h"
+
+#include <nn/6502/cpu.h>
+#include <nn/nes/rom.h>
+#include <nn/std/io.h>
+#include <nn/std/util.h>
 
 #include <stdlib.h>
 

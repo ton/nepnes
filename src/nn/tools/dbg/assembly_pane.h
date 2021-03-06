@@ -1,7 +1,7 @@
 #ifndef NEPNES_ASSEMBLY_PANE_H
 #define NEPNES_ASSEMBLY_PANE_H
 
-#include "nn.h"
+#include <nn/nn.h>
 
 #include <stdbool.h>
 #include <stddef.h>

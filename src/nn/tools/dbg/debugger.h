@@ -1,8 +1,8 @@
 #ifndef NEPNES_DEBUGGER_H
 #define NEPNES_DEBUGGER_H
 
-#include "cpu.h"
-#include "flat_set.h"
+#include <nn/6502/cpu.h>
+#include <nn/std/flat_set.h>
 
 #include <stdint.h>
 

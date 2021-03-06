@@ -3,7 +3,6 @@ add_executable(dbg
   breakpoints_pane.c
   cpu_pane.c
   debugger.c
-  flat_set.c
   main.c
   nc.c
   options.c

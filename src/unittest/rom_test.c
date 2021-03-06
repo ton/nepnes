@@ -1,8 +1,8 @@
 #include "rom_test.h"
 
-#include "io.h"
-#include "rom.h"
-#include "util.h"
+#include <nn/nes/rom.h>
+#include <nn/std/io.h>
+#include <nn/std/util.h>
 
 #include <check.h>
 

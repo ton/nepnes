@@ -2,20 +2,21 @@
 #include "breakpoints_pane.h"
 #include "cpu_pane.h"
 #include "debugger.h"
-#include "flat_set.h"
 #include "options.h"
 #include "status_pane.h"
 
+#include <nn/6502/cpu.h>
+#include <nn/6502/instruction.h>
+#include <nn/nes/rom.h>
+#include <nn/std/flat_set.h>
+#include <nn/std/io.h>
+#include <nn/std/util.h>
+
 #include <assert.h>
-#include <cpu.h>
-#include <instruction.h>
-#include <io.h>
 #include <locale.h>
 #include <notcurses/notcurses.h>
-#include <rom.h>
 #include <stdlib.h>
 #include <string.h>
-#include <util.h>
 
 /*
  * Logs the current CPU instruction to the given file, in Nintendulator format

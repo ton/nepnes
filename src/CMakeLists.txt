@@ -1,15 +1,15 @@
+add_subdirectory(nn/tools)
 add_subdirectory(unittest)
-add_subdirectory(tools)
 add_subdirectory(vendor)
 
 add_library(libnepnes
-  cpu.c
-  instruction.c
-  io.c
-  rom.c
-  util.c
-  tools/da/da.c
-  tools/dbg/flat_set.c
+  nn/6502/cpu.c
+  nn/6502/instruction.c
+  nn/nes/rom.c
+  nn/std/io.c
+  nn/std/util.c
+  nn/std/flat_set.c
+  nn/tools/da/da.c
 )
 
 target_link_libraries(libnepnes
@@ -17,8 +17,8 @@ target_link_libraries(libnepnes
 )
 
 add_executable(nepnes
-  ui.cpp
-  main.cpp
+  nn/ui.cpp
+  nn/main.cpp
   $<TARGET_OBJECTS:imgui>
 )
 

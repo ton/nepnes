@@ -2,7 +2,8 @@
 #define NEPNES_BREAKPOINTS_PANE_H
 
 #include "debugger.h"
-#include "nn.h"
+
+#include <nn/nn.h>
 
 #include <stdbool.h>
 #include <stdint.h>

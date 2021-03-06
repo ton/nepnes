@@ -1,6 +1,6 @@
 #include "flat_set_test.h"
 
-#include "tools/dbg/flat_set.h"
+#include <nn/std/flat_set.h>
 
 #include <check.h>
 

@@ -17,8 +17,10 @@ IncludeBlocks: Regroup
 IncludeCategories:
     - Regex:  '^".*"'
       Priority: 1
-    - Regex:  '^<(check.h)>'
+    - Regex:  '^<nn/.*\.h>'
       Priority: 2
-    - Regex:  '^<.*\.h>'
+    - Regex:  '^<(check.h)>'
       Priority: 3
+    - Regex:  '^<.*\.h>'
+      Priority: 4
 ...

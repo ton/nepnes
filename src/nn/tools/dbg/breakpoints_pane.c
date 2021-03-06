@@ -1,10 +1,11 @@
 #include "breakpoints_pane.h"
 
-#include "cpu.h"
 #include "debugger.h"
-#include "instruction.h"
 #include "nc.h"
-#include "util.h"
+
+#include <nn/6502/cpu.h>
+#include <nn/6502/instruction.h>
+#include <nn/std/util.h>
 
 #include <notcurses/notcurses.h>
 

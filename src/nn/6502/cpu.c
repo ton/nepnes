@@ -1,7 +1,7 @@
 #include "cpu.h"
 
-#include "instruction.h"
-#include "util.h"
+#include <nn/6502/instruction.h>
+#include <nn/std/util.h>
 
 #include <stdio.h>
 #include <string.h>

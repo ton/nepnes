@@ -1,7 +1,7 @@
 #ifndef NEPNES_CPU_H
 #define NEPNES_CPU_H
 
-#include "nn.h"
+#include <nn/nn.h>
 
 #include <stddef.h>
 #include <stdint.h>

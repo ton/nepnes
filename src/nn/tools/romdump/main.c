@@ -1,7 +1,8 @@
-#include "io.h"
-#include "rom.h"
-#include "tools/romdump/options.h"
-#include "util.h"
+#include "options.h"
+
+#include <nn/nes/rom.h>
+#include <nn/std/io.h>
+#include <nn/std/util.h>
 
 #include <stdlib.h>
 

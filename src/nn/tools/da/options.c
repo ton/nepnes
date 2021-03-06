@@ -1,6 +1,6 @@
-#include "tools/da/options.h"
+#include "options.h"
 
-#include "util.h"
+#include <nn/std/util.h>
 
 #include <getopt.h>
 #include <stdio.h>

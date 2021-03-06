@@ -1,7 +1,7 @@
 #ifndef NEPNES_STATUS_PANE_H
 #define NEPNES_STATUS_PANE_H
 
-#include "nn.h"
+#include <nn/nn.h>
 
 #include <stdbool.h>
 #include <stdint.h>

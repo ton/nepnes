@@ -1,6 +1,6 @@
 #include "rom.h"
 
-#include "util.h"
+#include <nn/std/util.h>
 
 /*
  * Constructs a ROM header from the given raw ROM header data.

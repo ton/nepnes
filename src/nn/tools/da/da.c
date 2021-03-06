@@ -1,7 +1,7 @@
 #include "da.h"
 
-#include "cpu.h"
-#include "instruction.h"
+#include <nn/6502/cpu.h>
+#include <nn/6502/instruction.h>
 
 /*
  * Disassembles the given ROM program data, with the given size, and outputs

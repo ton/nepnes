@@ -1,7 +1,7 @@
 #include "cpu_pane.h"
 
 #include "cpu.h"
-#include "dbg.h"
+#include "debugger.h"
 #include "instruction.h"
 #include "nc.h"
 #include "util.h"
@@ -26,7 +26,7 @@ struct cpu_pane make_cpu_pane(const int rows, const int cols, struct ncplane *st
 /*
  * Prints all relevant CPU state data in the given CPU pane.
  */
-void cpu_pane_update(struct cpu_pane *pane, struct Cpu *cpu)
+void cpu_pane_update(struct cpu_pane *pane, struct cpu *cpu)
 {
   struct ncplane *plane = pane->contents_plane;
   ncplane_erase(plane);

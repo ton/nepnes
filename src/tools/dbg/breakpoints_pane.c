@@ -1,7 +1,7 @@
 #include "breakpoints_pane.h"
 
 #include "cpu.h"
-#include "dbg.h"
+#include "debugger.h"
 #include "instruction.h"
 #include "nc.h"
 #include "util.h"
@@ -26,7 +26,7 @@ static void breakpoints_plane_draw_border(struct ncplane *breakpoints_plane,
  * the values in memory are interpreted as instructions. This will also draw a
  * rounded border around the assembly plane on the standard notcurses plane.
  */
-struct breakpoints_pane make_breakpoints_pane(struct ncplane *std_plane, struct Debugger *debugger,
+struct breakpoints_pane make_breakpoints_pane(struct ncplane *std_plane, struct debugger *debugger,
                                               const int rows, const int cols)
 {
   struct breakpoints_pane pane;
@@ -50,8 +50,8 @@ struct breakpoints_pane make_breakpoints_pane(struct ncplane *std_plane, struct 
  * Highlights the program counter, in case it is in view, draws the cursor line,
  * and highlights any breakpoints that are in view.
  */
-void breakpoints_pane_update(struct breakpoints_pane *pane, struct Debugger *debugger,
-                             struct Cpu *cpu)
+void breakpoints_pane_update(struct breakpoints_pane *pane, struct debugger *debugger,
+                             struct cpu *cpu)
 {
   struct ncplane *plane = pane->contents_plane;
   ncplane_erase(plane);

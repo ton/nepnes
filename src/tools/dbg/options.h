@@ -1,7 +1,7 @@
-#ifndef NEPNES_TOOLS_DBG_OPTIONS_H
-#define NEPNES_TOOLS_DBG_OPTIONS_H
+#ifndef NN_TOOLS_DBG_OPTIONS_H
+#define NN_TOOLS_DBG_OPTIONS_H
 
-#include "dbg.h"
+#include "debugger.h"
 
 struct Options
 {

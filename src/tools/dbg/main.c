@@ -1,7 +1,7 @@
 #include "assembly_pane.h"
 #include "breakpoints_pane.h"
 #include "cpu_pane.h"
-#include "dbg.h"
+#include "debugger.h"
 #include "flat_set.h"
 #include "options.h"
 #include "status_pane.h"
@@ -21,7 +21,7 @@
  * Logs the current CPU instruction to the given file, in Nintendulator format
  * so that it can be easily diffed with some verified output.
  */
-static void log_current_cpu_instruction(FILE *log_file, struct Cpu *cpu)
+static void log_current_cpu_instruction(FILE *log_file, struct cpu *cpu)
 {
   uint8_t *pc = cpu->ram + cpu->PC;
   const uint8_t *end = cpu->ram + sizeof cpu->ram;
@@ -62,7 +62,7 @@ static void log_current_cpu_instruction(FILE *log_file, struct Cpu *cpu)
  * are set.
  */
 static void toggle_focus(struct assembly_pane *assembly_pane,
-                         struct breakpoints_pane *breakpoints_pane, struct Debugger *debugger)
+                         struct breakpoints_pane *breakpoints_pane, struct debugger *debugger)
 {
   if (assembly_pane->has_focus && debugger->breakpoints.size > 0)
   {
@@ -167,7 +167,7 @@ int main(int argc, char **argv)
 
   /* Create the CPU and debugger state. Set the program counter to the address
    * where the ROM is loaded. */
-  struct Cpu cpu = {0};
+  struct cpu cpu = {0};
   cpu_power_on(&cpu);
   cpu.PC = options.address;
 
@@ -198,7 +198,7 @@ int main(int argc, char **argv)
   }
 
   /* Initialize the debugger state. */
-  struct Debugger debugger = make_debugger(prg_offset, prg_size);
+  struct debugger debugger = make_debugger(prg_offset, prg_size);
 
   notcurses_options opts = {0};
   opts.flags = NCOPTION_SUPPRESS_BANNERS;

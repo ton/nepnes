@@ -32,10 +32,9 @@ struct breakpoints_pane
 struct breakpoints_pane make_breakpoints_pane(struct ncplane *std_plane, struct debugger *debugger,
                                               const int lines, const int cols);
 
-void breakpoints_pane_update(struct breakpoints_pane *pane, struct debugger *debugger,
-                             struct cpu *cpu);
-void breakpoints_pane_resize(struct breakpoints_pane *pane, struct ncplane *std_plane,
-                             const int lines);
+void breakpoints_pane_update(struct breakpoints_pane *pane, struct debugger *debugger);
+// void breakpoints_pane_resize(struct breakpoints_pane *pane, struct ncplane *std_plane,
+//                              const int lines);
 
 void breakpoints_pane_move_cursor(struct breakpoints_pane *pane, int offset);
 void breakpoints_pane_set_focus(struct breakpoints_pane *pane, bool has_focus);

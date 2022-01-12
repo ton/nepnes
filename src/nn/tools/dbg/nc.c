@@ -16,9 +16,9 @@ struct ncplane *nn_make_line_plane(struct ncplane *parent_plane, uint8_t fr, uin
   opts.y = 0;
   opts.x = 0;
 
-  nccell c = CELL_TRIVIAL_INITIALIZER;
-  cell_set_fg_rgb8(&c, fr, fg, fb);
-  cell_set_bg_rgb8(&c, br, bg, bb);
+  nccell c = NCCELL_TRIVIAL_INITIALIZER;
+  nccell_set_fg_rgb8(&c, fr, fg, fb);
+  nccell_set_bg_rgb8(&c, br, bg, bb);
 
   struct ncplane *plane = ncplane_create(parent_plane, &opts);
   ncplane_set_base_cell(plane, &c);

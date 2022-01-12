@@ -13,14 +13,16 @@
  * Draws the border next to the assembly plane. Also called in case of a resize
  * event.
  */
+/*
 static void breakpoints_plane_draw_border(struct ncplane *breakpoints_plane,
                                           struct ncplane *std_plane, int lines)
 {
-  nccell vline_cell = CELL_TRIVIAL_INITIALIZER;
-  cell_load(std_plane, &vline_cell, "\u2502");
+  nccell vline_cell = NCCELL_TRIVIAL_INITIALIZER;
+  nccell_load(std_plane, &vline_cell, "\u2502");
   ncplane_cursor_move_yx(std_plane, 0, ncplane_dim_x(breakpoints_plane));
   ncplane_vline(std_plane, &vline_cell, lines);
 }
+*/
 
 /*
  * Constructs the plane that contains a view on the memory of the machine, where
@@ -51,8 +53,7 @@ struct breakpoints_pane make_breakpoints_pane(struct ncplane *std_plane, struct 
  * Highlights the program counter, in case it is in view, draws the cursor line,
  * and highlights any breakpoints that are in view.
  */
-void breakpoints_pane_update(struct breakpoints_pane *pane, struct debugger *debugger,
-                             struct cpu *cpu)
+void breakpoints_pane_update(struct breakpoints_pane *pane, struct debugger *debugger)
 {
   struct ncplane *plane = pane->contents_plane;
   ncplane_erase(plane);
@@ -69,11 +70,13 @@ void breakpoints_pane_update(struct breakpoints_pane *pane, struct debugger *deb
 /*
  * Redraws the assembly pane after a resize.
  */
+/*
 void breakpoints_pane_resize(struct breakpoints_pane *pane, struct ncplane *std_plane,
                              const int lines)
 {
-  /* breakpoints_plane_draw_border(pane->plane, std_plane, lines); */
+  breakpoints_plane_draw_border(pane->plane, std_plane, lines);
 }
+*/
 
 /*
  * Moves the cursor in the assembly view by the given number of lines.

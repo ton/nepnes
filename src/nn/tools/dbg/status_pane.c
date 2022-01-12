@@ -24,8 +24,8 @@ struct status_pane make_status_pane(struct ncplane *std_plane)
 
   pane.plane = nn_make_simple_plane(std_plane, ncplane_dim_y(std_plane) - 1, 0, rows, cols);
 
-  nccell c = CELL_CHAR_INITIALIZER(' ');
-  cell_set_bg_rgb8(&c, 0x20, 0x20, 0x20);
+  nccell c = NCCELL_CHAR_INITIALIZER(' ');
+  nccell_set_bg_rgb8(&c, 0x20, 0x20, 0x20);
   ncplane_set_base_cell(pane.plane, &c);
 
   return pane;

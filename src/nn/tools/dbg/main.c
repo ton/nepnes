@@ -15,6 +15,7 @@
 #include <assert.h>
 #include <locale.h>
 #include <notcurses/notcurses.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -124,9 +125,9 @@ static int user_query_address(struct notcurses *nc, struct ncplane *plane, const
   /*
    * Query user input, only hexadecimal characters and Enter/Escape are allowed.
    */
-  char32_t c;
+  uint32_t c;
   struct ncinput input;
-  while ((c = notcurses_getc_blocking(nc, &input)) != NCKEY_ENTER && c != NCKEY_ESC)
+  while ((c = notcurses_get_blocking(nc, &input)) != NCKEY_ENTER && c != NCKEY_ESC)
   {
     if (('0' <= c && c <= '9') || ('a' <= c && c <= 'f') || ('A' <= c && c <= 'F') ||
         c == NCKEY_BACKSPACE)
@@ -220,8 +221,8 @@ int main(int argc, char **argv)
     }
   }
 
-  int term_rows;
-  int term_cols;
+  unsigned term_rows;
+  unsigned term_cols;
   notcurses_term_dim_yx(nc, &term_rows, &term_cols);
 
   /* Create notcurses planes. */
@@ -264,7 +265,7 @@ int main(int argc, char **argv)
      * Check out how notcurses handles this in their demos. */
 
     assembly_pane_update(&assembly_pane);
-    breakpoints_pane_update(&breakpoints_pane, &debugger, &cpu);
+    breakpoints_pane_update(&breakpoints_pane, &debugger);
     cpu_pane_update(&cpu_pane, &cpu);
     status_pane_update(&status_pane);
 
@@ -274,7 +275,7 @@ int main(int argc, char **argv)
     if (interactive_mode)
     {
       /* Read user input, and act accordingly. */
-      notcurses_getc_blocking(nc, &input);
+      notcurses_get_blocking(nc, &input);
       switch (input.id)
       {
         case NCKEY_RESIZE:
@@ -381,7 +382,7 @@ int main(int argc, char **argv)
           {
             struct timespec ts = {0};
             ts.tv_sec = 1;
-            if (notcurses_getc(nc, &ts, NULL, NULL) == 'g')
+            if (notcurses_get(nc, &ts, NULL) == 'g')
             {
               assembly_pane_scroll_to_address(&assembly_pane, &debugger, &cpu, 0x0);
             }
@@ -423,7 +424,7 @@ int main(int argc, char **argv)
         case '?': /* show help */
           status_pane_print_help(&status_pane);
           notcurses_render(nc);
-          notcurses_getc_blocking(nc, &input);
+          notcurses_get_blocking(nc, &input);
           ncplane_erase(status_pane.plane);
           break;
       }

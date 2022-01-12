@@ -15,8 +15,8 @@
 static void assembly_plane_draw_border(struct ncplane *assembly_plane, struct ncplane *std_plane,
                                        int lines)
 {
-  nccell vline_cell = CELL_TRIVIAL_INITIALIZER;
-  cell_load(std_plane, &vline_cell, "\u2502");
+  nccell vline_cell = NCCELL_TRIVIAL_INITIALIZER;
+  nccell_load(std_plane, &vline_cell, "\u2502");
   ncplane_cursor_move_yx(std_plane, 0, ncplane_dim_x(assembly_plane));
   ncplane_vline(std_plane, &vline_cell, lines);
 }
@@ -51,9 +51,9 @@ static struct ncplane *make_line_plane(struct ncplane *assembly_plane, uint8_t f
   opts.y = 1;
   opts.x = 0;
 
-  nccell c = CELL_TRIVIAL_INITIALIZER;
-  cell_set_fg_rgb8(&c, fr, fg, fb);
-  cell_set_bg_rgb8(&c, br, bg, bb);
+  nccell c = NCCELL_TRIVIAL_INITIALIZER;
+  nccell_set_fg_rgb8(&c, fr, fg, fb);
+  nccell_set_bg_rgb8(&c, br, bg, bb);
 
   struct ncplane *plane = ncplane_create(assembly_plane, &opts);
   ncplane_set_base_cell(plane, &c);

@@ -148,14 +148,6 @@ void quit_strerror(const char *fmt, ...)
   kill(0, SIGTERM);
 }
 
-/* Returns a timestamp with microseconds precision. */
-timestamp_t get_timestamp()
-{
-  struct timeval now;
-  gettimeofday(&now, NULL);
-  return now.tv_usec + (timestamp_t)now.tv_sec * 1000000;
-}
-
 static void quit_optional_strerror(bool append_strerror, const char *fmt, va_list ap)
 {
   char buf[MAXLINE];

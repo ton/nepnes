@@ -278,6 +278,14 @@ static const struct Instruction instructions[256] = {
     {0}};
 
 /*
+ * Returns the assembly token for the given operation.
+ */
+static const char *operation_name(enum Operation op)
+{
+  return operation_mnemonic[op];
+}
+
+/*
  * Constructs an opcode containing all information on the given opcode encoding,
  * like the number of bytes it occupies in memory, the number of cycles it takes
  * to execute, and the addressing mode it uses.
@@ -324,14 +332,6 @@ uint8_t *next_instruction(uint8_t *pc)
 }
 
 /*
- * Returns the assembly token for the given operation.
- */
-const char *Instruction_operation_name(enum Operation op)
-{
-  return operation_mnemonic[op];
-}
-
-/*
  * See `instruction_print_layout`. Prints an instruction to some statically
  * allocated buffer using `nes-disasm` instruction layout.
  */
@@ -364,55 +364,48 @@ const char *instruction_print_layout(struct Instruction *ins, uint32_t encoding,
           (ins->op == OP_STX || ins->op == OP_LDX || ins->op == OP_LDA || ins->op == OP_STA);
       if (print_address_value)
       {
-        snprintf(buffer, sizeof buffer, "%s $%04X = %02X", Instruction_operation_name(ins->op),
+        snprintf(buffer, sizeof buffer, "%s $%04X = %02X", operation_name(ins->op),
                  ltob_uint16(encoding), cpu->ram[ltob_uint16(encoding)]);
       }
       else
       {
-        snprintf(buffer, sizeof buffer, "%s $%04X", Instruction_operation_name(ins->op),
-                 ltob_uint16(encoding));
+        snprintf(buffer, sizeof buffer, "%s $%04X", operation_name(ins->op), ltob_uint16(encoding));
       }
     }
     break;
     case AM_ABSOLUTE_X:
-      snprintf(buffer, sizeof buffer, "%s $%04X,X", Instruction_operation_name(ins->op),
-               ltob_uint16(encoding));
+      snprintf(buffer, sizeof buffer, "%s $%04X,X", operation_name(ins->op), ltob_uint16(encoding));
       break;
     case AM_ABSOLUTE_Y:
-      snprintf(buffer, sizeof buffer, "%s $%04X,Y", Instruction_operation_name(ins->op),
-               ltob_uint16(encoding));
+      snprintf(buffer, sizeof buffer, "%s $%04X,Y", operation_name(ins->op), ltob_uint16(encoding));
       break;
     case AM_ACCUMULATOR:
-      snprintf(buffer, sizeof buffer, "%s A", Instruction_operation_name(ins->op));
+      snprintf(buffer, sizeof buffer, "%s A", operation_name(ins->op));
       break;
     case AM_IMMEDIATE:
-      snprintf(buffer, sizeof buffer, "%s #$%02X", Instruction_operation_name(ins->op),
-               encoding & 0xff);
+      snprintf(buffer, sizeof buffer, "%s #$%02X", operation_name(ins->op), encoding & 0xff);
       break;
     case AM_IMPLIED:
-      snprintf(buffer, sizeof buffer, "%s", Instruction_operation_name(ins->op));
+      snprintf(buffer, sizeof buffer, "%s", operation_name(ins->op));
       break;
     case AM_INDIRECT:
-      snprintf(buffer, sizeof buffer, "%s ($%04X)", Instruction_operation_name(ins->op),
-               ltob_uint16(encoding));
+      snprintf(buffer, sizeof buffer, "%s ($%04X)", operation_name(ins->op), ltob_uint16(encoding));
       break;
     case AM_INDIRECT_X:
-      snprintf(buffer, sizeof buffer, "%s ($%02X,X)", Instruction_operation_name(ins->op),
-               encoding & 0xff);
+      snprintf(buffer, sizeof buffer, "%s ($%02X,X)", operation_name(ins->op), encoding & 0xff);
       break;
     case AM_INDIRECT_Y:
-      snprintf(buffer, sizeof buffer, "%s ($%02X),Y", Instruction_operation_name(ins->op),
-               encoding & 0xff);
+      snprintf(buffer, sizeof buffer, "%s ($%02X),Y", operation_name(ins->op), encoding & 0xff);
       break;
     case AM_RELATIVE:
       switch (layout)
       {
         case IL_NES_DISASM:
-          snprintf(buffer, sizeof buffer, "%s $%02X (%d)", Instruction_operation_name(ins->op),
-                   encoding & 0xff, (char)(encoding & 0xff));
+          snprintf(buffer, sizeof buffer, "%s $%02X (%d)", operation_name(ins->op), encoding & 0xff,
+                   (char)(encoding & 0xff));
           break;
         case IL_NINTENDULATOR:
-          snprintf(buffer, sizeof buffer, "%s $%02X", Instruction_operation_name(ins->op),
+          snprintf(buffer, sizeof buffer, "%s $%02X", operation_name(ins->op),
                    cpu->PC + ins->bytes + (encoding & 0xff));
           break;
       }
@@ -421,22 +414,19 @@ const char *instruction_print_layout(struct Instruction *ins, uint32_t encoding,
       switch (layout)
       {
         case IL_NES_DISASM:
-          snprintf(buffer, sizeof buffer, "%s $%02X", Instruction_operation_name(ins->op),
-                   encoding & 0xff);
+          snprintf(buffer, sizeof buffer, "%s $%02X", operation_name(ins->op), encoding & 0xff);
           break;
         case IL_NINTENDULATOR:
-          snprintf(buffer, sizeof buffer, "%s $%02X = %02X", Instruction_operation_name(ins->op),
+          snprintf(buffer, sizeof buffer, "%s $%02X = %02X", operation_name(ins->op),
                    encoding & 0xff, cpu->ram[encoding & 0xff]);
           break;
       }
       break;
     case AM_ZERO_PAGE_X:
-      snprintf(buffer, sizeof buffer, "%s $%02X,X", Instruction_operation_name(ins->op),
-               encoding & 0xff);
+      snprintf(buffer, sizeof buffer, "%s $%02X,X", operation_name(ins->op), encoding & 0xff);
       break;
     case AM_ZERO_PAGE_Y:
-      snprintf(buffer, sizeof buffer, "%s $%02X,Y", Instruction_operation_name(ins->op),
-               encoding & 0xff);
+      snprintf(buffer, sizeof buffer, "%s $%02X,Y", operation_name(ins->op), encoding & 0xff);
       break;
   }
 

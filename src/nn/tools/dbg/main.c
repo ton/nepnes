@@ -26,31 +26,25 @@
 static void log_current_cpu_instruction(FILE *log_file, struct Cpu *cpu)
 {
   uint8_t *pc = cpu->ram + cpu->PC;
-  const uint8_t *end = cpu->ram + sizeof cpu->ram;
-
   struct Instruction ins = make_instruction(*pc);
 
-  uint32_t encoding = *pc;
-  for (int i = 1; i < ins.bytes; ++i)
-  {
-    encoding = (encoding << 8) + (pc + i < end ? *(pc + i) : 0);
-  }
-
+  /* TODO(ton): check whether we go out-of-bounds while indexing the program
+   * counter below. */
   char encoding_buf[9];
   switch (ins.bytes)
   {
     case 1:
-      sprintf(encoding_buf, "%02X      ", (uint8_t)(encoding & 0x0000ff));
+      sprintf(encoding_buf, "%02X      ", *pc);
       break;
     case 2:
-      sprintf(encoding_buf, "%02X %02X   ", (uint8_t)((encoding & 0x00ff00) >> 8),
-              (uint8_t)(encoding & 0x0000ff));
+      sprintf(encoding_buf, "%02X %02X   ", *pc, *(pc + 1));
       break;
     case 3:
-      sprintf(encoding_buf, "%02X %02X %02X", (uint8_t)((encoding & 0xff0000) >> 16),
-              (uint8_t)((encoding & 0x00ff00) >> 8), (uint8_t)(encoding & 0x0000ff));
+      sprintf(encoding_buf, "%02X %02X %02X", *pc, *(pc + 1), *(pc + 2));
       break;
   }
+
+  const Encoding encoding = *(Encoding *)(pc);
 
   fprintf(log_file, "%X  %s  %-31s A:%02X X:%02X Y:%02X P:%02X SP:%02X CYC:%d\n", cpu->PC,
           encoding_buf, instruction_print_layout(&ins, encoding, IL_NINTENDULATOR, cpu), cpu->A,

@@ -235,8 +235,11 @@ enum InstructionLayout
 
 struct Cpu;
 
-const char *instruction_print(struct Instruction *ins, uint32_t encoding);
-const char *instruction_print_layout(struct Instruction *ins, uint32_t encoding,
+/* An instruction is encoded by a maximum of three bytes. */
+typedef uint32_t Encoding;
+
+const char *instruction_print(struct Instruction *ins, Encoding encoding);
+const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
                                      enum InstructionLayout layout, struct Cpu *cpu);
 
 #endif

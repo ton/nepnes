@@ -14,9 +14,9 @@
  * the values in memory are interpreted as instructions. This will also draw a
  * rounded border around the assembly plane on the standard notcurses plane.
  */
-struct cpu_pane make_cpu_pane(const int rows, const int cols, struct ncplane *std_plane)
+struct CpuPane make_cpu_pane(const int rows, const int cols, struct ncplane *std_plane)
 {
-  struct cpu_pane pane;
+  struct CpuPane pane;
 
   pane.decoration_plane = nn_make_pane_plane(std_plane, "CPU", 0, 0, rows, cols);
   pane.contents_plane = nn_make_simple_plane(pane.decoration_plane, 1, 1, rows - 2, cols - 2);
@@ -27,7 +27,7 @@ struct cpu_pane make_cpu_pane(const int rows, const int cols, struct ncplane *st
 /*
  * Prints all relevant CPU state data in the given CPU pane.
  */
-void cpu_pane_update(struct cpu_pane *pane, struct cpu *cpu)
+void cpu_pane_update(struct CpuPane *pane, struct Cpu *cpu)
 {
   struct ncplane *plane = pane->contents_plane;
   ncplane_erase(plane);

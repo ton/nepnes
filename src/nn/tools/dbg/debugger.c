@@ -7,9 +7,9 @@
 /*
  * Creates a debugger.
  */
-struct debugger make_debugger(Address prg_offset, size_t prg_size)
+struct Debugger make_debugger(Address prg_offset, size_t prg_size)
 {
-  struct debugger debugger = {prg_offset, prg_size, {0}};
+  struct Debugger debugger = {prg_offset, prg_size, {0}};
   debugger.breakpoints = make_flat_set(16);
   return debugger;
 }
@@ -17,7 +17,7 @@ struct debugger make_debugger(Address prg_offset, size_t prg_size)
 /*
  * Frees dynamically allocated memory for a debugger object.
  */
-void destroy_debugger(struct debugger *debugger)
+void destroy_debugger(struct Debugger *debugger)
 {
   destroy_flat_set(&debugger->breakpoints);
 }
@@ -28,7 +28,7 @@ void destroy_debugger(struct debugger *debugger)
  * located at the address, or that overlaps the given address, is the n-th
  * instruction in memory.
  */
-int debugger_address_to_instruction_offset(const struct debugger *debugger, const struct cpu *cpu,
+int debugger_address_to_instruction_offset(const struct Debugger *debugger, const struct Cpu *cpu,
                                            Address address)
 {
   /* Each data memory location is displayed on a single line. In case we are in
@@ -58,8 +58,8 @@ int debugger_address_to_instruction_offset(const struct debugger *debugger, cons
  * will display the data at the given address, or that overlaps the given
  * address.
  */
-Address debugger_instruction_offset_to_address(const struct debugger *debugger,
-                                               const struct cpu *cpu, uint16_t offset)
+Address debugger_instruction_offset_to_address(const struct Debugger *debugger,
+                                               const struct Cpu *cpu, uint16_t offset)
 {
   /* Each data memory location is displayed on a single line. In case we are in
    * the data segment, just return the address as the line number. */
@@ -87,7 +87,7 @@ Address debugger_instruction_offset_to_address(const struct debugger *debugger,
 /*
  * Returns whether a breakpoint is current set for the given address.
  */
-bool debugger_has_breakpoint_at(struct debugger *debugger, Address address)
+bool debugger_has_breakpoint_at(struct Debugger *debugger, Address address)
 {
   return flat_set_contains(&debugger->breakpoints, address);
 }
@@ -97,7 +97,7 @@ bool debugger_has_breakpoint_at(struct debugger *debugger, Address address)
  * already set for the given address, removes it, otherwise, sets it. Returns
  * the index of the breakpoint that was added or removed.
  */
-size_t debugger_toggle_breakpoint_at(struct debugger *debugger, Address address)
+size_t debugger_toggle_breakpoint_at(struct Debugger *debugger, Address address)
 {
   return flat_set_contains(&debugger->breakpoints, address)
              ? flat_set_remove(&debugger->breakpoints, address)

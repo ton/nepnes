@@ -23,7 +23,7 @@
  * Logs the current CPU instruction to the given file, in Nintendulator format
  * so that it can be easily diffed with some verified output.
  */
-static void log_current_cpu_instruction(FILE *log_file, struct cpu *cpu)
+static void log_current_cpu_instruction(FILE *log_file, struct Cpu *cpu)
 {
   uint8_t *pc = cpu->ram + cpu->PC;
   const uint8_t *end = cpu->ram + sizeof cpu->ram;
@@ -63,8 +63,8 @@ static void log_current_cpu_instruction(FILE *log_file, struct cpu *cpu)
  * same time. The breakpoints pane can not receive focus in case no breakpoints
  * are set.
  */
-static void toggle_focus(struct assembly_pane *assembly_pane,
-                         struct breakpoints_pane *breakpoints_pane, struct debugger *debugger)
+static void toggle_focus(struct AssemblyPane *assembly_pane,
+                         struct BreakpointsPane *breakpoints_pane, struct Debugger *debugger)
 {
   if (assembly_pane->has_focus && debugger->breakpoints.size > 0)
   {
@@ -169,7 +169,7 @@ int main(int argc, char **argv)
 
   /* Create the CPU and debugger state. Set the program counter to the address
    * where the ROM is loaded. */
-  struct cpu cpu = {0};
+  struct Cpu cpu = {0};
   cpu_power_on(&cpu);
   cpu.PC = options.address;
 
@@ -200,7 +200,7 @@ int main(int argc, char **argv)
   }
 
   /* Initialize the debugger state. */
-  struct debugger debugger = make_debugger(prg_offset, prg_size);
+  struct Debugger debugger = make_debugger(prg_offset, prg_size);
 
   notcurses_options opts = {0};
   opts.flags = NCOPTION_SUPPRESS_BANNERS;
@@ -232,14 +232,14 @@ int main(int argc, char **argv)
   const int assembly_x = 0;
   const int assembly_y = 0;
   const int assembly_cols = 80;
-  struct assembly_pane assembly_pane = make_assembly_pane(std_plane, &debugger, &cpu, term_rows - 1,
-                                                          assembly_cols, assembly_y, assembly_x);
+  struct AssemblyPane assembly_pane = make_assembly_pane(std_plane, &debugger, &cpu, term_rows - 1,
+                                                         assembly_cols, assembly_y, assembly_x);
   assembly_pane.has_focus = true;
   assembly_pane_scroll_to_pc(&assembly_pane, &debugger, &cpu);
 
-  struct breakpoints_pane breakpoints_pane = make_breakpoints_pane(std_plane, &debugger, 9, 30);
+  struct BreakpointsPane breakpoints_pane = make_breakpoints_pane(std_plane, &debugger, 9, 30);
 
-  struct cpu_pane cpu_pane = make_cpu_pane(9, 20, std_plane);
+  struct CpuPane cpu_pane = make_cpu_pane(9, 20, std_plane);
   struct status_pane status_pane = make_status_pane(std_plane);
 
   /* Move the CPU state plane to the upper right corner. */

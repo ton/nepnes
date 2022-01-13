@@ -25,7 +25,7 @@ static void assembly_plane_draw_border(struct ncplane *assembly_plane, struct nc
  * After the contents in the assembly pane scroll in a certain direction, this repositions the bars
  * that highlight certain instructions, like the instruction the program counter is pointing to,
  * breakpoints, etc. */
-static void assembly_pane_update_line_planes(struct assembly_pane *pane, int delta_first_offset)
+static void assembly_pane_update_line_planes(struct AssemblyPane *pane, int delta_first_offset)
 {
   /* Position the cursor plane (if this pane has focus). */
   if (pane->has_focus)
@@ -65,11 +65,11 @@ static struct ncplane *make_line_plane(struct ncplane *assembly_plane, uint8_t f
  * the values in memory are interpreted as instructions. This will also draw a
  * rounded border around the assembly plane on the standard notcurses plane.
  */
-struct assembly_pane make_assembly_pane(struct ncplane *std_plane, struct debugger *debugger,
-                                        struct cpu *cpu, const int lines, const int cols,
-                                        const int y, const int x)
+struct AssemblyPane make_assembly_pane(struct ncplane *std_plane, struct Debugger *debugger,
+                                       struct Cpu *cpu, const int lines, const int cols,
+                                       const int y, const int x)
 {
-  struct assembly_pane pane;
+  struct AssemblyPane pane;
 
   pane.cpu = cpu;
   pane.debugger = debugger;
@@ -112,7 +112,7 @@ struct assembly_pane make_assembly_pane(struct ncplane *std_plane, struct debugg
  * Destroys all dynamically allocated memory associated with an assembly pane.
  * TODO(ton): Do we even need this...? Let the OS take care of it...
  */
-void destroy_assembly_pane(struct assembly_pane *pane)
+void destroy_assembly_pane(struct AssemblyPane *pane)
 {
   free(pane->breakpoint_planes);
 }
@@ -122,7 +122,7 @@ void destroy_assembly_pane(struct assembly_pane *pane)
  * Highlights the program counter, in case it is in view, draws the cursor line,
  * and highlights any breakpoints that are in view.
  */
-void assembly_pane_update(struct assembly_pane *pane)
+void assembly_pane_update(struct AssemblyPane *pane)
 {
   uint32_t address = pane->first;
   const uint32_t prg_last_address = pane->debugger->prg_offset + pane->debugger->prg_size;
@@ -208,7 +208,7 @@ void assembly_pane_update(struct assembly_pane *pane)
 /*
  * Redraws the assembly pane after a resize.
  */
-void assembly_pane_resize(struct assembly_pane *pane, struct ncplane *std_plane, const int lines)
+void assembly_pane_resize(struct AssemblyPane *pane, struct ncplane *std_plane, const int lines)
 {
   assembly_plane_draw_border(pane->plane, std_plane, lines);
 }
@@ -216,8 +216,8 @@ void assembly_pane_resize(struct assembly_pane *pane, struct ncplane *std_plane,
 /*
  * Returns the address where the cursor is positioned.
  */
-Address assembly_pane_cursor_address(struct assembly_pane *pane, struct debugger *debugger,
-                                     struct cpu *cpu)
+Address assembly_pane_cursor_address(struct AssemblyPane *pane, struct Debugger *debugger,
+                                     struct Cpu *cpu)
 {
   return debugger_instruction_offset_to_address(debugger, cpu,
                                                 pane->first_offset + pane->cursor_offset);
@@ -226,7 +226,7 @@ Address assembly_pane_cursor_address(struct assembly_pane *pane, struct debugger
 /*
  * Moves the cursor in the assembly view by the given number of lines.
  */
-void assembly_pane_move_cursor(struct assembly_pane *pane, int offset)
+void assembly_pane_move_cursor(struct AssemblyPane *pane, int offset)
 {
   pane->cursor_offset += offset;
 
@@ -267,8 +267,8 @@ void assembly_pane_move_cursor(struct assembly_pane *pane, int offset)
  * Scrolls the assembly pane to display the instruction that starts at or
  * overlaps the given address.
  */
-void assembly_pane_scroll_to_address(struct assembly_pane *pane, struct debugger *debugger,
-                                     struct cpu *cpu, Address address)
+void assembly_pane_scroll_to_address(struct AssemblyPane *pane, struct Debugger *debugger,
+                                     struct Cpu *cpu, Address address)
 {
   const int prev_first_offset = pane->first_offset;
 
@@ -284,8 +284,8 @@ void assembly_pane_scroll_to_address(struct assembly_pane *pane, struct debugger
  * points to. This will also update the location of the bar that highlights the
  * instruction at the address the program counter is pointing to.
  */
-void assembly_pane_scroll_to_pc(struct assembly_pane *pane, struct debugger *debugger,
-                                struct cpu *cpu)
+void assembly_pane_scroll_to_pc(struct AssemblyPane *pane, struct Debugger *debugger,
+                                struct Cpu *cpu)
 {
   assembly_pane_scroll_to_address(pane, debugger, cpu, cpu->PC);
 
@@ -298,7 +298,7 @@ void assembly_pane_scroll_to_pc(struct assembly_pane *pane, struct debugger *deb
  * Either sets or removes focus for this pane. In case this pane has focus, the
  * cursor is visible, otherwise, it is hidden.
  */
-void assembly_pane_set_focus(struct assembly_pane *pane, bool has_focus)
+void assembly_pane_set_focus(struct AssemblyPane *pane, bool has_focus)
 {
   if ((pane->has_focus = has_focus))
   {

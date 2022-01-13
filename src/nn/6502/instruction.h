@@ -233,10 +233,10 @@ enum InstructionLayout
   IL_NINTENDULATOR,
 };
 
-struct cpu;
+struct Cpu;
 
 const char *instruction_print(struct Instruction *ins, uint32_t encoding);
 const char *instruction_print_layout(struct Instruction *ins, uint32_t encoding,
-                                     enum InstructionLayout layout, struct cpu *cpu);
+                                     enum InstructionLayout layout, struct Cpu *cpu);
 
 #endif

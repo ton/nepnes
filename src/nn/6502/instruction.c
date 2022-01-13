@@ -348,7 +348,7 @@ const char *instruction_print(struct Instruction *ins, uint32_t encoding)
  * print out values that are stored in the zero page.
  */
 const char *instruction_print_layout(struct Instruction *ins, uint32_t encoding,
-                                     enum InstructionLayout layout, struct cpu *cpu)
+                                     enum InstructionLayout layout, struct Cpu *cpu)
 {
   static char buffer[INSTRUCTION_BUFSIZE + 1];
 

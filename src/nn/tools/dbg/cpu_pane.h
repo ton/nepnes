@@ -8,17 +8,17 @@
 
 struct ncplane;
 
-struct cpu;
+struct Cpu;
 
 /* Stores state of the assembly pane. This deals primarily with presentation
  * logic, using notcurses as the back end. */
-struct cpu_pane
+struct CpuPane
 {
   struct ncplane *decoration_plane; /* base plane, holds the window border and title */
   struct ncplane *contents_plane;   /* holds the list of breakpoints */
 };
 
-struct cpu_pane make_cpu_pane(const int lines, const int cols, struct ncplane *std_plane);
-void cpu_pane_update(struct cpu_pane *pane, struct cpu *cpu);
+struct CpuPane make_cpu_pane(const int lines, const int cols, struct ncplane *std_plane);
+void cpu_pane_update(struct CpuPane *pane, struct Cpu *cpu);
 
 #endif

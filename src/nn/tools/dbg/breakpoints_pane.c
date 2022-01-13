@@ -29,10 +29,10 @@ static void breakpoints_plane_draw_border(struct ncplane *breakpoints_plane,
  * the values in memory are interpreted as instructions. This will also draw a
  * rounded border around the assembly plane on the standard notcurses plane.
  */
-struct breakpoints_pane make_breakpoints_pane(struct ncplane *std_plane, struct debugger *debugger,
-                                              const int rows, const int cols)
+struct BreakpointsPane make_breakpoints_pane(struct ncplane *std_plane, struct Debugger *debugger,
+                                             const int rows, const int cols)
 {
-  struct breakpoints_pane pane;
+  struct BreakpointsPane pane;
 
   pane.debugger = debugger;
   pane.first = 0;
@@ -53,7 +53,7 @@ struct breakpoints_pane make_breakpoints_pane(struct ncplane *std_plane, struct 
  * Highlights the program counter, in case it is in view, draws the cursor line,
  * and highlights any breakpoints that are in view.
  */
-void breakpoints_pane_update(struct breakpoints_pane *pane, struct debugger *debugger)
+void breakpoints_pane_update(struct BreakpointsPane *pane, struct Debugger *debugger)
 {
   struct ncplane *plane = pane->contents_plane;
   ncplane_erase(plane);
@@ -71,7 +71,7 @@ void breakpoints_pane_update(struct breakpoints_pane *pane, struct debugger *deb
  * Redraws the assembly pane after a resize.
  */
 /*
-void breakpoints_pane_resize(struct breakpoints_pane *pane, struct ncplane *std_plane,
+void breakpoints_pane_resize(struct BreakpointsPane *pane, struct ncplane *std_plane,
                              const int lines)
 {
   breakpoints_plane_draw_border(pane->plane, std_plane, lines);
@@ -81,7 +81,7 @@ void breakpoints_pane_resize(struct breakpoints_pane *pane, struct ncplane *std_
 /*
  * Moves the cursor in the assembly view by the given number of lines.
  */
-void breakpoints_pane_move_cursor(struct breakpoints_pane *pane, int offset)
+void breakpoints_pane_move_cursor(struct BreakpointsPane *pane, int offset)
 {
   pane->cursor_offset += offset;
 
@@ -119,7 +119,7 @@ void breakpoints_pane_move_cursor(struct breakpoints_pane *pane, int offset)
  * Either sets or removes focus for this pane. In case the pane has focus, the
  * cursor is visible, otherwise it is hidden.
  */
-void breakpoints_pane_set_focus(struct breakpoints_pane *pane, bool has_focus)
+void breakpoints_pane_set_focus(struct BreakpointsPane *pane, bool has_focus)
 {
   if ((pane->has_focus = has_focus))
   {
@@ -135,7 +135,7 @@ void breakpoints_pane_set_focus(struct breakpoints_pane *pane, bool has_focus)
  * Returns the index of the currently selected breakpoint, or -1 in case no
  * breakpoint is selected.
  */
-int breakpoints_pane_selected_breakpoint(struct breakpoints_pane *pane)
+int breakpoints_pane_selected_breakpoint(struct BreakpointsPane *pane)
 {
   return pane->has_focus ? pane->first + pane->cursor_offset : -1;
 }

@@ -335,7 +335,7 @@ const char *Instruction_operation_name(enum Operation op)
  * See `instruction_print_layout`. Prints an instruction to some statically
  * allocated buffer using `nes-disasm` instruction layout.
  */
-const char *instruction_print(struct Instruction *ins, int32_t encoding)
+const char *instruction_print(struct Instruction *ins, uint32_t encoding)
 {
   return instruction_print_layout(ins, encoding, IL_NES_DISASM, NULL);
 }
@@ -347,7 +347,7 @@ const char *instruction_print(struct Instruction *ins, int32_t encoding)
  * 'Nintendulator'. The Nintendulator mode requires access to RAM, since it will
  * print out values that are stored in the zero page.
  */
-const char *instruction_print_layout(struct Instruction *ins, int32_t encoding,
+const char *instruction_print_layout(struct Instruction *ins, uint32_t encoding,
                                      enum InstructionLayout layout, struct cpu *cpu)
 {
   static char buffer[INSTRUCTION_BUFSIZE + 1];

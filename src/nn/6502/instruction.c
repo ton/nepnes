@@ -366,15 +366,18 @@ const char *instruction_print(struct Instruction *ins, Encoding encoding)
 const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
                                      enum InstructionLayout layout, struct Cpu *cpu)
 {
-  static char buffer[INSTRUCTION_BUFSIZE + 1];
+  static char buffer[32];
+
+  /* TODO(ton): Nintendulator prints extra information next to the assembly
+   * depending on the addressing mode of the instruction. This can be
+   * implemented in a more general way instead of the ad-hoc approach that is
+   * taken below.
+   */
 
   switch (ins->addressing_mode)
   {
     case AM_ABSOLUTE:
     {
-      /* TODO(ton): apparently the value at the absolute memory address is only
-       * printed for a select number of instructions? Verify this by checking
-       * the Nintendulator sources. */
       const bool print_address_value =
           layout == IL_NINTENDULATOR &&
           (ins->op == OP_STX || ins->op == OP_LDX || ins->op == OP_LDA || ins->op == OP_STA);
@@ -408,10 +411,28 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
       snprintf(buffer, sizeof buffer, "%s ($%04X)", operation_name(ins->op), read_16b_op(encoding));
       break;
     case AM_INDIRECT_X:
-      snprintf(buffer, sizeof buffer, "%s ($%02X,X)", operation_name(ins->op), encoding & 0xff);
-      break;
+    {
+      const uint8_t operand = read_8b_op(encoding);
+
+      const bool print_address_value = layout == IL_NINTENDULATOR && (ins->op == OP_LDA);
+      if (print_address_value)
+      {
+        const uint8_t indexed_address = operand + cpu->X;
+        const uint16_t effective_address = *(uint16_t *)(cpu->ram + indexed_address);
+        const uint8_t data = cpu->ram[effective_address];
+
+        snprintf(buffer, sizeof buffer, "%s ($%02X,X) @ %02X = %04X = %02X",
+                 operation_name(ins->op), operand, indexed_address, effective_address, data);
+      }
+      else
+      {
+        snprintf(buffer, sizeof buffer, "%s ($%02X,X)", operation_name(ins->op), operand);
+      }
+    }
+    break;
     case AM_INDIRECT_Y:
-      snprintf(buffer, sizeof buffer, "%s ($%02X),Y", operation_name(ins->op), encoding & 0xff);
+      snprintf(buffer, sizeof buffer, "%s ($%02X),Y", operation_name(ins->op),
+               read_8b_op(encoding));
       break;
     case AM_RELATIVE:
       switch (layout)

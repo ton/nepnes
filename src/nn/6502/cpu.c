@@ -282,7 +282,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
 
       /* Push next instruction address (-1) onto the stack. */
       cpu_push_16b(cpu, cpu->PC + instruction.bytes - 1);
-      cpu->PC = *(uint16_t *)(cpu->ram + cpu->PC + 1);
+      cpu->PC = cpu_read_16b(cpu, cpu->PC + 1);
       break;
     case 0x21:
       /*
@@ -402,7 +402,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        *
        * Sets the program counter to the address specified by the operand.
        */
-      cpu->PC = *(uint16_t *)(cpu->ram + cpu->PC + 1);
+      cpu->PC = cpu_read_16b(cpu, cpu->PC + 1);
       break;
     case 0x48:
       /*

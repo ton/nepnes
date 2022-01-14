@@ -144,9 +144,21 @@ uint16_t cpu_read_16b(struct Cpu *cpu, Address a)
  * case the offset is $ff, the most significant byte of the address is read from
  * $00.
  */
-Address cpu_read_indirect_address(struct Cpu* cpu, uint8_t offset)
+Address cpu_read_indirect_address(struct Cpu *cpu, uint8_t offset)
 {
   return cpu_read_8b(cpu, offset) + ((Address)cpu_read_8b(cpu, (uint8_t)(offset + 1)) << 8);
+}
+
+/*
+ * Reads a pre-indexed address stored in the zero table. The offset in the table
+ * is calculated by adding the given offset and the value in the X register,
+ * modulo $ff. In case the resulting offset is $ff, the most significant byte of
+ * the address is read from $00.
+ */
+Address cpu_read_indirect_x_address(struct Cpu *cpu, uint8_t offset)
+{
+  const uint8_t x_offset = offset + cpu->X;
+  return cpu_read_8b(cpu, x_offset) + ((Address)cpu_read_8b(cpu, (uint8_t)(x_offset + 1)) << 8);
 }
 
 /*
@@ -154,11 +166,9 @@ Address cpu_read_indirect_address(struct Cpu* cpu, uint8_t offset)
  * table in the zero page at the given offset. This performs a memory lookup
  * using the indirect,x addressing mode (AM_INDIRECT_X).
  */
-uint8_t cpu_read_indirect_x(struct Cpu* cpu, uint8_t offset)
+uint8_t cpu_read_indirect_x(struct Cpu *cpu, uint8_t offset)
 {
-  const uint8_t table_offset = offset + cpu->X;
-  const Address ptr = cpu_read_indirect_address(cpu, table_offset);
-  return cpu_read_8b(cpu, ptr);
+  return cpu_read_8b(cpu, cpu_read_indirect_x_address(cpu, offset));
 }
 
 /*
@@ -174,6 +184,18 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
     case 0:
       /* TODO(ton): invalid opcode; what to do? */
       return;
+    case 0x01:
+      /*
+       * ORA - Logical Inclusive OR (indirect, X)
+       *
+       * An inclusive OR is performed, bit by bit, on the contents of the
+       * accumulator and some operand value, and stores the result in the
+       * accumulator. Updates the zero and negative flags accordingly.
+       */
+      cpu->A |= cpu_read_indirect_x(cpu, cpu->ram[cpu->PC + 1]);
+      cpu_set_zero_negative_flags(cpu, cpu->A);
+      cpu->PC += instruction.bytes;
+      break;
     case 0x08:
       /*
        * PHP - Push Processor State
@@ -190,7 +212,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       /*
        * ORA - Logical Inclusive OR (immediate)
        *
-       * An exclusive OR is performed, bit by bit, on the contents of the
+       * An inclusive OR is performed, bit by bit, on the contents of the
        * accumulator and some operand value, and stores the result in the
        * accumulator. Updates the zero and negative flags accordingly.
        */
@@ -253,6 +275,17 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       /* Push next instruction address (-1) onto the stack. */
       cpu_push_16b(cpu, cpu->PC + instruction.bytes - 1);
       cpu->PC = *(uint16_t *)(cpu->ram + cpu->PC + 1);
+      break;
+    case 0x21:
+      /*
+       * AND - Logical And (indirect, X)
+       *
+       * A logical AND is performed, bit by bit, on the accumulator
+       * contents using the contents of a byte of memory.
+       */
+      cpu->A &= cpu_read_indirect_x(cpu, cpu->ram[cpu->PC + 1]);
+      cpu_set_zero_negative_flags(cpu, cpu->A);
+      cpu->PC += instruction.bytes;
       break;
     case 0x24:
       /*
@@ -476,6 +509,18 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        */
       cpu->P |= FLAGS_INTERRUPT_DISABLE;
       cpu->PC += instruction.bytes;
+      break;
+    case 0x81:
+      /*
+       * STA - Store Accumulator (indirect, X)
+       *
+       * Stores the contents of the accumulator into memory.
+       */
+      {
+        Address address = cpu_read_indirect_x_address(cpu, cpu->ram[cpu->PC + 1]);
+        cpu->ram[address] = cpu->A;
+        cpu->PC += instruction.bytes;
+      }
       break;
     case 0x85:
       /*

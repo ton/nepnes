@@ -414,15 +414,16 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
     {
       const uint8_t operand = read_8b_op(encoding);
 
-      const bool print_address_value = layout == IL_NINTENDULATOR && (ins->op == OP_LDA);
+      const bool print_address_value =
+          layout == IL_NINTENDULATOR &&
+          (ins->op == OP_LDA || ins->op == OP_STA || ins->op == OP_ORA || ins->op == OP_AND);
       if (print_address_value)
       {
-        const uint8_t table_offset = operand + cpu->X;
-        const Address ptr = cpu_read_indirect_address(cpu, table_offset);
+        const Address ptr = cpu_read_indirect_x_address(cpu, operand);
         const uint8_t data = cpu_read_indirect_x(cpu, operand);
 
         snprintf(buffer, sizeof buffer, "%s ($%02X,X) @ %02X = %04X = %02X",
-                 operation_name(ins->op), operand, table_offset, ptr, data);
+                 operation_name(ins->op), operand, (uint8_t)(operand + cpu->X), ptr, data);
       }
       else
       {

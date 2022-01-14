@@ -41,8 +41,9 @@ void status_pane_print_help(struct status_pane *pane)
                          " j/k: scroll up/down   "
                          "C-B/C-F: page up/down   "
                          "f: focus PC   "
-                         "r: run    "
+                         "r: run   "
                          "c: break at cycle   "
+                         "<space>: toggle breakpoint at cursor   "
                          "n: next instruction   "
                          "q: quit");
   ncplane_putstr_aligned(pane->plane, 0, NCALIGN_RIGHT, "press any key to close help ");

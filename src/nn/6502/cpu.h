@@ -66,6 +66,12 @@ struct Cpu
   unsigned cycle; /* Number of cycles elapsed since execution */
 };
 
+uint8_t cpu_read_8b(struct Cpu *cpu, Address a);
+uint16_t cpu_read_16b(struct Cpu *cpu, Address a);
+
+Address cpu_read_indirect_address(struct Cpu* cpu, uint8_t offset);
+uint8_t cpu_read_indirect_x(struct Cpu* cpu, uint8_t offset);
+
 void cpu_execute_next_instruction(struct Cpu *cpu);
 
 void cpu_power_on(struct Cpu *cpu);

@@ -417,12 +417,12 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
       const bool print_address_value = layout == IL_NINTENDULATOR && (ins->op == OP_LDA);
       if (print_address_value)
       {
-        const uint8_t indexed_address = operand + cpu->X;
-        const uint16_t effective_address = *(uint16_t *)(cpu->ram + indexed_address);
-        const uint8_t data = cpu->ram[effective_address];
+        const uint8_t table_offset = operand + cpu->X;
+        const Address ptr = cpu_read_indirect_address(cpu, table_offset);
+        const uint8_t data = cpu_read_indirect_x(cpu, operand);
 
         snprintf(buffer, sizeof buffer, "%s ($%02X,X) @ %02X = %04X = %02X",
-                 operation_name(ins->op), operand, indexed_address, effective_address, data);
+                 operation_name(ins->op), operand, table_offset, ptr, data);
       }
       else
       {

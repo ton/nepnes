@@ -122,6 +122,46 @@ static void cpu_addc(struct Cpu *cpu, uint8_t v)
 }
 
 /*
+ * Reads an 8-bit value at the given address. Specifying an out-of-bounds
+ * address results in undefined behavior.
+ */
+uint8_t cpu_read_8b(struct Cpu *cpu, Address a)
+{
+  return cpu->ram[a];
+}
+
+/*
+ * Reads a 16-bit value at the given address. Specifying an out-of-bounds
+ * address results in undefined behavior.
+ */
+uint16_t cpu_read_16b(struct Cpu *cpu, Address a)
+{
+  return cpu->ram[a] + (cpu->ram[a + 1] << 8);  // little-endian
+}
+
+/*
+ * Reads a pre-indexed address stored in the zero table in the range $00-$ff. In
+ * case the offset is $ff, the most significant byte of the address is read from
+ * $00.
+ */
+Address cpu_read_indirect_address(struct Cpu* cpu, uint8_t offset)
+{
+  return cpu_read_8b(cpu, offset) + ((Address)cpu_read_8b(cpu, (uint8_t)(offset + 1)) << 8);
+}
+
+/*
+ * Performs a pre-indexed indirect addressing using the address stored in the
+ * table in the zero page at the given offset. This performs a memory lookup
+ * using the indirect,x addressing mode (AM_INDIRECT_X).
+ */
+uint8_t cpu_read_indirect_x(struct Cpu* cpu, uint8_t offset)
+{
+  const uint8_t table_offset = offset + cpu->X;
+  const Address ptr = cpu_read_indirect_address(cpu, table_offset);
+  return cpu_read_8b(cpu, ptr);
+}
+
+/*
  * Executes the instruction currently pointed to by the program counter register
  * (PC). Updates register state, updates cycle count.
  */
@@ -566,9 +606,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        * negative flags as appropriate.
        */
       {
-        uint16_t address;
-        memcpy(&address, cpu->ram + cpu->PC + 1, 2);
-        cpu->A = cpu->ram[address + cpu->X];
+        cpu->A = cpu_read_indirect_x(cpu, cpu_read_8b(cpu, cpu->PC + 1));
         cpu_set_zero_negative_flags(cpu, cpu->A);
         cpu->PC += instruction.bytes;
       }

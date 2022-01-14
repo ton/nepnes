@@ -46,9 +46,7 @@ static void cpu_push_8b(struct Cpu *cpu, uint8_t i)
 static uint16_t cpu_pop_16b(struct Cpu *cpu)
 {
   cpu->S += 2;
-  uint16_t i;
-  memcpy(&i, cpu->ram + STACK_OFFSET + cpu->S - 1, 2);
-  return i;
+  return cpu_read_16b(cpu, STACK_OFFSET + cpu->S - 1);
 }
 
 /*
@@ -56,7 +54,7 @@ static uint16_t cpu_pop_16b(struct Cpu *cpu)
  */
 static void cpu_push_16b(struct Cpu *cpu, uint16_t i)
 {
-  memcpy(cpu->ram + STACK_OFFSET + cpu->S - 1, &i, 2);
+  cpu_write_16b(cpu, STACK_OFFSET + cpu->S - 1, i);
   cpu->S -= 2;
 }
 
@@ -136,7 +134,17 @@ uint8_t cpu_read_8b(struct Cpu *cpu, Address a)
  */
 uint16_t cpu_read_16b(struct Cpu *cpu, Address a)
 {
-  return cpu->ram[a] + (cpu->ram[a + 1] << 8);  // little-endian
+  return cpu->ram[a] + (cpu->ram[a + 1] << 8);  // little endian
+}
+
+/*
+ * Writes a 16-bit value at the given address. Specifying an out-of-bounds
+ * address results in undefined behavior.
+ */
+void cpu_write_16b(struct Cpu *cpu, Address a, uint16_t x)
+{
+  cpu->ram[a] = x & 0xff;  // little endian
+  cpu->ram[a + 1] = (x >> 8) & 0xff;
 }
 
 /*
@@ -575,8 +583,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        * Stores the contents of the accumulator into memory.
        */
       {
-        uint16_t address;
-        memcpy(&address, cpu->ram + cpu->PC + 1, 2);
+        const uint16_t address = cpu_read_16b(cpu, cpu->PC + 1);
         cpu->ram[address] = cpu->A;
         cpu->PC += instruction.bytes;
       }
@@ -588,8 +595,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        * Stores the contents of the X register into memory.
        */
       {
-        uint16_t address;
-        memcpy(&address, cpu->ram + cpu->PC + 1, 2);
+        const uint16_t address = cpu_read_16b(cpu, cpu->PC + 1);
         cpu->ram[address] = cpu->X;
         cpu->PC += instruction.bytes;
       }
@@ -719,8 +725,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        * negative flags as appropriate.
        */
       {
-        uint16_t address;
-        memcpy(&address, cpu->ram + cpu->PC + 1, 2);
+        const uint16_t address = cpu_read_16b(cpu, cpu->PC + 1);
         cpu->A = cpu->ram[address];
         cpu_set_zero_negative_flags(cpu, cpu->A);
         cpu->PC += instruction.bytes;
@@ -734,8 +739,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        * negative flags as appropriate.
        */
       {
-        uint16_t address;
-        memcpy(&address, cpu->ram + cpu->PC + 1, 2);
+        const uint16_t address = cpu_read_16b(cpu, cpu->PC + 1);
         cpu->X = cpu->ram[address];
         cpu_set_zero_negative_flags(cpu, cpu->X);
         cpu->PC += instruction.bytes;

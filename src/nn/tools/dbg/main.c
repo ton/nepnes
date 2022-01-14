@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 /*
  * Logs the current CPU instruction to the given file, in Nintendulator format
@@ -374,8 +375,9 @@ int main(int argc, char **argv)
         {
           if (assembly_pane.has_focus)
           {
-            struct timespec ts = {0};
-            ts.tv_sec = 1;
+            struct timespec ts;
+            clock_gettime(CLOCK_MONOTONIC, &ts);
+            ts.tv_sec += 1;
             if (notcurses_get(nc, &ts, NULL) == 'g')
             {
               assembly_pane_scroll_to_address(&assembly_pane, &debugger, &cpu, 0x0);

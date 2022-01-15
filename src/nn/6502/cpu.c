@@ -383,6 +383,18 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu->P = (cpu_pop_8b(cpu) & 0xcf) | (cpu->P & 0x30);
       cpu->PC = cpu_pop_16b(cpu);
       break;
+    case 0x41:
+      /*
+       * EOR - Exclusive OR (indirect, X)
+       *
+       * Performs an exclusive OR, bit by bit, on the value in the accumulator
+       * and the given operand, and stores the result in the accumulator. The
+       * zero and negative flags are set accordingly.
+       */
+      cpu->A ^= cpu_read_indirect_x(cpu, cpu->ram[cpu->PC + 1]);
+      cpu_set_zero_negative_flags(cpu, cpu->A);
+      cpu->PC += instruction.bytes;
+      break;
     case 0x4a:
       /*
        * LSR - Logical Shift Right (accumulator)
@@ -451,6 +463,16 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        * stack.
        */
       cpu->PC = cpu_pop_16b(cpu);
+      cpu->PC += instruction.bytes;
+      break;
+    case 0x61:
+      /*
+       * ADC - Add With Carry (indirect, X)
+       *
+       * Adds the contents of a memory location to the accumulator together with
+       * the carry bit. If overflow occurs, the carry bit is set.
+       */
+      cpu_addc(cpu, cpu_read_indirect_x(cpu, cpu->ram[cpu->PC + 1]));
       cpu->PC += instruction.bytes;
       break;
     case 0x68:
@@ -798,6 +820,22 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0xc1:
+      /*
+       * CMP - Compare (indirect, X)
+       *
+       * Compares the contents of the accumulator with another value from
+       * memory and sets the zero and carry flags as appropriate. The negative
+       * flag is set in case bit 7 of the result of (A - value) is set.
+       */
+      {
+        const uint8_t value = cpu_read_indirect_x(cpu, cpu->ram[cpu->PC + 1]);
+        BIT_SET_IF(cpu->A >= value, cpu->P, FLAGS_BIT_CARRY);
+        BIT_SET_IF(cpu->A == value, cpu->P, FLAGS_BIT_ZERO);
+        BIT_SET_IF((cpu->A - value) & 0x80, cpu->P, FLAGS_BIT_NEGATIVE);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0xc8:
       /*
        * INY - Increment Y Register
@@ -887,6 +925,33 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        */
       cpu->X++;
       cpu_set_zero_negative_flags(cpu, cpu->X);
+      cpu->PC += instruction.bytes;
+      break;
+    case 0xe1:
+      /*
+       * SBC - Subtract With Carry (indirect, X)
+       *
+       * Subtracts the contents of a memory location from the accumulator
+       * together with the not of the carry bit. If overflow occurs, the carry
+       * bit is clear.
+       *
+       * Note that SBC is simply ADC, with the value at the memory location
+       * changed to one's complement. To see why this is, SBC is defined as:
+       *
+       *   SBC = A - v - B
+       *
+       * where `v` is some value in memory, and `B` is the borrow bit. B is
+       * defined as the inverse of the carry flag: (1 - C). Thus:
+       *
+       *   SBC = A - v - (1 - C)
+       *   SBC = A - v - (1 - C) + 256
+       *   SBC = A - v - C + 255
+       *   SBC = A + (255 - v) + C
+       *
+       * here, 255 - v is simply the one's complement of v. Note that adding 256
+       * to an 8bit value does not change the 8bit value.
+       */
+      cpu_addc(cpu, ~(cpu_read_indirect_x(cpu, cpu->ram[cpu->PC + 1])));
       cpu->PC += instruction.bytes;
       break;
     case 0xe9:

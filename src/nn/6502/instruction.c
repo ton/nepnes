@@ -416,7 +416,8 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
 
       const bool print_address_value =
           layout == IL_NINTENDULATOR &&
-          (ins->op == OP_LDA || ins->op == OP_STA || ins->op == OP_ORA || ins->op == OP_AND);
+          (ins->op == OP_LDA || ins->op == OP_STA || ins->op == OP_ORA || ins->op == OP_AND ||
+           ins->op == OP_EOR || ins->op == OP_ADC || ins->op == OP_CMP || ins->op == OP_SBC);
       if (print_address_value)
       {
         const Address ptr = cpu_read_indirect_x_address(cpu, operand);

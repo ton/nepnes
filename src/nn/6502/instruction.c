@@ -380,7 +380,12 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
     {
       const bool print_address_value =
           layout == IL_NINTENDULATOR &&
-          (ins->op == OP_STX || ins->op == OP_LDX || ins->op == OP_LDA || ins->op == OP_STA);
+          (ins->op == OP_STX || ins->op == OP_LDX || ins->op == OP_LDA || ins->op == OP_STA ||
+           ins->op == OP_LDY || ins->op == OP_STY || ins->op == OP_BIT || ins->op == OP_ORA ||
+           ins->op == OP_AND || ins->op == OP_EOR || ins->op == OP_ADC || ins->op == OP_CMP ||
+           ins->op == OP_SBC || ins->op == OP_CPX || ins->op == OP_CPY || ins->op == OP_LSR ||
+           ins->op == OP_ASL || ins->op == OP_ROR || ins->op == OP_ROL || ins->op == OP_INC ||
+           ins->op == OP_DEC);
       if (print_address_value)
       {
         snprintf(buffer, sizeof buffer, "%s $%04X = %02X", operation_name(ins->op),

@@ -180,6 +180,38 @@ uint8_t cpu_read_indirect_x(struct Cpu *cpu, uint8_t offset)
 }
 
 /*
+ * Reads a post-indexed address stored in the zero table. The offset in the
+ * table is given and contains the least significant byte of the address. This
+ * address is subsequently added to the value of the Y-register to get to the
+ * final address.
+ */
+Address cpu_read_indirect_y_address(struct Cpu *cpu, uint8_t offset)
+{
+  return cpu_read_8b(cpu, offset) + ((Address)cpu_read_8b(cpu, (uint8_t)(offset + 1)) << 8) +
+         cpu->Y;
+}
+
+/*
+ * Performs a post-indexed indirect addressing using the address stored in the
+ * table in the zero page at the given offset. This performs a memory lookup
+ * using the indirect,y addressing mode (AM_INDIRECT_Y).
+ */
+uint8_t cpu_read_indirect_y(struct Cpu *cpu, uint8_t offset)
+{
+  return cpu_read_8b(cpu, cpu_read_indirect_y_address(cpu, offset));
+}
+
+/*
+ * Returns 1 in case adding the given offset to the address results in a page
+ * cross, returns 0 otherwise. A page runs from $--00 to $--ff.
+ */
+int cpu_page_cross(Address address, uint8_t offset)
+{
+  /* TODO(ton): is there a more efficient/elegant way to check this? */
+  return 0xff - offset < (address & 0xff);
+}
+
+/*
  * Executes the instruction currently pointed to by the program counter register
  * (PC). Updates register state, updates cycle count.
  */
@@ -327,6 +359,22 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       }
       else
       {
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0x11:
+      /*
+       * ORA - Logical Inclusive OR (indirect), Y
+       *
+       * An inclusive OR is performed, bit by bit, on the contents of the
+       * accumulator and some operand value, and stores the result in the
+       * accumulator. Updates the zero and negative flags accordingly.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        cpu->A |= cpu_read_indirect_y(cpu, operand);
+        cpu->cycle += cpu_page_cross(cpu_read_16b(cpu, operand), cpu->Y);
+        cpu_set_zero_negative_flags(cpu, cpu->A);
         cpu->PC += instruction.bytes;
       }
       break;
@@ -509,8 +557,30 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        * If the negative flag is set, then add the relative displacement to the
        * program counter to cause a branch to a new location.
        */
-      /* TODO(ton): implement. */
-      cpu->PC += instruction.bytes;
+      if (cpu->P & FLAGS_NEGATIVE)
+      {
+        cpu->PC += instruction.bytes + cpu_read_8b(cpu, cpu->PC + 1);
+        cpu->cycle++;
+      }
+      else
+      {
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0x31:
+      /*
+       * AND - Logical And (indirect), Y
+       *
+       * A logical AND is performed, bit by bit, on the accumulator
+       * contents using the contents of a byte of memory.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        cpu->A &= cpu_read_indirect_y(cpu, operand);
+        cpu->cycle += cpu_page_cross(cpu_read_16b(cpu, operand), cpu->Y);
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
       break;
     case 0x38:
       /*
@@ -666,6 +736,22 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0x51:
+      /*
+       * EOR - Exclusive OR (indirect), Y
+       *
+       * Performs an exclusive OR, bit by bit, on the value in the accumulator
+       * and the given operand, and stores the result in the accumulator. The
+       * zero and negative flags are set accordingly.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        cpu->A ^= cpu_read_indirect_y(cpu, operand);
+        cpu->cycle += cpu_page_cross(cpu_read_16b(cpu, operand), cpu->Y);
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x60:
       /*
        * RTS - Return from Subroutine
@@ -805,6 +891,20 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0x71:
+      /*
+       * ADC - Add With Carry (indirect), Y
+       *
+       * Adds the contents of a memory location to the accumulator together with
+       * the carry bit. If overflow occurs, the carry bit is set.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        cpu_addc(cpu, cpu_read_indirect_y(cpu, operand));
+        cpu->cycle += cpu_page_cross(cpu_read_16b(cpu, operand), cpu->Y);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x78:
       /*
        * SEI - Set Interrupt Disable
@@ -935,6 +1035,20 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       else
       {
         cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0x91:
+      /*
+       * STA - Store Accumulator (indirect), Y
+       *
+       * Stores the contents of the accumulator into memory.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        const Address address = cpu_read_indirect_y_address(cpu, operand);
+        cpu->ram[address] = cpu->A;
+        cpu->PC += instruction.bytes;
+        cpu->cycle += cpu_page_cross(cpu_read_16b(cpu, operand), cpu->Y);
       }
       break;
     case 0x98:
@@ -1115,6 +1229,21 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       }
       else
       {
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0xb1:
+      /*
+       * LDA - Load Accumulator (indirect), Y
+       *
+       * Loads a byte of memory into the accumulator setting the zero and
+       * negative flags as appropriate.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        cpu->A = cpu_read_indirect_y(cpu, operand);
+        cpu->cycle += cpu_page_cross(cpu_read_16b(cpu, operand), cpu->Y);
+        cpu_set_zero_negative_flags(cpu, cpu->A);
         cpu->PC += instruction.bytes;
       }
       break;
@@ -1317,6 +1446,24 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       }
       else
       {
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0xd1:
+      /*
+       * CMP - Compare (indirect), Y
+       *
+       * Compares the contents of the accumulator with another value from
+       * memory and sets the zero and carry flags as appropriate. The negative
+       * flag is set in case bit 7 of the result of (A - value) is set.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        const uint8_t value = cpu_read_indirect_y(cpu, operand);
+        cpu->cycle += cpu_page_cross(cpu_read_16b(cpu, operand), cpu->Y);
+        BIT_SET_IF(cpu->A >= value, cpu->P, FLAGS_BIT_CARRY);
+        BIT_SET_IF(cpu->A == value, cpu->P, FLAGS_BIT_ZERO);
+        BIT_SET_IF((cpu->A - value) & 0x80, cpu->P, FLAGS_BIT_NEGATIVE);
         cpu->PC += instruction.bytes;
       }
       break;
@@ -1552,6 +1699,37 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       }
       else
       {
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0xf1:
+      /*
+       * SBC - Subtract With Carry (indirect), Y
+       *
+       * Subtracts the contents of a memory location from the accumulator
+       * together with the not of the carry bit. If overflow occurs, the carry
+       * bit is clear.
+       *
+       * Note that SBC is simply ADC, with the value at the memory location
+       * changed to one's complement. To see why this is, SBC is defined as:
+       *
+       *   SBC = A - v - B
+       *
+       * where `v` is some value in memory, and `B` is the borrow bit. B is
+       * defined as the inverse of the carry flag: (1 - C). Thus:
+       *
+       *   SBC = A - v - (1 - C)
+       *   SBC = A - v - (1 - C) + 256
+       *   SBC = A - v - C + 255
+       *   SBC = A + (255 - v) + C
+       *
+       * here, 255 - v is simply the one's complement of v. Note that adding 256
+       * to an 8bit value does not change the 8bit value.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        cpu_addc(cpu, ~(cpu_read_indirect_y(cpu, operand)));
+        cpu->cycle += cpu_page_cross(cpu_read_16b(cpu, operand), cpu->Y);
         cpu->PC += instruction.bytes;
       }
       break;

@@ -438,9 +438,28 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
     }
     break;
     case AM_INDIRECT_Y:
-      snprintf(buffer, sizeof buffer, "%s ($%02X),Y", operation_name(ins->op),
-               read_8b_op(encoding));
-      break;
+    {
+      const uint8_t operand = read_8b_op(encoding);
+
+      const bool print_address_value =
+          layout == IL_NINTENDULATOR &&
+          (ins->op == OP_LDA || ins->op == OP_ORA || ins->op == OP_AND || ins->op == OP_EOR ||
+           ins->op == OP_ADC || ins->op == OP_CMP || ins->op == OP_SBC || ins->op == OP_STA);
+      if (print_address_value)
+      {
+        const Address ptr = cpu_read_indirect_y_address(cpu, operand);
+        const uint8_t data = cpu_read_indirect_y(cpu, operand);
+
+        snprintf(buffer, sizeof buffer, "%s ($%02X),Y = %04X @ %04X = %02X",
+                 operation_name(ins->op), operand, cpu_read_indirect_address(cpu, operand), ptr,
+                 data);
+      }
+      else
+      {
+        snprintf(buffer, sizeof buffer, "%s ($%02X),Y", operation_name(ins->op), operand);
+      }
+    }
+    break;
     case AM_RELATIVE:
       switch (layout)
       {

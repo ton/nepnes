@@ -214,8 +214,12 @@ struct Instruction
   int cycles;
 };
 
+/* An instruction is encoded by a maximum of three bytes. */
+typedef uint32_t Encoding;
+
 struct Instruction make_instruction(uint8_t opcode);
 size_t instruction_size(uint8_t opcode);
+Encoding instruction_read_encoding(const uint8_t *buf, int bytes);
 uint8_t *advance_instruction(uint8_t *pc, int n);
 uint8_t *next_instruction(uint8_t *pc);
 
@@ -234,9 +238,6 @@ enum InstructionLayout
 };
 
 struct Cpu;
-
-/* An instruction is encoded by a maximum of three bytes. */
-typedef uint32_t Encoding;
 
 const char *instruction_print(struct Instruction *ins, Encoding encoding);
 const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,

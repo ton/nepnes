@@ -322,6 +322,23 @@ size_t instruction_size(uint8_t opcode)
 }
 
 /*
+ * Returns the encoding of the given instruction, which is at most three bytes
+ * long.
+ */
+Encoding instruction_read_encoding(const uint8_t *buf, int bytes)
+{
+  if (bytes == 1)
+  {
+    return *buf;
+  }
+  else if (bytes == 2)
+  {
+    return *buf + (*(buf + 1) << 8);
+  }
+  return *buf + (*(buf + 1) << 8) + (*(buf + 2) << 16);
+}
+
+/*
  * Advances the given program counter n instructions, and returns the new
  * program counter. n may be negative to rewind the program counter.
  */

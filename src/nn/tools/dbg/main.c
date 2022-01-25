@@ -45,7 +45,7 @@ static void log_current_cpu_instruction(FILE *log_file, struct Cpu *cpu)
       break;
   }
 
-  const Encoding encoding = *(Encoding *)(pc);
+  const Encoding encoding = instruction_read_encoding(pc, ins.bytes);
 
   fprintf(log_file, "%X  %s  %-31s A:%02X X:%02X Y:%02X P:%02X SP:%02X CYC:%d\n", cpu->PC,
           encoding_buf, instruction_print_layout(&ins, encoding, IL_NINTENDULATOR, cpu), cpu->A,

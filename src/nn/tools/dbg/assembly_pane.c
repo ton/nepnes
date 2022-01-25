@@ -154,11 +154,7 @@ void assembly_pane_update(struct AssemblyPane *pane)
     }
     else
     {
-      uint32_t encoding = pane->cpu->ram[address];
-      for (int i = 1; i < ins.bytes; ++i)
-      {
-        encoding = (encoding << 8) + pane->cpu->ram[address + i];
-      }
+      const Encoding encoding = instruction_read_encoding(pane->cpu->ram + address, ins.bytes);
 
       ncplane_printf_yx(pane->plane, y, 1, "$%04X: %-*s (%0*X)", address, INSTRUCTION_BUFSIZE,
                         instruction_print(&ins, encoding), ins.bytes * 2, encoding);

@@ -33,11 +33,7 @@ int da_disassemble(FILE *fp, uint8_t *prg_data, size_t prg_size)
     }
     else
     {
-      uint32_t encoding = *pc;
-      for (int i = 1; i < ins.bytes; ++i)
-      {
-        encoding = (encoding << 8) + (pc + i < end ? *(pc + i) : 0);
-      }
+      const Encoding encoding = instruction_read_encoding(pc, ins.bytes);
 
       fprintf(fp, "$%X: %-*s (%0*X)\n", rom_offset, INSTRUCTION_BUFSIZE,
               instruction_print(&ins, encoding), ins.bytes * 2, encoding);

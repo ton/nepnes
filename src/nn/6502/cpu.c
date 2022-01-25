@@ -138,6 +138,33 @@ uint16_t cpu_read_16b(struct Cpu *cpu, Address a)
 }
 
 /*
+ * Reads a 16-bit value at the given address, and then uses that value as an
+ * address to read the final 16-bit value. Only used by the JMP instruction.
+ */
+uint16_t cpu_read_indirect_16b(struct Cpu *cpu, Address a)
+{
+  if ((a & 0xff) == 0xff)
+  {
+    /* "An original 6502 does not correctly fetch the target address if the
+     * indirect vector falls on a page boundary (e.g. $xxFF where xx is any
+     * value from $00 to $FF). In this case it fetches the LSB from $xxFF as
+     * expected but takes the MSB from $xx00. This is fixed in some later chips
+     * like the 65SC02 so for compatibility always ensure the indirect vector is
+     * not at the end of the page"
+     *
+     *                           - taken from the 6502 Reference; obelisk.me.uk
+     */
+    const uint8_t lsb = cpu_read_8b(cpu, a);
+    const uint8_t msb = cpu_read_8b(cpu, a & 0xff00);
+    return lsb + (msb << 8);
+  }
+  else
+  {
+    return cpu_read_16b(cpu, a);
+  }
+}
+
+/*
  * Writes a 16-bit value at the given address. Specifying an out-of-bounds
  * address results in undefined behavior.
  */
@@ -840,6 +867,15 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu_set_zero_negative_flags(cpu, cpu->A);
         cpu->PC += instruction.bytes;
       }
+      break;
+    case 0x6c:
+      /*
+       * JMP - Jump (indirect)
+       *
+       * Sets the program counter to the address stored at the address specified
+       * by the operand.
+       */
+      cpu->PC = cpu_read_indirect_16b(cpu, cpu_read_16b(cpu, cpu->PC + 1));
       break;
     case 0x6d:
       /*

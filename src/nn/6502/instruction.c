@@ -430,7 +430,17 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
       snprintf(buffer, sizeof buffer, "%s", operation_name(ins->op));
       break;
     case AM_INDIRECT:
-      snprintf(buffer, sizeof buffer, "%s ($%04X)", operation_name(ins->op), read_16b_op(encoding));
+      if (layout == IL_NINTENDULATOR)
+      {
+        const Address address = read_16b_op(encoding);
+        snprintf(buffer, sizeof buffer, "%s ($%04X) = %04X", operation_name(ins->op), address,
+                 cpu_read_indirect_16b(cpu, address));
+      }
+      else
+      {
+        snprintf(buffer, sizeof buffer, "%s ($%04X)", operation_name(ins->op),
+                 read_16b_op(encoding));
+      }
       break;
     case AM_INDIRECT_X:
     {

@@ -47,7 +47,11 @@ static void log_current_cpu_instruction(FILE *log_file, struct Cpu *cpu)
 
   const Encoding encoding = instruction_read_encoding(pc, ins.bytes);
 
-  fprintf(log_file, "%X  %s  %-31s A:%02X X:%02X Y:%02X P:%02X SP:%02X CYC:%d\n", cpu->PC,
+  /* TODO(ton): Nintendulator specific knowledge is present in this function as
+   * well as `instruction_print_layout`. We should merge this function and the
+   * Nintendulator specific code factored out from `instruction_print_layout`.
+   */
+  fprintf(log_file, "%04X  %s  %-31s A:%02X X:%02X Y:%02X P:%02X SP:%02X CYC:%d\n", cpu->PC,
           encoding_buf, instruction_print_layout(&ins, encoding, IL_NINTENDULATOR, cpu), cpu->A,
           cpu->X, cpu->Y, cpu->P, cpu->S, cpu->cycle);
   fflush(log_file);

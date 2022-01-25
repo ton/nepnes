@@ -58,6 +58,6 @@ void parse_options(struct Options *options, int argc, char **argv)
 
   if (options->rom_file_name == NULL)
   {
-    quit("Missing required argument: -i ROMFILE");
+    nn_quit("Missing required argument: -i ROMFILE");
   }
 }

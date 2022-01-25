@@ -67,6 +67,6 @@ void parse_options(struct Options *options, int argc, char **argv)
 
   if (options->binary_file_name == NULL)
   {
-    quit("Missing required argument: -i BINARY");
+    nn_quit("Missing required argument: -i BINARY");
   }
 }

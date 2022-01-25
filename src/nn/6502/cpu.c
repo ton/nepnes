@@ -1565,7 +1565,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu->PC += instruction.bytes;
       break;
     default:
-      quit("Unknown opcode: %x", instruction.opcode);
+      nn_quit("Unknown opcode: %x", instruction.opcode);
       break;
   }
 

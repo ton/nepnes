@@ -10,7 +10,7 @@
 
 static const int MAXLINE = 120;
 
-static void quit_optional_strerror(bool append_strerror, const char *fmt, va_list ap);
+static void nn_quit_optional_strerror(bool append_strerror, const char *fmt, va_list ap);
 
 /*
  * This will concatenate the given string x and y, and returns the result.
@@ -108,11 +108,11 @@ void nn_log(const char *fmt, ...)
 /*
  * Print a message to stderr, and exits the application.
  */
-void quit(const char *fmt, ...)
+void nn_quit(const char *fmt, ...)
 {
   va_list ap;
   va_start(ap, fmt);
-  quit_optional_strerror(false, fmt, ap);
+  nn_quit_optional_strerror(false, fmt, ap);
   va_end(ap);
 
   kill(0, SIGTERM);
@@ -122,17 +122,17 @@ void quit(const char *fmt, ...)
  * Prints a message to stderr, appending the error message generated from the
  * current error code, and exits the application.
  */
-void quit_strerror(const char *fmt, ...)
+void nn_quit_strerror(const char *fmt, ...)
 {
   va_list ap;
   va_start(ap, fmt);
-  quit_optional_strerror(true, fmt, ap);
+  nn_quit_optional_strerror(true, fmt, ap);
   va_end(ap);
 
   kill(0, SIGTERM);
 }
 
-static void quit_optional_strerror(bool append_strerror, const char *fmt, va_list ap)
+static void nn_quit_optional_strerror(bool append_strerror, const char *fmt, va_list ap)
 {
   char buf[MAXLINE];
   vsnprintf(buf, MAXLINE - 1, fmt, ap);

@@ -18,8 +18,8 @@ char *nn_dirname(const char *filename);
 int nn_mkdirs(const char *path, mode_t mode);
 
 void nn_log(const char *fmt, ...);
-void quit(const char *fmt, ...);
-void quit_strerror(const char *fmt, ...);
+void nn_quit(const char *fmt, ...);
+void nn_quit_strerror(const char *fmt, ...);
 
 typedef unsigned long long timestamp_t;
 

@@ -157,7 +157,8 @@ int main(int argc, char **argv)
   size_t binary_size = 0;
   if (read_all(options.binary_file_name, &binary_data, &binary_size) == -1)
   {
-    quit_strerror("Could not open the given ROM file '%s' for reading", options.binary_file_name);
+    nn_quit_strerror("Could not open the given ROM file '%s' for reading",
+                     options.binary_file_name);
   }
 
   printf("Binary size: %lu bytes\n", binary_size);
@@ -212,7 +213,7 @@ int main(int argc, char **argv)
   {
     if ((log_file = fopen(options.log_file_name, "w")) == NULL)
     {
-      quit_strerror("Could not create log file '%s'", options.log_file_name);
+      nn_quit_strerror("Could not create log file '%s'", options.log_file_name);
     }
   }
 

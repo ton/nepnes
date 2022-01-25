@@ -17,7 +17,7 @@ int main(int argc, char **argv)
   size_t rom_size = 0;
   if (read_all(options.rom_file_name, &rom_data, &rom_size) == -1)
   {
-    quit_strerror("Could not open the given ROM file '%s' for reading", options.rom_file_name);
+    nn_quit_strerror("Could not open the given ROM file '%s' for reading", options.rom_file_name);
   }
 
   printf("ROM size: %lu bytes\n", rom_size);
@@ -25,7 +25,7 @@ int main(int argc, char **argv)
   struct RomHeader header = rom_make_header(rom_data);
   if (header.rom_format == RF_UNKNOWN)
   {
-    quit("Can not open the ROM file '%s', unknown ROM format", options.rom_file_name);
+    nn_quit("Can not open the ROM file '%s', unknown ROM format", options.rom_file_name);
   }
 
   uint8_t *prg_data;

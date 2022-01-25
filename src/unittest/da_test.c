@@ -29,7 +29,7 @@ static int disassemble_rom(const char *rom_filename, const struct stat *sb, int 
   size_t rom_size = 0;
   if (read_all(rom_filename, &rom_data, &rom_size) == -1)
   {
-    quit_strerror("Could not open the given ROM file '%s' for reading", rom_filename);
+    nn_quit_strerror("Could not open the given ROM file '%s' for reading", rom_filename);
   }
 
   struct RomHeader header = rom_make_header(rom_data);
@@ -55,13 +55,13 @@ static int disassemble_rom(const char *rom_filename, const struct stat *sb, int 
     if (access(ref_path, F_OK) < 0 &&
         nn_mkdirs(ref_path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) < 0)
     {
-      quit_strerror("Could not create reference directory '%s'", ref_path);
+      nn_quit_strerror("Could not create reference directory '%s'", ref_path);
     }
 
     /* Create the reference file. */
     if ((ref_fp = fopen(ref_filename, "w")) == NULL)
     {
-      quit_strerror("Could not open reference file '%s' for writing", ref_filename);
+      nn_quit_strerror("Could not open reference file '%s' for writing", ref_filename);
     }
 
     /* Write assembly to the reference file. */
@@ -73,7 +73,7 @@ static int disassemble_rom(const char *rom_filename, const struct stat *sb, int 
      * da_disassemble(). */
     if ((ref_fp = fopen(ref_filename, "r")) == NULL)
     {
-      quit_strerror("Could not open reference file '%s' for reading", ref_filename);
+      nn_quit_strerror("Could not open reference file '%s' for reading", ref_filename);
     }
 
     /* Disassemble the ROM in memory. */

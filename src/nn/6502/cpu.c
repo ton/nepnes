@@ -229,6 +229,44 @@ uint8_t cpu_read_indirect_y(struct Cpu *cpu, uint8_t offset)
 }
 
 /*
+ * Reads a zero page offset from the given address in memory, and converts it to
+ * an address that can be used for the zero page, X addressing mode
+ * (AM_ZERO_PAGE_X).
+ */
+uint8_t cpu_make_zero_page_x_offset(struct Cpu *cpu, uint8_t offset)
+{
+  return (uint8_t)(offset + cpu->X);
+}
+
+/*
+ * Reads a value from the zero page at the given offset, after adding the value
+ * in the X-register to the offset, taking the module of 0xFF (AM_ZERO_PAGE_X).
+ */
+uint8_t cpu_read_zero_page_x(struct Cpu *cpu, uint8_t offset)
+{
+  return cpu_read_8b(cpu, cpu_make_zero_page_x_offset(cpu, offset));
+}
+
+/*
+ * Reads a zero page offset from the given address in memory, and converts it to
+ * an address that can be used for the zero page, Y addressing mode
+ * (AM_ZERO_PAGE_Y).
+ */
+uint8_t cpu_make_zero_page_y_offset(struct Cpu *cpu, uint8_t offset)
+{
+  return (uint8_t)(offset + cpu->Y);
+}
+
+/*
+ * Reads a value from the zero page at the given offset, after adding the value
+ * in the Y-register to the offset, taking the module of 0xFF (AM_ZERO_PAGE_Y).
+ */
+uint8_t cpu_read_zero_page_y(struct Cpu *cpu, uint8_t offset)
+{
+  return cpu_read_8b(cpu, cpu_make_zero_page_y_offset(cpu, offset));
+}
+
+/*
  * Returns 1 in case adding the given offset to the address results in a page
  * cross, returns 0 otherwise. A page runs from $--00 to $--ff.
  */
@@ -405,6 +443,42 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0x15:
+      /*
+       * ORA - Logical Inclusive OR (zero page, X)
+       *
+       * An inclusive OR is performed, bit by bit, on the contents of the
+       * accumulator and some operand value, and stores the result in the
+       * accumulator. Updates the zero and negative flags accordingly.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        cpu->A |= cpu_read_zero_page_x(cpu, operand);
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0x16:
+      /*
+       * ASL - Arithmetic Shift Left (zero page, X)
+       *
+       * This operation shifts all the bits of the accumulator or memory
+       * contents one bit left. Bit 0 is set to 0 and bit 7 is placed in the
+       * carry flag. The effect of this operation is to multiply the memory
+       * contents by 2 (ignoring 2's complement considerations), setting the
+       * carry if the result will not fit in 8 bits. The zero and negative flags
+       * are set according to the calculated value.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + cpu_make_zero_page_x_offset(cpu, operand);
+        BIT_SET_IF(*value & 0x80, cpu->P, FLAGS_BIT_CARRY);
+        *value <<= 1;
+        *value &= 0xfe;
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x18:
       /*
        * CLC - Clear Carry Flag
@@ -413,6 +487,22 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        */
       cpu->P &= ~FLAGS_CARRY;
       cpu->PC += instruction.bytes;
+      break;
+    case 0x19:
+      /*
+       * ORA - Logical Inclusive OR (absolute, Y)
+       *
+       * An inclusive OR is performed, bit by bit, on the contents of the
+       * accumulator and some operand value, and stores the result in the
+       * accumulator. Updates the zero and negative flags accordingly.
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        cpu->A |= cpu_read_8b(cpu, address + cpu->Y);
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->cycle += cpu_page_cross(address, cpu->Y);
+        cpu->PC += instruction.bytes;
+      }
       break;
     case 0x20:
       /*
@@ -609,6 +699,40 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0x35:
+      /*
+       * AND - Logical And (zero page, X)
+       *
+       * A logical AND is performed, bit by bit, on the accumulator
+       * contents using the contents of a byte of memory.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        cpu->A &= cpu_read_zero_page_x(cpu, operand);
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0x36:
+      /*
+       * ROL - Rotate Left (zero page, X)
+       *
+       * Move each of the bits of the value at the given location in the zero
+       * page one place to the left. Bit 0 is filled with the current value of
+       * the carry flag whilst the old bit 7 becomes the new carry flag value.
+       * The zero and negative flags are set as appropriate.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + cpu_make_zero_page_x_offset(cpu, operand);
+        const uint8_t new_carry = *value & 0x80;
+        *value <<= 1;
+        BIT_SET_IF(cpu->P & FLAGS_CARRY, *value, 0);
+        BIT_SET_IF(new_carry, cpu->P, FLAGS_BIT_CARRY);
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x38:
       /*
        * SEC - Set Carry Flag
@@ -617,6 +741,20 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        */
       cpu->P |= FLAGS_CARRY;
       cpu->PC += instruction.bytes;
+      break;
+    case 0x39:
+      /*
+       * AND - Logical And (absolute, Y)
+       *
+       * A logical AND is performed, bit by bit, on the accumulator
+       * contents using the contents of a byte of memory.
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        cpu->A &= cpu_read_8b(cpu, address + cpu->Y);
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
       break;
     case 0x40:
       /*
@@ -775,6 +913,54 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
         cpu->A ^= cpu_read_indirect_y(cpu, operand);
         cpu->cycle += cpu_page_cross(cpu_read_16b(cpu, operand), cpu->Y);
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0x55:
+      /*
+       * EOR - Exclusive OR (zero page, X)
+       *
+       * Performs an exclusive OR, bit by bit, on the value in the accumulator
+       * and the given operand, and stores the result in the accumulator. The
+       * zero and negative flags are set accordingly.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        cpu->A ^= cpu_read_zero_page_x(cpu, operand);
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0x56:
+      /*
+       * LSR - Logical Shift Right (zero page, X)
+       *
+       * Each of the bits of the value in the zero page at the given location is
+       * shifted one place to the right. The bit that was in bit 0 is shifted
+       * into the carry flag. Bit 7 is set to zero. The zero and negative flags
+       * are set according to the calculated value.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + cpu_make_zero_page_x_offset(cpu, operand);
+        BIT_SET_IF(*value & 0x01, cpu->P, FLAGS_BIT_CARRY);
+        *value = (*value >> 1) & 0x7f;
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0x59:
+      /*
+       * EOR - Exclusive OR (absolute, Y)
+       *
+       * Performs an exclusive OR, bit by bit, on the value in the accumulator
+       * and the given operand, and stores the result in the accumulator. The
+       * zero and negative flags are set accordingly.
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        cpu->A ^= cpu_read_8b(cpu, address + cpu->Y);
         cpu_set_zero_negative_flags(cpu, cpu->A);
         cpu->PC += instruction.bytes;
       }
@@ -941,6 +1127,39 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0x75:
+      /*
+       * ADC - Add With Carry (zero page, X)
+       *
+       * Adds the contents of a memory location to the accumulator together with
+       * the carry bit. If overflow occurs, the carry bit is set.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        cpu_addc(cpu, cpu_read_zero_page_x(cpu, operand));
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0x76:
+      /*
+       * ROR - Rotate Right (zero page, X)
+       *
+       * Move each of the bits of the value at the given location in the zero
+       * page one place to the right. Bit 7 is filled with the current value of
+       * the carry flag whilst the old bit 0 becomes the new carry flag value.
+       * The zero and negative flags are set as appropriate.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + cpu_make_zero_page_x_offset(cpu, operand);
+        const uint8_t new_carry = *value & 0x01;
+        *value >>= 1;
+        BIT_SET_IF(cpu->P & FLAGS_CARRY, *value, 7);
+        BIT_SET_IF(new_carry, cpu->P, FLAGS_BIT_CARRY);
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x78:
       /*
        * SEI - Set Interrupt Disable
@@ -950,6 +1169,19 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu->P |= FLAGS_INTERRUPT_DISABLE;
       cpu->PC += instruction.bytes;
       break;
+    case 0x79:
+      /*
+       * ADC - Add With Carry (absolute, Y)
+       *
+       * Adds the contents of a memory location to the accumulator together with
+       * the carry bit. If overflow occurs, the carry bit is set.
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        cpu_addc(cpu, cpu_read_8b(cpu, address + cpu->Y));
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x81:
       /*
        * STA - Store Accumulator (indirect, X)
@@ -957,7 +1189,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        * Stores the contents of the accumulator into memory.
        */
       {
-        Address address = cpu_read_indirect_x_address(cpu, cpu->ram[cpu->PC + 1]);
+        const Address address = cpu_read_indirect_x_address(cpu, cpu->ram[cpu->PC + 1]);
         cpu->ram[address] = cpu->A;
         cpu->PC += instruction.bytes;
       }
@@ -1039,7 +1271,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        * Stores the contents of the accumulator into memory.
        */
       {
-        const uint16_t address = cpu_read_16b(cpu, cpu->PC + 1);
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
         cpu->ram[address] = cpu->A;
         cpu->PC += instruction.bytes;
       }
@@ -1087,6 +1319,46 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->cycle += cpu_page_cross(cpu_read_16b(cpu, operand), cpu->Y);
       }
       break;
+    case 0x94:
+      /*
+       * STY - Store Y Register (zero page, X)
+       *
+       * Stores the contents of the Y register into memory.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        const uint8_t address = cpu_make_zero_page_x_offset(cpu, operand);
+        cpu->ram[address] = cpu->Y;
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0x95:
+      /*
+       * STA - Store Accumulator (zero page, X)
+       *
+       * Stores the contents of the accumulator into memory.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        const uint8_t zero_page_offset = cpu_make_zero_page_x_offset(cpu, operand);
+        cpu->ram[zero_page_offset] = cpu->A;
+        cpu->PC += instruction.bytes;
+        cpu->cycle += cpu_page_cross(cpu_read_16b(cpu, operand), cpu->Y);
+      }
+      break;
+    case 0x96:
+      /*
+       * STX - Store X Register (zero page, Y)
+       *
+       * Stores the contents of the X register into memory.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        const uint8_t zero_page_y_offset = cpu_make_zero_page_y_offset(cpu, operand);
+        cpu->ram[zero_page_y_offset] = cpu->X;
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x98:
       /*
        * TYA - Transfer Y to Accumulator
@@ -1097,6 +1369,18 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu->A = cpu->Y;
       cpu_set_zero_negative_flags(cpu, cpu->A);
       cpu->PC += instruction.bytes;
+      break;
+    case 0x99:
+      /*
+       * STA - Store Accumulator (absolute, Y)
+       *
+       * Stores the contents of the accumulator into memory.
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        cpu->ram[address + cpu->Y] = cpu->A;
+        cpu->PC += instruction.bytes;
+      }
       break;
     case 0x9a:
       /*
@@ -1283,6 +1567,48 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0xb5:
+      /*
+       * LDA - Load Accumulator (zero page, X)
+       *
+       * Loads a byte of memory into the accumulator setting the zero and
+       * negative flags as appropriate.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        cpu->A = cpu_read_zero_page_x(cpu, operand);
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0xb4:
+      /*
+       * LDY - Load Y Register (zero page, X)
+       *
+       * Loads a byte of memory into the Y register, setting the zero and
+       * negative flags as appropriate.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        cpu->Y = cpu_read_zero_page_x(cpu, operand);
+        cpu_set_zero_negative_flags(cpu, cpu->Y);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0xb6:
+      /*
+       * LDX - Load X Register (zero page, Y)
+       *
+       * Loads a byte of memory into the X register, setting the zero and
+       * negative flags as appropriate.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        cpu->X = cpu_read_8b(cpu, cpu_make_zero_page_y_offset(cpu, operand));
+        cpu_set_zero_negative_flags(cpu, cpu->X);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0xb8:
       /*
        * CLV - Clear Overflow Flag
@@ -1291,6 +1617,21 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        */
       BIT_CLEAR(cpu->P, FLAGS_BIT_OVERFLOW);
       cpu->PC += instruction.bytes;
+      break;
+    case 0xb9:
+      /*
+       * LDA - Load Accumulator (absolute, Y)
+       *
+       * Loads a byte of memory into the accumulator setting the zero and
+       * negative flags as appropriate.
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        cpu->A = cpu_read_8b(cpu, address + cpu->Y);
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->cycle += cpu_page_cross(address, cpu->Y);
+        cpu->PC += instruction.bytes;
+      }
       break;
     case 0xba:
       /*
@@ -1496,10 +1837,42 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       {
         const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
         const uint8_t value = cpu_read_indirect_y(cpu, operand);
-        cpu->cycle += cpu_page_cross(cpu_read_16b(cpu, operand), cpu->Y);
         BIT_SET_IF(cpu->A >= value, cpu->P, FLAGS_BIT_CARRY);
         BIT_SET_IF(cpu->A == value, cpu->P, FLAGS_BIT_ZERO);
         BIT_SET_IF((cpu->A - value) & 0x80, cpu->P, FLAGS_BIT_NEGATIVE);
+        cpu->cycle += cpu_page_cross(cpu_read_16b(cpu, operand), cpu->Y);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0xd5:
+      /*
+       * CMP - Compare (zero page, X)
+       *
+       * Compares the contents of the accumulator with another value from
+       * memory and sets the zero and carry flags as appropriate. The negative
+       * flag is set in case bit 7 of the result of (A - value) is set.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        const uint8_t value = cpu_read_zero_page_x(cpu, operand);
+        BIT_SET_IF(cpu->A >= value, cpu->P, FLAGS_BIT_CARRY);
+        BIT_SET_IF(cpu->A == value, cpu->P, FLAGS_BIT_ZERO);
+        BIT_SET_IF((cpu->A - value) & 0x80, cpu->P, FLAGS_BIT_NEGATIVE);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0xd6:
+      /*
+       * DEC - Decrement memory (zero page, X)
+       *
+       * Subtracts one from the value held at a specified memory location
+       * setting the zero and negative flags as appropriate.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + cpu_make_zero_page_x_offset(cpu, operand);
+        (*value)--;
+        cpu_set_zero_negative_flags(cpu, *value);
         cpu->PC += instruction.bytes;
       }
       break;
@@ -1511,6 +1884,23 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        */
       BIT_CLEAR(cpu->P, FLAGS_BIT_DECIMAL);
       cpu->PC += instruction.bytes;
+      break;
+    case 0xd9:
+      /*
+       * CMP - Compare (absolute, Y)
+       *
+       * Compares the contents of the accumulator with another value from
+       * memory and sets the zero and carry flags as appropriate. The negative
+       * flag is set in case bit 7 of the result of (A - value) is set.
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        const uint8_t value = cpu_read_8b(cpu, address + cpu->Y);
+        BIT_SET_IF(cpu->A >= value, cpu->P, FLAGS_BIT_CARRY);
+        BIT_SET_IF(cpu->A == value, cpu->P, FLAGS_BIT_ZERO);
+        BIT_SET_IF((cpu->A - value) & 0x80, cpu->P, FLAGS_BIT_NEGATIVE);
+        cpu->PC += instruction.bytes;
+      }
       break;
     case 0xe0:
       /*
@@ -1769,6 +2159,51 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0xf5:
+      /*
+       * SBC - Subtract With Carry (zero page, X)
+       *
+       * Subtracts the contents of a memory location from the accumulator
+       * together with the not of the carry bit. If overflow occurs, the carry
+       * bit is clear.
+       *
+       * Note that SBC is simply ADC, with the value at the memory location
+       * changed to one's complement. To see why this is, SBC is defined as:
+       *
+       *   SBC = A - v - B
+       *
+       * where `v` is some value in memory, and `B` is the borrow bit. B is
+       * defined as the inverse of the carry flag: (1 - C). Thus:
+       *
+       *   SBC = A - v - (1 - C)
+       *   SBC = A - v - (1 - C) + 256
+       *   SBC = A - v - C + 255
+       *   SBC = A + (255 - v) + C
+       *
+       * here, 255 - v is simply the one's complement of v. Note that adding 256
+       * to an 8bit value does not change the 8bit value.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        cpu_addc(cpu, ~(cpu_read_zero_page_x(cpu, operand)));
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0xf6:
+      /*
+       * INC - Increment memory (zero page, X)
+       *
+       * Adds one to the value held at a specified memory location setting the
+       * zero and negative flags as appropriate.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + cpu_make_zero_page_x_offset(cpu, operand);
+        (*value)++;
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0xf8:
       /*
        * SED - Set Decimal Flag
@@ -1777,6 +2212,36 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        */
       BIT_SET(cpu->P, FLAGS_BIT_DECIMAL);
       cpu->PC += instruction.bytes;
+      break;
+    case 0xf9:
+      /*
+       * SBC - Subtract With Carry (absolute, Y)
+       *
+       * Subtracts the contents of a memory location from the accumulator
+       * together with the not of the carry bit. If overflow occurs, the carry
+       * bit is clear.
+       *
+       * Note that SBC is simply ADC, with the value at the memory location
+       * changed to one's complement. To see why this is, SBC is defined as:
+       *
+       *   SBC = A - v - B
+       *
+       * where `v` is some value in memory, and `B` is the borrow bit. B is
+       * defined as the inverse of the carry flag: (1 - C). Thus:
+       *
+       *   SBC = A - v - (1 - C)
+       *   SBC = A - v - (1 - C) + 256
+       *   SBC = A - v - C + 255
+       *   SBC = A + (255 - v) + C
+       *
+       * here, 255 - v is simply the one's complement of v. Note that adding 256
+       * to an 8bit value does not change the 8bit value.
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        cpu_addc(cpu, ~cpu_read_8b(cpu, address + cpu->Y));
+        cpu->PC += instruction.bytes;
+      }
       break;
     default:
       nn_quit("Unknown opcode: %x", instruction.opcode);

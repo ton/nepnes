@@ -77,6 +77,11 @@ uint8_t cpu_read_indirect_x(struct Cpu *cpu, uint8_t offset);
 Address cpu_read_indirect_y_address(struct Cpu *cpu, uint8_t offset);
 uint8_t cpu_read_indirect_y(struct Cpu *cpu, uint8_t offset);
 
+uint8_t cpu_make_zero_page_x_offset(struct Cpu *cpu, uint8_t offset);
+uint8_t cpu_read_zero_page_x(struct Cpu *cpu, uint8_t offset);
+uint8_t cpu_make_zero_page_y_offset(struct Cpu *cpu, uint8_t offset);
+uint8_t cpu_read_zero_page_y(struct Cpu *cpu, uint8_t offset);
+
 int cpu_page_cross(Address address, uint8_t offset);
 
 void cpu_execute_next_instruction(struct Cpu *cpu);

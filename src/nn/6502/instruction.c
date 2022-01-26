@@ -418,8 +418,25 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
       snprintf(buffer, sizeof buffer, "%s $%04X,X", operation_name(ins->op), read_16b_op(encoding));
       break;
     case AM_ABSOLUTE_Y:
-      snprintf(buffer, sizeof buffer, "%s $%04X,Y", operation_name(ins->op), read_16b_op(encoding));
-      break;
+    {
+      const bool print_address_value =
+          layout == IL_NINTENDULATOR &&
+          (ins->op == OP_LDA || ins->op == OP_ORA || ins->op == OP_AND || ins->op == OP_EOR ||
+           ins->op == OP_ADC || ins->op == OP_CMP || ins->op == OP_SBC || ins->op == OP_STA ||
+           ins->op == OP_LDY);
+      if (print_address_value)
+      {
+        const Address address = read_16b_op(encoding) + cpu->Y;
+        snprintf(buffer, sizeof buffer, "%s $%04X,Y @ %04X = %02X", operation_name(ins->op),
+                 read_16b_op(encoding), address, cpu_read_8b(cpu, address));
+      }
+      else
+      {
+        snprintf(buffer, sizeof buffer, "%s $%04X,Y", operation_name(ins->op),
+                 read_16b_op(encoding));
+      }
+    }
+    break;
     case AM_ACCUMULATOR:
       snprintf(buffer, sizeof buffer, "%s A", operation_name(ins->op));
       break;
@@ -514,11 +531,43 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
       }
       break;
     case AM_ZERO_PAGE_X:
-      snprintf(buffer, sizeof buffer, "%s $%02X,X", operation_name(ins->op), encoding & 0xff);
-      break;
+    {
+      const bool print_address_value =
+          layout == IL_NINTENDULATOR &&
+          (ins->op == OP_LDY || ins->op == OP_STY || ins->op == OP_ORA || ins->op == OP_AND ||
+           ins->op == OP_EOR || ins->op == OP_ADC || ins->op == OP_CMP || ins->op == OP_SBC ||
+           ins->op == OP_LDA || ins->op == OP_STA || ins->op == OP_LSR || ins->op == OP_ASL ||
+           ins->op == OP_ROR || ins->op == OP_ROL || ins->op == OP_INC || ins->op == OP_DEC);
+      if (print_address_value)
+      {
+        const uint8_t offset = read_8b_op(encoding);
+        const uint8_t zero_page_x_offset = cpu_make_zero_page_x_offset(cpu, offset);
+        snprintf(buffer, sizeof buffer, "%s $%02X,X @ %02X = %02X", operation_name(ins->op), offset,
+                 zero_page_x_offset, cpu_read_zero_page_x(cpu, offset));
+      }
+      else
+      {
+        snprintf(buffer, sizeof buffer, "%s $%02X,X", operation_name(ins->op), encoding & 0xff);
+      }
+    }
+    break;
     case AM_ZERO_PAGE_Y:
-      snprintf(buffer, sizeof buffer, "%s $%02X,Y", operation_name(ins->op), encoding & 0xff);
-      break;
+    {
+      const bool print_address_value =
+          layout == IL_NINTENDULATOR && (ins->op == OP_LDX || ins->op == OP_STX);
+      if (print_address_value)
+      {
+        const uint8_t offset = read_8b_op(encoding);
+        const uint8_t zero_page_y_offset = cpu_make_zero_page_y_offset(cpu, offset);
+        snprintf(buffer, sizeof buffer, "%s $%02X,Y @ %02X = %02X", operation_name(ins->op), offset,
+                 zero_page_y_offset, cpu_read_zero_page_y(cpu, offset));
+      }
+      else
+      {
+        snprintf(buffer, sizeof buffer, "%s $%02X,Y", operation_name(ins->op), encoding & 0xff);
+      }
+    }
+    break;
   }
 
   return buffer;

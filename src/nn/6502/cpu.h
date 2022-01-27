@@ -67,6 +67,7 @@ struct Cpu
 };
 
 uint8_t cpu_read_8b(struct Cpu *cpu, Address a);
+int8_t cpu_read_signed_8b(struct Cpu *cpu, Address a);
 uint16_t cpu_read_16b(struct Cpu *cpu, Address a);
 uint16_t cpu_read_indirect_16b(struct Cpu* cpu, Address a);
 void cpu_write_16b(struct Cpu *cpu, Address a, uint16_t x);

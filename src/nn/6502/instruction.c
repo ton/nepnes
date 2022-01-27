@@ -295,6 +295,14 @@ static uint8_t read_8b_op(Encoding encoding)
 }
 
 /*
+ * Given an instruction encoding, reads its signed 8-bit operand.
+ */
+static int8_t read_signed_8b_op(Encoding encoding)
+{
+  return (encoding >> 8) & 0xff;
+}
+
+/*
  * Given an instruction encoding, reads its 16-bit operand.
  */
 static uint16_t read_16b_op(Encoding encoding)
@@ -527,12 +535,12 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
       switch (layout)
       {
         case IL_NES_DISASM:
-          snprintf(buffer, sizeof buffer, "%s $%02X (%d)", op_name, read_8b_op(encoding),
-                   read_8b_op(encoding));
+          snprintf(buffer, sizeof buffer, "%s $%02X (%d)", op_name, read_signed_8b_op(encoding),
+                   read_signed_8b_op(encoding));
           break;
         case IL_NINTENDULATOR:
           snprintf(buffer, sizeof buffer, "%s $%02X", op_name,
-                   cpu->PC + ins->bytes + (read_8b_op(encoding)));
+                   cpu->PC + ins->bytes + (read_signed_8b_op(encoding)));
           break;
       }
       break;

@@ -23,6 +23,11 @@
 #define BIT_SET_IF(p, x, n) (x = (x & ~(1 << n)) | (((p) > 0) << n))
 
 /*
+ * TODO(ton): all instructions with relative addressing modes should read a
+ * signed operand!
+ */
+
+/*
  * Pops an 8-bit value from the stack.
  */
 static uint8_t cpu_pop_8b(struct Cpu *cpu)
@@ -124,6 +129,15 @@ static void cpu_addc(struct Cpu *cpu, uint8_t v)
  * address results in undefined behavior.
  */
 uint8_t cpu_read_8b(struct Cpu *cpu, Address a)
+{
+  return cpu->ram[a];
+}
+
+/*
+ * Reads a signed 8-bit value at the given address. Specifying an out-of-bounds
+ * address results in undefined behavior.
+ */
+int8_t cpu_read_signed_8b(struct Cpu *cpu, Address a)
 {
   return cpu->ram[a];
 }
@@ -2184,8 +2198,8 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        */
       if (!(cpu->P & FLAGS_ZERO))
       {
-        cpu->PC += instruction.bytes + cpu->ram[cpu->PC + 1];
-        cpu->cycle++;
+        cpu->PC += instruction.bytes + cpu_read_signed_8b(cpu, cpu->PC + 1);
+        cpu->cycle++; /* TODO: +2 if branching to a new page */
       }
       else
       {

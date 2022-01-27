@@ -17,264 +17,265 @@ static const char *operation_mnemonic[] = {
     [OP_ROR] = "ROR", [OP_RTI] = "RTI", [OP_RTS] = "RTS", [OP_SBC] = "SBC", [OP_SEC] = "SEC",
     [OP_SED] = "SED", [OP_SEI] = "SEI", [OP_STA] = "STA", [OP_STX] = "STX", [OP_STY] = "STY",
     [OP_TAX] = "TAX", [OP_TAY] = "TAY", [OP_TSX] = "TSX", [OP_TXA] = "TXA", [OP_TXS] = "TXS",
-    [OP_TYA] = "TYA"};
+    [OP_TYA] = "TYA", [OP_IGN] = "IGN", [OP_SKB] = "SKB",
+};
 
 static const struct Instruction instructions[256] = {
-    {0x00, OP_BRK, 1, AM_IMPLIED, 7},
-    {0x01, OP_ORA, 2, AM_INDIRECT_X, 6},
+    {0x00, OP_BRK, 1, AM_IMPLIED, 7, true},
+    {0x01, OP_ORA, 2, AM_INDIRECT_X, 6, true},
     {0},
     {0},
+    {0x04, OP_IGN, 2, AM_ZERO_PAGE, 3, false},
+    {0x05, OP_ORA, 2, AM_ZERO_PAGE, 3, true},
+    {0x06, OP_ASL, 2, AM_ZERO_PAGE, 5, true},
     {0},
-    {0x05, OP_ORA, 2, AM_ZERO_PAGE, 3},
-    {0x06, OP_ASL, 2, AM_ZERO_PAGE, 5},
+    {0x08, OP_PHP, 1, AM_IMPLIED, 3, true},
+    {0x09, OP_ORA, 2, AM_IMMEDIATE, 2, true},
+    {0x0A, OP_ASL, 1, AM_ACCUMULATOR, 2, true},
     {0},
-    {0x08, OP_PHP, 1, AM_IMPLIED, 3},
-    {0x09, OP_ORA, 2, AM_IMMEDIATE, 2},
-    {0x0A, OP_ASL, 1, AM_ACCUMULATOR, 2},
+    {0x0C, OP_IGN, 3, AM_ABSOLUTE, 4, false},
+    {0x0D, OP_ORA, 3, AM_ABSOLUTE, 4, true},
+    {0x0E, OP_ASL, 3, AM_ABSOLUTE, 6, true},
     {0},
+    {0x10, OP_BPL, 2, AM_RELATIVE, 2 /* +1 on branch, +2 on page cross */, true},
+    {0x11, OP_ORA, 2, AM_INDIRECT_Y, 5 /* +1 on page cross */, true},
     {0},
-    {0x0D, OP_ORA, 3, AM_ABSOLUTE, 4},
-    {0x0E, OP_ASL, 3, AM_ABSOLUTE, 6},
     {0},
-    {0x10, OP_BPL, 2, AM_RELATIVE, 2 /* +1 on branch, +2 on page cross */},
-    {0x11, OP_ORA, 2, AM_INDIRECT_Y, 5 /* +1 on page cross */},
+    {0x14, OP_IGN, 2, AM_ZERO_PAGE_X, 4, false},
+    {0x15, OP_ORA, 2, AM_ZERO_PAGE_X, 4, true},
+    {0x16, OP_ASL, 2, AM_ZERO_PAGE_X, 6, true},
     {0},
+    {0x18, OP_CLC, 1, AM_IMPLIED, 2, true},
+    {0x19, OP_ORA, 3, AM_ABSOLUTE_Y, 4 /* +1 on page cross */, true},
+    {0x1A, OP_NOP, 1, AM_IMPLIED, 2, false},
     {0},
+    {0x1C, OP_IGN, 3, AM_ABSOLUTE_X, 4 /* +1 on page cross */, false},
+    {0x1D, OP_ORA, 3, AM_ABSOLUTE_X, 4 /* +1 on page cross */, true},
+    {0x1E, OP_ASL, 3, AM_ABSOLUTE_X, 7, true},
     {0},
-    {0x15, OP_ORA, 2, AM_ZERO_PAGE_X, 4},
-    {0x16, OP_ASL, 2, AM_ZERO_PAGE_X, 6},
+    {0x20, OP_JSR, 3, AM_ABSOLUTE, 6, true},
+    {0x21, OP_AND, 2, AM_INDIRECT_X, 6, true},
     {0},
-    {0x18, OP_CLC, 1, AM_IMPLIED, 2},
-    {0x19, OP_ORA, 3, AM_ABSOLUTE_Y, 4 /* +1 on page cross */},
     {0},
+    {0x24, OP_BIT, 2, AM_ZERO_PAGE, 3, true},
+    {0x25, OP_AND, 2, AM_ZERO_PAGE, 3, true},
+    {0x26, OP_ROL, 2, AM_ZERO_PAGE, 5, true},
     {0},
+    {0x28, OP_PLP, 1, AM_IMPLIED, 4, true},
+    {0x29, OP_AND, 2, AM_IMMEDIATE, 2, true},
+    {0x2A, OP_ROL, 1, AM_ACCUMULATOR, 2, true},
     {0},
-    {0x1D, OP_ORA, 3, AM_ABSOLUTE_X, 4 /* +1 on page cross */},
-    {0x1E, OP_ASL, 3, AM_ABSOLUTE_X, 7},
+    {0x2C, OP_BIT, 3, AM_ABSOLUTE, 4, true},
+    {0x2D, OP_AND, 3, AM_ABSOLUTE, 4, true},
+    {0x2E, OP_ROL, 3, AM_ABSOLUTE, 6, true},
     {0},
-    {0x20, OP_JSR, 3, AM_ABSOLUTE, 6},
-    {0x21, OP_AND, 2, AM_INDIRECT_X, 6},
+    {0x30, OP_BMI, 2, AM_RELATIVE, 2 /* +1 on branch, +2 on page cross */, true},
+    {0x31, OP_AND, 2, AM_INDIRECT_Y, 5 /* +1 on page cross */, true},
     {0},
     {0},
-    {0x24, OP_BIT, 2, AM_ZERO_PAGE, 3},
-    {0x25, OP_AND, 2, AM_ZERO_PAGE, 3},
-    {0x26, OP_ROL, 2, AM_ZERO_PAGE, 5},
+    {0x34, OP_IGN, 2, AM_ZERO_PAGE_X, 4, false},
+    {0x35, OP_AND, 2, AM_ZERO_PAGE_X, 4, true},
+    {0x36, OP_ROL, 2, AM_ZERO_PAGE_X, 6, true},
     {0},
-    {0x28, OP_PLP, 1, AM_IMPLIED, 4},
-    {0x29, OP_AND, 2, AM_IMMEDIATE, 2},
-    {0x2A, OP_ROL, 1, AM_ACCUMULATOR, 2},
+    {0x38, OP_SEC, 1, AM_IMPLIED, 2, true},
+    {0x39, OP_AND, 3, AM_ABSOLUTE_Y, 4 /* +1 on page cross */, true},
+    {0x3A, OP_NOP, 1, AM_IMPLIED, 2, false},
     {0},
-    {0x2C, OP_BIT, 3, AM_ABSOLUTE, 4},
-    {0x2D, OP_AND, 3, AM_ABSOLUTE, 4},
-    {0x2E, OP_ROL, 3, AM_ABSOLUTE, 6},
+    {0x3C, OP_IGN, 3, AM_ABSOLUTE_X, 4 /* +1 on page cross */, false},
+    {0x3D, OP_AND, 3, AM_ABSOLUTE_X, 4 /* +1 on page cross */, true},
+    {0x3E, OP_ROL, 3, AM_ABSOLUTE_X, 7, true},
     {0},
-    {0x30, OP_BMI, 2, AM_RELATIVE, 2 /* +1 on branch, +2 on page cross */},
-    {0x31, OP_AND, 2, AM_INDIRECT_Y, 5 /* +1 on page cross */},
+    {0x40, OP_RTI, 1, AM_IMPLIED, 6, true},
+    {0x41, OP_EOR, 2, AM_INDIRECT_X, 6, true},
     {0},
     {0},
+    {0x44, OP_IGN, 2, AM_ZERO_PAGE, 3, false},
+    {0x45, OP_EOR, 2, AM_ZERO_PAGE, 3, true},
+    {0x46, OP_LSR, 2, AM_ZERO_PAGE, 5, true},
     {0},
-    {0x35, OP_AND, 2, AM_ZERO_PAGE_X, 4},
-    {0x36, OP_ROL, 2, AM_ZERO_PAGE_X, 6},
+    {0x48, OP_PHA, 1, AM_IMPLIED, 3, true},
+    {0x49, OP_EOR, 2, AM_IMMEDIATE, 2, true},
+    {0x4A, OP_LSR, 1, AM_ACCUMULATOR, 2, true},
     {0},
-    {0x38, OP_SEC, 1, AM_IMPLIED, 2},
-    {0x39, OP_AND, 3, AM_ABSOLUTE_Y, 4 /* +1 on page cross */},
+    {0x4C, OP_JMP, 3, AM_ABSOLUTE, 3, true},
+    {0x4D, OP_EOR, 3, AM_ABSOLUTE, 4, true},
+    {0x4E, OP_LSR, 3, AM_ABSOLUTE, 6, true},
     {0},
+    {0x50, OP_BVC, 2, AM_RELATIVE, 2 /* +1 on branch, +2 on page cross */, true},
+    {0x51, OP_EOR, 2, AM_INDIRECT_Y, 5 /* +1 on page cross */, true},
     {0},
     {0},
-    {0x3D, OP_AND, 3, AM_ABSOLUTE_X, 4 /* +1 on page cross */},
-    {0x3E, OP_ROL, 3, AM_ABSOLUTE_X, 7},
+    {0x54, OP_IGN, 2, AM_ZERO_PAGE_X, 4, false},
+    {0x55, OP_EOR, 2, AM_ZERO_PAGE_X, 4, true},
+    {0x56, OP_LSR, 2, AM_ZERO_PAGE_X, 6, true},
     {0},
-    {0x40, OP_RTI, 1, AM_IMPLIED, 6},
-    {0x41, OP_EOR, 2, AM_INDIRECT_X, 6},
+    {0x58, OP_CLI, 1, AM_IMPLIED, 2, true},
+    {0x59, OP_EOR, 3, AM_ABSOLUTE_Y, 4 /* +1 on page cross */, true},
+    {0x5A, OP_NOP, 1, AM_IMPLIED, 2, false},
     {0},
+    {0x5C, OP_IGN, 3, AM_ABSOLUTE_X, 4 /* +1 on page cross */, false},
+    {0x5D, OP_EOR, 3, AM_ABSOLUTE_X, 4 /* +1 on page cross */, true},
+    {0x5E, OP_LSR, 3, AM_ABSOLUTE_X, 7, true},
     {0},
+    {0x60, OP_RTS, 1, AM_IMPLIED, 6, true},
+    {0x61, OP_ADC, 2, AM_INDIRECT_X, 6, true},
     {0},
-    {0x45, OP_EOR, 2, AM_ZERO_PAGE, 3},
-    {0x46, OP_LSR, 2, AM_ZERO_PAGE, 5},
     {0},
-    {0x48, OP_PHA, 1, AM_IMPLIED, 3},
-    {0x49, OP_EOR, 2, AM_IMMEDIATE, 2},
-    {0x4A, OP_LSR, 1, AM_ACCUMULATOR, 2},
+    {0x64, OP_IGN, 2, AM_ZERO_PAGE, 3, false},
+    {0x65, OP_ADC, 2, AM_ZERO_PAGE, 3, true},
+    {0x66, OP_ROR, 2, AM_ZERO_PAGE, 5, true},
     {0},
-    {0x4C, OP_JMP, 3, AM_ABSOLUTE, 3},
-    {0x4D, OP_EOR, 3, AM_ABSOLUTE, 4},
-    {0x4E, OP_LSR, 3, AM_ABSOLUTE, 6},
+    {0x68, OP_PLA, 1, AM_IMPLIED, 4, true},
+    {0x69, OP_ADC, 2, AM_IMMEDIATE, 2, true},
+    {0x6A, OP_ROR, 1, AM_ACCUMULATOR, 2, true},
     {0},
-    {0x50, OP_BVC, 2, AM_RELATIVE, 2 /* +1 on branch, +2 on page cross */},
-    {0x51, OP_EOR, 2, AM_INDIRECT_Y, 5 /* +1 on page cross */},
+    {0x6C, OP_JMP, 3, AM_INDIRECT, 5, true},
+    {0x6D, OP_ADC, 3, AM_ABSOLUTE, 4, true},
+    {0x6E, OP_ROR, 3, AM_ABSOLUTE, 6, true},
     {0},
+    {0x70, OP_BVS, 2, AM_RELATIVE, 2 /* +1 on branch, +2 on page cross */, true},
+    {0x71, OP_ADC, 2, AM_INDIRECT_Y, 5 /* +1 on page cross */, true},
     {0},
     {0},
-    {0x55, OP_EOR, 2, AM_ZERO_PAGE_X, 4},
-    {0x56, OP_LSR, 2, AM_ZERO_PAGE_X, 6},
+    {0x54, OP_IGN, 2, AM_ZERO_PAGE_X, 4, false},
+    {0x75, OP_ADC, 2, AM_ZERO_PAGE_X, 4, true},
+    {0x76, OP_ROR, 2, AM_ZERO_PAGE_X, 6, true},
     {0},
-    {0x58, OP_CLI, 1, AM_IMPLIED, 2},
-    {0x59, OP_EOR, 3, AM_ABSOLUTE_Y, 4 /* +1 on page cross */},
+    {0x78, OP_SEI, 1, AM_IMPLIED, 2, true},
+    {0x79, OP_ADC, 3, AM_ABSOLUTE_Y, 4 /* +1 on page cross */, true},
+    {0x7A, OP_NOP, 1, AM_IMPLIED, 2, false},
     {0},
+    {0x7C, OP_IGN, 3, AM_ABSOLUTE_X, 4 /* +1 on page cross */, false},
+    {0x7D, OP_ADC, 3, AM_ABSOLUTE_X, 4 /* +1 on page cross */, true},
+    {0x7E, OP_ROR, 3, AM_ABSOLUTE_X, 7, true},
     {0},
+    {0x80, OP_SKB, 2, AM_IMMEDIATE, 2, false},
+    {0x81, OP_STA, 2, AM_INDIRECT_X, 6, true},
     {0},
-    {0x5D, OP_EOR, 3, AM_ABSOLUTE_X, 4 /* +1 on page cross */},
-    {0x5E, OP_LSR, 3, AM_ABSOLUTE_X, 7},
     {0},
-    {0x60, OP_RTS, 1, AM_IMPLIED, 6},
-    {0x61, OP_ADC, 2, AM_INDIRECT_X, 6},
+    {0x84, OP_STY, 2, AM_ZERO_PAGE, 3, true},
+    {0x85, OP_STA, 2, AM_ZERO_PAGE, 3, true},
+    {0x86, OP_STX, 2, AM_ZERO_PAGE, 3, true},
     {0},
+    {0x88, OP_DEY, 1, AM_IMPLIED, 2, true},
     {0},
+    {0x8A, OP_TXA, 1, AM_IMPLIED, 2, true},
     {0},
-    {0x65, OP_ADC, 2, AM_ZERO_PAGE, 3},
-    {0x66, OP_ROR, 2, AM_ZERO_PAGE, 5},
+    {0x8C, OP_STY, 3, AM_ABSOLUTE, 4, true},
+    {0x8D, OP_STA, 3, AM_ABSOLUTE, 4, true},
+    {0x8E, OP_STX, 3, AM_ABSOLUTE, 4, true},
     {0},
-    {0x68, OP_PLA, 1, AM_IMPLIED, 4},
-    {0x69, OP_ADC, 2, AM_IMMEDIATE, 2},
-    {0x6A, OP_ROR, 1, AM_ACCUMULATOR, 2},
+    {0x90, OP_BCC, 2, AM_RELATIVE, 2 /* +1 on branch, +2 on page cross */, true},
+    {0x91, OP_STA, 2, AM_INDIRECT_Y, 6, true},
     {0},
-    {0x6C, OP_JMP, 3, AM_INDIRECT, 5},
-    {0x6D, OP_ADC, 3, AM_ABSOLUTE, 4},
-    {0x6E, OP_ROR, 3, AM_ABSOLUTE, 6},
     {0},
-    {0x70, OP_BVS, 2, AM_RELATIVE, 2 /* +1 on branch, +2 on page cross */},
-    {0x71, OP_ADC, 2, AM_INDIRECT_Y, 5 /* +1 on page cross */},
+    {0x94, OP_STY, 2, AM_ZERO_PAGE_X, 4, true},
+    {0x95, OP_STA, 2, AM_ZERO_PAGE_X, 4, true},
+    {0x96, OP_STX, 2, AM_ZERO_PAGE_Y, 4, true},
     {0},
+    {0x98, OP_TYA, 1, AM_IMPLIED, 2, true},
+    {0x99, OP_STA, 3, AM_ABSOLUTE_Y, 5, true},
+    {0x9A, OP_TXS, 1, AM_IMPLIED, 2, true},
     {0},
     {0},
-    {0x75, OP_ADC, 2, AM_ZERO_PAGE_X, 4},
-    {0x76, OP_ROR, 2, AM_ZERO_PAGE_X, 6},
+    {0x9D, OP_STA, 3, AM_ABSOLUTE_X, 5, true},
     {0},
-    {0x78, OP_SEI, 1, AM_IMPLIED, 2},
-    {0x79, OP_ADC, 3, AM_ABSOLUTE_Y, 4 /* +1 on page cross */},
     {0},
+    {0xA0, OP_LDY, 2, AM_IMMEDIATE, 2, true},
+    {0xA1, OP_LDA, 2, AM_INDIRECT_X, 6, true},
+    {0xA2, OP_LDX, 2, AM_IMMEDIATE, 2, true},
     {0},
+    {0xA4, OP_LDY, 2, AM_ZERO_PAGE, 3, true},
+    {0xA5, OP_LDA, 2, AM_ZERO_PAGE, 3, true},
+    {0xA6, OP_LDX, 2, AM_ZERO_PAGE, 3, true},
     {0},
-    {0x7D, OP_ADC, 3, AM_ABSOLUTE_X, 4 /* +1 on page cross */},
-    {0x7E, OP_ROR, 3, AM_ABSOLUTE_X, 7},
+    {0xA8, OP_TAY, 1, AM_IMPLIED, 2, true},
+    {0xA9, OP_LDA, 2, AM_IMMEDIATE, 2, true},
+    {0xAA, OP_TAX, 1, AM_IMPLIED, 2, true},
     {0},
-    {0},  // 80
-    {0x81, OP_STA, 2, AM_INDIRECT_X, 6},
+    {0xAC, OP_LDY, 3, AM_ABSOLUTE, 4, true},
+    {0xAD, OP_LDA, 3, AM_ABSOLUTE, 4, true},
+    {0xAE, OP_LDX, 3, AM_ABSOLUTE, 4, true},
     {0},
+    {0xB0, OP_BCS, 2, AM_RELATIVE, 2 /* +1 on branch, +2 on page cross */, true},
+    {0xB1, OP_LDA, 2, AM_INDIRECT_Y, 5 /* +1 on page cross */, true},
     {0},
-    {0x84, OP_STY, 2, AM_ZERO_PAGE, 3},
-    {0x85, OP_STA, 2, AM_ZERO_PAGE, 3},
-    {0x86, OP_STX, 2, AM_ZERO_PAGE, 3},
     {0},
-    {0x88, OP_DEY, 1, AM_IMPLIED, 2},
+    {0xB4, OP_LDY, 2, AM_ZERO_PAGE_X, 4, true},
+    {0xB5, OP_LDA, 2, AM_ZERO_PAGE_X, 4, true},
+    {0xB6, OP_LDX, 2, AM_ZERO_PAGE_Y, 4, true},
     {0},
-    {0x8A, OP_TXA, 1, AM_IMPLIED, 2},
+    {0xB8, OP_CLV, 1, AM_IMPLIED, 2, true},
+    {0xB9, OP_LDA, 3, AM_ABSOLUTE_Y, 4 /* +1 on page cross */, true},
+    {0xBA, OP_TSX, 1, AM_IMPLIED, 2, true},
     {0},
-    {0x8C, OP_STY, 3, AM_ABSOLUTE, 4},
-    {0x8D, OP_STA, 3, AM_ABSOLUTE, 4},
-    {0x8E, OP_STX, 3, AM_ABSOLUTE, 4},
+    {0xBC, OP_LDY, 3, AM_ABSOLUTE_X, 4 /* +1 on page cross */, true},
+    {0xBD, OP_LDA, 3, AM_ABSOLUTE_X, 4 /* +1 on page cross */, true},
+    {0xBE, OP_LDX, 3, AM_ABSOLUTE_Y, 4 /* +1 on page cross */, true},
     {0},
-    {0x90, OP_BCC, 2, AM_RELATIVE, 2 /* +1 on branch, +2 on page cross */},
-    {0x91, OP_STA, 2, AM_INDIRECT_Y, 6},
+    {0xC0, OP_CPY, 2, AM_IMMEDIATE, 2, true},
+    {0xC1, OP_CMP, 2, AM_INDIRECT_X, 6, true},
     {0},
     {0},
-    {0x94, OP_STY, 2, AM_ZERO_PAGE_X, 4},
-    {0x95, OP_STA, 2, AM_ZERO_PAGE_X, 4},
-    {0x96, OP_STX, 2, AM_ZERO_PAGE_Y, 4},
+    {0xC4, OP_CPY, 2, AM_ZERO_PAGE, 3, true},
+    {0xC5, OP_CMP, 2, AM_ZERO_PAGE, 3, true},
+    {0xC6, OP_DEC, 2, AM_ZERO_PAGE, 5, true},
     {0},
-    {0x98, OP_TYA, 1, AM_IMPLIED, 2},
-    {0x99, OP_STA, 3, AM_ABSOLUTE_Y, 5},
-    {0x9A, OP_TXS, 1, AM_IMPLIED, 2},
+    {0xC8, OP_INY, 1, AM_IMPLIED, 2, true},
+    {0xC9, OP_CMP, 2, AM_IMMEDIATE, 2, true},
+    {0xCA, OP_DEX, 1, AM_IMPLIED, 2, true},
     {0},
+    {0xCC, OP_CPY, 3, AM_ABSOLUTE, 4, true},
+    {0xCD, OP_CMP, 3, AM_ABSOLUTE, 4, true},
+    {0xCE, OP_DEC, 3, AM_ABSOLUTE, 6, true},
     {0},
-    {0x9D, OP_STA, 3, AM_ABSOLUTE_X, 5},
+    {0xD0, OP_BNE, 2, AM_RELATIVE, 2 /* +1 on branch, +2 on page cross */, true},
+    {0xD1, OP_CMP, 2, AM_INDIRECT_Y, 5 /* +1 on page cross */, true},
     {0},
     {0},
-    {0xA0, OP_LDY, 2, AM_IMMEDIATE, 2},
-    {0xA1, OP_LDA, 2, AM_INDIRECT_X, 6},
-    {0xA2, OP_LDX, 2, AM_IMMEDIATE, 2},
+    {0xD4, OP_IGN, 2, AM_ZERO_PAGE_X, 4, false},
+    {0xD5, OP_CMP, 2, AM_ZERO_PAGE_X, 4, true},
+    {0xD6, OP_DEC, 2, AM_ZERO_PAGE_X, 6, true},
     {0},
-    {0xA4, OP_LDY, 2, AM_ZERO_PAGE, 3},
-    {0xA5, OP_LDA, 2, AM_ZERO_PAGE, 3},
-    {0xA6, OP_LDX, 2, AM_ZERO_PAGE, 3},
+    {0xD8, OP_CLD, 1, AM_IMPLIED, 2, true},
+    {0xD9, OP_CMP, 3, AM_ABSOLUTE_Y, 4 /* +1 on page cross */, true},
+    {0xDA, OP_NOP, 1, AM_IMPLIED, 2, false},
     {0},
-    {0xA8, OP_TAY, 1, AM_IMPLIED, 2},
-    {0xA9, OP_LDA, 2, AM_IMMEDIATE, 2},
-    {0xAA, OP_TAX, 1, AM_IMPLIED, 2},
+    {0xDC, OP_IGN, 3, AM_ABSOLUTE_X, 4 /* +1 on page cross */, false},
+    {0xDD, OP_CMP, 3, AM_ABSOLUTE_X, 4 /* +1 on page cross */, true},
+    {0xDE, OP_DEC, 3, AM_ABSOLUTE_X, 7, true},
     {0},
-    {0xAC, OP_LDY, 3, AM_ABSOLUTE, 4},
-    {0xAD, OP_LDA, 3, AM_ABSOLUTE, 4},
-    {0xAE, OP_LDX, 3, AM_ABSOLUTE, 4},
+    {0xE0, OP_CPX, 2, AM_IMMEDIATE, 2, true},
+    {0xE1, OP_SBC, 2, AM_INDIRECT_X, 6, true},
     {0},
-    {0xB0, OP_BCS, 2, AM_RELATIVE, 2 /* +1 on branch, +2 on page cross */},
-    {0xB1, OP_LDA, 2, AM_INDIRECT_Y, 5 /* +1 on page cross */},
     {0},
+    {0xE4, OP_CPX, 2, AM_ZERO_PAGE, 3, true},
+    {0xE5, OP_SBC, 2, AM_ZERO_PAGE, 3, true},
+    {0xE6, OP_INC, 2, AM_ZERO_PAGE, 5, true},
     {0},
-    {0xB4, OP_LDY, 2, AM_ZERO_PAGE_X, 4},
-    {0xB5, OP_LDA, 2, AM_ZERO_PAGE_X, 4},
-    {0xB6, OP_LDX, 2, AM_ZERO_PAGE_Y, 4},
+    {0xE8, OP_INX, 1, AM_IMPLIED, 2, true},
+    {0xE9, OP_SBC, 2, AM_IMMEDIATE, 2, true},
+    {0xEA, OP_NOP, 1, AM_IMPLIED, 2, true},
     {0},
-    {0xB8, OP_CLV, 1, AM_IMPLIED, 2},
-    {0xB9, OP_LDA, 3, AM_ABSOLUTE_Y, 4 /* +1 on page cross */},
-    {0xBA, OP_TSX, 1, AM_IMPLIED, 2},
+    {0xEC, OP_CPX, 3, AM_ABSOLUTE, 4, true},
+    {0xED, OP_SBC, 3, AM_ABSOLUTE, 4, true},
+    {0xEE, OP_INC, 3, AM_ABSOLUTE, 6, true},
     {0},
-    {0xBC, OP_LDY, 3, AM_ABSOLUTE_X, 4 /* +1 on page cross */},
-    {0xBD, OP_LDA, 3, AM_ABSOLUTE_X, 4 /* +1 on page cross */},
-    {0xBE, OP_LDX, 3, AM_ABSOLUTE_Y, 4 /* +1 on page cross */},
+    {0xF0, OP_BEQ, 2, AM_RELATIVE, 2 /* +1 on branch, +2 on page cross */, true},
+    {0xF1, OP_SBC, 2, AM_INDIRECT_Y, 5 /* +1 on page cross */, true},
     {0},
-    {0xC0, OP_CPY, 2, AM_IMMEDIATE, 2},
-    {0xC1, OP_CMP, 2, AM_INDIRECT_X, 6},
     {0},
+    {0xF4, OP_IGN, 2, AM_ZERO_PAGE_X, 4, false},
+    {0xF5, OP_SBC, 2, AM_ZERO_PAGE_X, 4, true},
+    {0xF6, OP_INC, 2, AM_ZERO_PAGE_X, 6, true},
     {0},
-    {0xC4, OP_CPY, 2, AM_ZERO_PAGE, 3},
-    {0xC5, OP_CMP, 2, AM_ZERO_PAGE, 3},
-    {0xC6, OP_DEC, 2, AM_ZERO_PAGE, 5},
+    {0xF8, OP_SED, 1, AM_IMPLIED, 2, true},
+    {0xF9, OP_SBC, 3, AM_ABSOLUTE_Y, 4 /* +1 on page cross */, true},
+    {0xFA, OP_NOP, 1, AM_IMPLIED, 2, false},
     {0},
-    {0xC8, OP_INY, 1, AM_IMPLIED, 2},
-    {0xC9, OP_CMP, 2, AM_IMMEDIATE, 2},
-    {0xCA, OP_DEX, 1, AM_IMPLIED, 2},
-    {0},
-    {0xCC, OP_CPY, 3, AM_ABSOLUTE, 4},
-    {0xCD, OP_CMP, 3, AM_ABSOLUTE, 4},
-    {0xCE, OP_DEC, 3, AM_ABSOLUTE, 6},
-    {0},
-    {0xD0, OP_BNE, 2, AM_RELATIVE, 2 /* +1 on branch, +2 on page cross */},
-    {0xD1, OP_CMP, 2, AM_INDIRECT_Y, 5 /* +1 on page cross */},
-    {0},
-    {0},
-    {0},
-    {0xD5, OP_CMP, 2, AM_ZERO_PAGE_X, 4},
-    {0xD6, OP_DEC, 2, AM_ZERO_PAGE_X, 6},
-    {0},
-    {0xD8, OP_CLD, 1, AM_IMPLIED, 2},
-    {0xD9, OP_CMP, 3, AM_ABSOLUTE_Y, 4 /* +1 on page cross */},
-    {0},
-    {0},
-    {0},
-    {0xDD, OP_CMP, 3, AM_ABSOLUTE_X, 4 /* +1 on page cross */},
-    {0xDE, OP_DEC, 3, AM_ABSOLUTE_X, 7},
-    {0},
-    {0xE0, OP_CPX, 2, AM_IMMEDIATE, 2},
-    {0xE1, OP_SBC, 2, AM_INDIRECT_X, 6},
-    {0},
-    {0},
-    {0xE4, OP_CPX, 2, AM_ZERO_PAGE, 3},
-    {0xE5, OP_SBC, 2, AM_ZERO_PAGE, 3},
-    {0xE6, OP_INC, 2, AM_ZERO_PAGE, 5},
-    {0},
-    {0xE8, OP_INX, 1, AM_IMPLIED, 2},
-    {0xE9, OP_SBC, 2, AM_IMMEDIATE, 2},
-    {0xEA, OP_NOP, 1, AM_IMPLIED, 2},
-    {0},
-    {0xEC, OP_CPX, 3, AM_ABSOLUTE, 4},
-    {0xED, OP_SBC, 3, AM_ABSOLUTE, 4},
-    {0xEE, OP_INC, 3, AM_ABSOLUTE, 6},
-    {0},
-    {0xF0, OP_BEQ, 2, AM_RELATIVE, 2 /* +1 on branch, +2 on page cross */},
-    {0xF1, OP_SBC, 2, AM_INDIRECT_Y, 5 /* +1 on page cross */},
-    {0},
-    {0},
-    {0},
-    {0xF5, OP_SBC, 2, AM_ZERO_PAGE_X, 4},
-    {0xF6, OP_INC, 2, AM_ZERO_PAGE_X, 6},
-    {0},
-    {0xF8, OP_SED, 1, AM_IMPLIED, 2},
-    {0xF9, OP_SBC, 3, AM_ABSOLUTE_Y, 4 /* +1 on page cross */},
-    {0},
-    {0},
-    {0},
-    {0xFD, OP_SBC, 3, AM_ABSOLUTE_X, 4 /* +1 on page cross */},
-    {0xFE, OP_INC, 3, AM_ABSOLUTE_X, 7},
+    {0xFC, OP_IGN, 3, AM_ABSOLUTE_X, 4 /* +1 on page cross */, false},
+    {0xFD, OP_SBC, 3, AM_ABSOLUTE_X, 4 /* +1 on page cross */, true},
+    {0xFE, OP_INC, 3, AM_ABSOLUTE_X, 7, true},
     {0}};
 
 /*
@@ -391,6 +392,10 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
    * taken below.
    */
 
+  const char *op_name = layout == IL_NINTENDULATOR && (ins->op == OP_IGN || ins->op == OP_SKB)
+                            ? "NOP"
+                            : operation_name(ins->op);
+
   switch (ins->addressing_mode)
   {
     case AM_ABSOLUTE:
@@ -402,15 +407,15 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
            ins->op == OP_AND || ins->op == OP_EOR || ins->op == OP_ADC || ins->op == OP_CMP ||
            ins->op == OP_SBC || ins->op == OP_CPX || ins->op == OP_CPY || ins->op == OP_LSR ||
            ins->op == OP_ASL || ins->op == OP_ROR || ins->op == OP_ROL || ins->op == OP_INC ||
-           ins->op == OP_DEC);
+           ins->op == OP_DEC || ins->op == OP_IGN);
       if (print_address_value)
       {
-        snprintf(buffer, sizeof buffer, "%s $%04X = %02X", operation_name(ins->op),
-                 read_16b_op(encoding), cpu->ram[read_16b_op(encoding)]);
+        snprintf(buffer, sizeof buffer, "%s $%04X = %02X", op_name, read_16b_op(encoding),
+                 cpu->ram[read_16b_op(encoding)]);
       }
       else
       {
-        snprintf(buffer, sizeof buffer, "%s $%04X", operation_name(ins->op), read_16b_op(encoding));
+        snprintf(buffer, sizeof buffer, "%s $%04X", op_name, read_16b_op(encoding));
       }
     }
     break;
@@ -421,17 +426,16 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
           (ins->op == OP_LDY || ins->op == OP_ORA || ins->op == OP_AND || ins->op == OP_EOR ||
            ins->op == OP_ADC || ins->op == OP_CMP || ins->op == OP_SBC || ins->op == OP_LDA ||
            ins->op == OP_STA || ins->op == OP_LSR || ins->op == OP_ASL || ins->op == OP_ROR ||
-           ins->op == OP_ROL || ins->op == OP_INC || ins->op == OP_DEC);
+           ins->op == OP_ROL || ins->op == OP_INC || ins->op == OP_DEC || ins->op == OP_IGN);
       if (print_address_value)
       {
         const Address address = read_16b_op(encoding) + cpu->X;
-        snprintf(buffer, sizeof buffer, "%s $%04X,X @ %04X = %02X", operation_name(ins->op),
-                 read_16b_op(encoding), address, cpu_read_8b(cpu, address));
+        snprintf(buffer, sizeof buffer, "%s $%04X,X @ %04X = %02X", op_name, read_16b_op(encoding),
+                 address, cpu_read_8b(cpu, address));
       }
       else
       {
-        snprintf(buffer, sizeof buffer, "%s $%04X,X", operation_name(ins->op),
-                 read_16b_op(encoding));
+        snprintf(buffer, sizeof buffer, "%s $%04X,X", op_name, read_16b_op(encoding));
       }
     }
     break;
@@ -445,36 +449,34 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
       if (print_address_value)
       {
         const Address address = read_16b_op(encoding) + cpu->Y;
-        snprintf(buffer, sizeof buffer, "%s $%04X,Y @ %04X = %02X", operation_name(ins->op),
-                 read_16b_op(encoding), address, cpu_read_8b(cpu, address));
+        snprintf(buffer, sizeof buffer, "%s $%04X,Y @ %04X = %02X", op_name, read_16b_op(encoding),
+                 address, cpu_read_8b(cpu, address));
       }
       else
       {
-        snprintf(buffer, sizeof buffer, "%s $%04X,Y", operation_name(ins->op),
-                 read_16b_op(encoding));
+        snprintf(buffer, sizeof buffer, "%s $%04X,Y", op_name, read_16b_op(encoding));
       }
     }
     break;
     case AM_ACCUMULATOR:
-      snprintf(buffer, sizeof buffer, "%s A", operation_name(ins->op));
+      snprintf(buffer, sizeof buffer, "%s A", op_name);
       break;
     case AM_IMMEDIATE:
-      snprintf(buffer, sizeof buffer, "%s #$%02X", operation_name(ins->op), read_8b_op(encoding));
+      snprintf(buffer, sizeof buffer, "%s #$%02X", op_name, read_8b_op(encoding));
       break;
     case AM_IMPLIED:
-      snprintf(buffer, sizeof buffer, "%s", operation_name(ins->op));
+      snprintf(buffer, sizeof buffer, "%s", op_name);
       break;
     case AM_INDIRECT:
       if (layout == IL_NINTENDULATOR)
       {
         const Address address = read_16b_op(encoding);
-        snprintf(buffer, sizeof buffer, "%s ($%04X) = %04X", operation_name(ins->op), address,
+        snprintf(buffer, sizeof buffer, "%s ($%04X) = %04X", op_name, address,
                  cpu_read_indirect_16b(cpu, address));
       }
       else
       {
-        snprintf(buffer, sizeof buffer, "%s ($%04X)", operation_name(ins->op),
-                 read_16b_op(encoding));
+        snprintf(buffer, sizeof buffer, "%s ($%04X)", op_name, read_16b_op(encoding));
       }
       break;
     case AM_INDIRECT_X:
@@ -490,12 +492,12 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
         const Address ptr = cpu_read_indirect_x_address(cpu, operand);
         const uint8_t data = cpu_read_indirect_x(cpu, operand);
 
-        snprintf(buffer, sizeof buffer, "%s ($%02X,X) @ %02X = %04X = %02X",
-                 operation_name(ins->op), operand, (uint8_t)(operand + cpu->X), ptr, data);
+        snprintf(buffer, sizeof buffer, "%s ($%02X,X) @ %02X = %04X = %02X", op_name, operand,
+                 (uint8_t)(operand + cpu->X), ptr, data);
       }
       else
       {
-        snprintf(buffer, sizeof buffer, "%s ($%02X,X)", operation_name(ins->op), operand);
+        snprintf(buffer, sizeof buffer, "%s ($%02X,X)", op_name, operand);
       }
     }
     break;
@@ -512,13 +514,12 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
         const Address ptr = cpu_read_indirect_y_address(cpu, operand);
         const uint8_t data = cpu_read_indirect_y(cpu, operand);
 
-        snprintf(buffer, sizeof buffer, "%s ($%02X),Y = %04X @ %04X = %02X",
-                 operation_name(ins->op), operand, cpu_read_indirect_address(cpu, operand), ptr,
-                 data);
+        snprintf(buffer, sizeof buffer, "%s ($%02X),Y = %04X @ %04X = %02X", op_name, operand,
+                 cpu_read_indirect_address(cpu, operand), ptr, data);
       }
       else
       {
-        snprintf(buffer, sizeof buffer, "%s ($%02X),Y", operation_name(ins->op), operand);
+        snprintf(buffer, sizeof buffer, "%s ($%02X),Y", op_name, operand);
       }
     }
     break;
@@ -526,11 +527,11 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
       switch (layout)
       {
         case IL_NES_DISASM:
-          snprintf(buffer, sizeof buffer, "%s $%02X (%d)", operation_name(ins->op),
-                   read_8b_op(encoding), read_8b_op(encoding));
+          snprintf(buffer, sizeof buffer, "%s $%02X (%d)", op_name, read_8b_op(encoding),
+                   read_8b_op(encoding));
           break;
         case IL_NINTENDULATOR:
-          snprintf(buffer, sizeof buffer, "%s $%02X", operation_name(ins->op),
+          snprintf(buffer, sizeof buffer, "%s $%02X", op_name,
                    cpu->PC + ins->bytes + (read_8b_op(encoding)));
           break;
       }
@@ -539,12 +540,11 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
       switch (layout)
       {
         case IL_NES_DISASM:
-          snprintf(buffer, sizeof buffer, "%s $%02X", operation_name(ins->op),
-                   read_8b_op(encoding));
+          snprintf(buffer, sizeof buffer, "%s $%02X", op_name, read_8b_op(encoding));
           break;
         case IL_NINTENDULATOR:
-          snprintf(buffer, sizeof buffer, "%s $%02X = %02X", operation_name(ins->op),
-                   read_8b_op(encoding), cpu->ram[read_8b_op(encoding)]);
+          snprintf(buffer, sizeof buffer, "%s $%02X = %02X", op_name, read_8b_op(encoding),
+                   cpu->ram[read_8b_op(encoding)]);
           break;
       }
       break;
@@ -555,17 +555,18 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
           (ins->op == OP_LDY || ins->op == OP_STY || ins->op == OP_ORA || ins->op == OP_AND ||
            ins->op == OP_EOR || ins->op == OP_ADC || ins->op == OP_CMP || ins->op == OP_SBC ||
            ins->op == OP_LDA || ins->op == OP_STA || ins->op == OP_LSR || ins->op == OP_ASL ||
-           ins->op == OP_ROR || ins->op == OP_ROL || ins->op == OP_INC || ins->op == OP_DEC);
+           ins->op == OP_ROR || ins->op == OP_ROL || ins->op == OP_INC || ins->op == OP_DEC ||
+           ins->op == OP_IGN);
       if (print_address_value)
       {
         const uint8_t offset = read_8b_op(encoding);
         const uint8_t zero_page_x_offset = cpu_make_zero_page_x_offset(cpu, offset);
-        snprintf(buffer, sizeof buffer, "%s $%02X,X @ %02X = %02X", operation_name(ins->op), offset,
+        snprintf(buffer, sizeof buffer, "%s $%02X,X @ %02X = %02X", op_name, offset,
                  zero_page_x_offset, cpu_read_zero_page_x(cpu, offset));
       }
       else
       {
-        snprintf(buffer, sizeof buffer, "%s $%02X,X", operation_name(ins->op), encoding & 0xff);
+        snprintf(buffer, sizeof buffer, "%s $%02X,X", op_name, encoding & 0xff);
       }
     }
     break;
@@ -577,12 +578,12 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
       {
         const uint8_t offset = read_8b_op(encoding);
         const uint8_t zero_page_y_offset = cpu_make_zero_page_y_offset(cpu, offset);
-        snprintf(buffer, sizeof buffer, "%s $%02X,Y @ %02X = %02X", operation_name(ins->op), offset,
+        snprintf(buffer, sizeof buffer, "%s $%02X,Y @ %02X = %02X", op_name, offset,
                  zero_page_y_offset, cpu_read_zero_page_y(cpu, offset));
       }
       else
       {
-        snprintf(buffer, sizeof buffer, "%s $%02X,Y", operation_name(ins->op), encoding & 0xff);
+        snprintf(buffer, sizeof buffer, "%s $%02X,Y", op_name, encoding & 0xff);
       }
     }
     break;

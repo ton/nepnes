@@ -301,6 +301,15 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_set_zero_negative_flags(cpu, cpu->A);
       cpu->PC += instruction.bytes;
       break;
+    case 0x04:
+      /*
+       * IGN - Ignore value (zero page, illegal)
+       *
+       * Reads a value from memory, and ignores it. This affects no registers or
+       * flags. Effectively a NOP for this emulator.
+       */
+      cpu->PC += instruction.bytes;
+      break;
     case 0x05:
       /*
        * ORA - Logical Inclusive OR (zero page)
@@ -374,6 +383,15 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_set_zero_negative_flags(cpu, cpu->A);
       cpu->PC += instruction.bytes;
       break;
+    case 0x0c:
+      /*
+       * IGN - Ignore value (absolute, illegal)
+       *
+       * Reads a value from memory, and ignores it. This affects no registers or
+       * flags. Effectively a NOP for this emulator.
+       */
+      cpu->PC += instruction.bytes;
+      break;
     case 0x0d:
       /*
        * ORA - Logical Inclusive OR (absolute)
@@ -443,6 +461,15 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0x14:
+      /*
+       * IGN - Ignore value (zero page, X)
+       *
+       * Reads a value from memory, and ignores it. This affects no registers or
+       * flags. Effectively a NOP for this emulator.
+       */
+      cpu->PC += instruction.bytes;
+      break;
     case 0x15:
       /*
        * ORA - Logical Inclusive OR (zero page, X)
@@ -501,6 +528,28 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->A |= cpu_read_8b(cpu, address + cpu->Y);
         cpu_set_zero_negative_flags(cpu, cpu->A);
         cpu->cycle += cpu_page_cross(address, cpu->Y);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0x1a:
+      /*
+       * NOP - No operation (implied, illegal)
+       *
+       * The NOP instruction causes no changes to the processor other than the
+       * normal incrementing of the program counter to the next instruction.
+       */
+      cpu->PC += instruction.bytes;
+      break;
+    case 0x1c:
+      /*
+       * IGN - Ignore value (absolute, X)
+       *
+       * Reads a value from memory, and ignores it. This affects no registers or
+       * flags. Effectively a NOP for this emulator.
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        cpu->cycle += cpu_page_cross(address, cpu->X);
         cpu->PC += instruction.bytes;
       }
       break;
@@ -736,6 +785,15 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0x34:
+      /*
+       * IGN - Ignore value (zero page, X)
+       *
+       * Reads a value from memory, and ignores it. This affects no registers or
+       * flags. Effectively a NOP for this emulator.
+       */
+      cpu->PC += instruction.bytes;
+      break;
     case 0x35:
       /*
        * AND - Logical And (zero page, X)
@@ -790,6 +848,28 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         const Address address = cpu_read_16b(cpu, cpu->PC + 1);
         cpu->A &= cpu_read_8b(cpu, address + cpu->Y);
         cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0x3a:
+      /*
+       * NOP - No operation (implied, illegal)
+       *
+       * The NOP instruction causes no changes to the processor other than the
+       * normal incrementing of the program counter to the next instruction.
+       */
+      cpu->PC += instruction.bytes;
+      break;
+    case 0x3c:
+      /*
+       * IGN - Ignore value (absolute, X)
+       *
+       * Reads a value from memory, and ignores it. This affects no registers or
+       * flags. Effectively a NOP for this emulator.
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        cpu->cycle += cpu_page_cross(address, cpu->X);
         cpu->PC += instruction.bytes;
       }
       break;
@@ -850,6 +930,15 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        */
       cpu->A ^= cpu_read_indirect_x(cpu, cpu->ram[cpu->PC + 1]);
       cpu_set_zero_negative_flags(cpu, cpu->A);
+      cpu->PC += instruction.bytes;
+      break;
+    case 0x44:
+      /*
+       * IGN - Ignore value (zero page, illegal)
+       *
+       * Reads a value from memory, and ignores it. This affects no registers or
+       * flags. Effectively a NOP for this emulator.
+       */
       cpu->PC += instruction.bytes;
       break;
     case 0x45:
@@ -989,6 +1078,15 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0x54:
+      /*
+       * IGN - Ignore value (zero page, X)
+       *
+       * Reads a value from memory, and ignores it. This affects no registers or
+       * flags. Effectively a NOP for this emulator.
+       */
+      cpu->PC += instruction.bytes;
+      break;
     case 0x55:
       /*
        * EOR - Exclusive OR (zero page, X)
@@ -1034,6 +1132,28 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         const Address address = cpu_read_16b(cpu, cpu->PC + 1);
         cpu->A ^= cpu_read_8b(cpu, address + cpu->Y);
         cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0x5a:
+      /*
+       * NOP - No operation (implied, illegal)
+       *
+       * The NOP instruction causes no changes to the processor other than the
+       * normal incrementing of the program counter to the next instruction.
+       */
+      cpu->PC += instruction.bytes;
+      break;
+    case 0x5c:
+      /*
+       * IGN - Ignore value (absolute, X)
+       *
+       * Reads a value from memory, and ignores it. This affects no registers or
+       * flags. Effectively a NOP for this emulator.
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        cpu->cycle += cpu_page_cross(address, cpu->X);
         cpu->PC += instruction.bytes;
       }
       break;
@@ -1090,6 +1210,15 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        * the carry bit. If overflow occurs, the carry bit is set.
        */
       cpu_addc(cpu, cpu_read_indirect_x(cpu, cpu->ram[cpu->PC + 1]));
+      cpu->PC += instruction.bytes;
+      break;
+    case 0x64:
+      /*
+       * IGN - Ignore value (zero page, illegal)
+       *
+       * Reads a value from memory, and ignores it. This affects no registers or
+       * flags. Effectively a NOP for this emulator.
+       */
       cpu->PC += instruction.bytes;
       break;
     case 0x65:
@@ -1233,6 +1362,15 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0x74:
+      /*
+       * IGN - Ignore value (zero page, X)
+       *
+       * Reads a value from memory, and ignores it. This affects no registers or
+       * flags. Effectively a NOP for this emulator.
+       */
+      cpu->PC += instruction.bytes;
+      break;
     case 0x75:
       /*
        * ADC - Add With Carry (zero page, X)
@@ -1288,6 +1426,28 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0x7a:
+      /*
+       * NOP - No operation (implied, illegal)
+       *
+       * The NOP instruction causes no changes to the processor other than the
+       * normal incrementing of the program counter to the next instruction.
+       */
+      cpu->PC += instruction.bytes;
+      break;
+    case 0x7c:
+      /*
+       * IGN - Ignore value (absolute, X)
+       *
+       * Reads a value from memory, and ignores it. This affects no registers or
+       * flags. Effectively a NOP for this emulator.
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        cpu->cycle += cpu_page_cross(address, cpu->X);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x7d:
       /*
        * ADC - Add With Carry (absolute, X)
@@ -1321,6 +1481,15 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu_set_zero_negative_flags(cpu, *value);
         cpu->PC += instruction.bytes;
       }
+      break;
+    case 0x80:
+      /*
+       * SKB - Skip byte (immediate, illegal)
+       *
+       * Reads the immediate byte from memory, and ignores it. Effectively a NOP
+       * for this emulator.
+       */
+      cpu->PC += instruction.bytes;
       break;
     case 0x81:
       /*
@@ -2041,6 +2210,15 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0xd4:
+      /*
+       * IGN - Ignore value (zero page, X)
+       *
+       * Reads a value from memory, and ignores it. This affects no registers or
+       * flags. Effectively a NOP for this emulator.
+       */
+      cpu->PC += instruction.bytes;
+      break;
     case 0xd5:
       /*
        * CMP - Compare (zero page, X)
@@ -2096,6 +2274,28 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         BIT_SET_IF(cpu->A >= value, cpu->P, FLAGS_BIT_CARRY);
         BIT_SET_IF(cpu->A == value, cpu->P, FLAGS_BIT_ZERO);
         BIT_SET_IF((cpu->A - value) & 0x80, cpu->P, FLAGS_BIT_NEGATIVE);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0xda:
+      /*
+       * NOP - No operation (implied, illegal)
+       *
+       * The NOP instruction causes no changes to the processor other than the
+       * normal incrementing of the program counter to the next instruction.
+       */
+      cpu->PC += instruction.bytes;
+      break;
+    case 0xdc:
+      /*
+       * IGN - Ignore value (absolute, X)
+       *
+       * Reads a value from memory, and ignores it. This affects no registers or
+       * flags. Effectively a NOP for this emulator.
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        cpu->cycle += cpu_page_cross(address, cpu->X);
         cpu->PC += instruction.bytes;
       }
       break;
@@ -2389,6 +2589,15 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0xf4:
+      /*
+       * IGN - Ignore value (zero page, X)
+       *
+       * Reads a value from memory, and ignores it. This affects no registers or
+       * flags. Effectively a NOP for this emulator.
+       */
+      cpu->PC += instruction.bytes;
+      break;
     case 0xf5:
       /*
        * SBC - Subtract With Carry (zero page, X)
@@ -2470,6 +2679,28 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       {
         const Address address = cpu_read_16b(cpu, cpu->PC + 1);
         cpu_addc(cpu, ~cpu_read_8b(cpu, address + cpu->Y));
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0xfa:
+      /*
+       * NOP - No operation (implied, illegal)
+       *
+       * The NOP instruction causes no changes to the processor other than the
+       * normal incrementing of the program counter to the next instruction.
+       */
+      cpu->PC += instruction.bytes;
+      break;
+    case 0xfc:
+      /*
+       * IGN - Ignore value (absolute, X)
+       *
+       * Reads a value from memory, and ignores it. This affects no registers or
+       * flags. Effectively a NOP for this emulator.
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        cpu->cycle += cpu_page_cross(address, cpu->X);
         cpu->PC += instruction.bytes;
       }
       break;

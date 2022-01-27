@@ -1,6 +1,7 @@
 #ifndef NEPNES_INSTRUCTION_H
 #define NEPNES_INSTRUCTION_H
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -63,6 +64,11 @@ enum Operation
   OP_TXA,  // Transfer X to Accumulator
   OP_TXS,  // Transfer X to Stack Pointer
   OP_TYA,  // Transfer Y to Accumulator
+
+  /* Illegal opcodes */
+
+  OP_IGN,  // Read a value from memory, and ignore it
+  OP_SKB,  // Read an immediate value and ignore it
 };
 
 /*
@@ -212,6 +218,8 @@ struct Instruction
   enum AddressingMode addressing_mode;
   /* The number of CPU cycles it takes to execute this instruction. */
   int cycles;
+  /* Indicates whether this is a supported (non-illegal) instruction. */
+  bool is_supported;
 };
 
 /* An instruction is encoded by a maximum of three bytes. */

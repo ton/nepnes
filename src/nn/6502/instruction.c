@@ -415,15 +415,33 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
     }
     break;
     case AM_ABSOLUTE_X:
-      snprintf(buffer, sizeof buffer, "%s $%04X,X", operation_name(ins->op), read_16b_op(encoding));
-      break;
+    {
+      const bool print_address_value =
+          layout == IL_NINTENDULATOR &&
+          (ins->op == OP_LDY || ins->op == OP_ORA || ins->op == OP_AND || ins->op == OP_EOR ||
+           ins->op == OP_ADC || ins->op == OP_CMP || ins->op == OP_SBC || ins->op == OP_LDA ||
+           ins->op == OP_STA || ins->op == OP_LSR || ins->op == OP_ASL || ins->op == OP_ROR ||
+           ins->op == OP_ROL || ins->op == OP_INC || ins->op == OP_DEC);
+      if (print_address_value)
+      {
+        const Address address = read_16b_op(encoding) + cpu->X;
+        snprintf(buffer, sizeof buffer, "%s $%04X,X @ %04X = %02X", operation_name(ins->op),
+                 read_16b_op(encoding), address, cpu_read_8b(cpu, address));
+      }
+      else
+      {
+        snprintf(buffer, sizeof buffer, "%s $%04X,X", operation_name(ins->op),
+                 read_16b_op(encoding));
+      }
+    }
+    break;
     case AM_ABSOLUTE_Y:
     {
       const bool print_address_value =
           layout == IL_NINTENDULATOR &&
           (ins->op == OP_LDA || ins->op == OP_ORA || ins->op == OP_AND || ins->op == OP_EOR ||
            ins->op == OP_ADC || ins->op == OP_CMP || ins->op == OP_SBC || ins->op == OP_STA ||
-           ins->op == OP_LDY);
+           ins->op == OP_LDY || ins->op == OP_LDX);
       if (print_address_value)
       {
         const Address address = read_16b_op(encoding) + cpu->Y;

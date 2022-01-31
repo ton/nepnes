@@ -574,7 +574,7 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
       }
       else
       {
-        snprintf(buffer, sizeof buffer, "%s $%02X,X", op_name, encoding & 0xff);
+        snprintf(buffer, sizeof buffer, "%s $%02X,X", op_name, read_8b_op(encoding));
       }
     }
     break;
@@ -591,7 +591,7 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
       }
       else
       {
-        snprintf(buffer, sizeof buffer, "%s $%02X,Y", op_name, encoding & 0xff);
+        snprintf(buffer, sizeof buffer, "%s $%02X,Y", op_name, read_8b_op(encoding));
       }
     }
     break;

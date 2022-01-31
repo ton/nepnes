@@ -344,21 +344,36 @@ int main(int argc, char **argv)
             notcurses_refresh(nc, NULL, NULL);
           }
           break;
-        case 'B': /* page up */
-          if (input.ctrl && assembly_pane.has_focus)
+        case NCKEY_PGUP:
+          if (assembly_pane.has_focus)
           {
             assembly_pane_move_cursor(&assembly_pane, -term_rows);
           }
-          else if (!input.ctrl) /* set breakpoint */
+          break;
+        case 'B': /* page up (C-b) or set breakpoint */
+          if (assembly_pane.has_focus)
           {
-            uint16_t address;
-            if (user_query_address(nc, status_pane.plane, "Break at address: ", &address) == 0)
+            if (input.ctrl)
             {
-              debugger_toggle_breakpoint_at(&debugger, address);
+              assembly_pane_move_cursor(&assembly_pane, -term_rows);
+            }
+            else /* set breakpoint */
+            {
+              uint16_t address;
+              if (user_query_address(nc, status_pane.plane, "Break at address: ", &address) == 0)
+              {
+                debugger_toggle_breakpoint_at(&debugger, address);
+              }
             }
           }
           break;
-        case 'F': /* page down */
+        case NCKEY_PGDOWN:
+          if (assembly_pane.has_focus)
+          {
+            assembly_pane_move_cursor(&assembly_pane, term_rows);
+          }
+          break;
+        case 'F': /* page down (C-f) or focus PC */
           if (assembly_pane.has_focus)
           {
             if (input.ctrl)
@@ -400,6 +415,7 @@ int main(int argc, char **argv)
           }
         }
         break;
+        case NCKEY_DOWN:
         case 'j': /* scroll one line down */
           if (assembly_pane.has_focus)
           {
@@ -410,6 +426,7 @@ int main(int argc, char **argv)
             breakpoints_pane_move_cursor(&breakpoints_pane, 1);
           }
           break;
+        case NCKEY_UP:
         case 'k': /* scroll one line up */
           if (assembly_pane.has_focus)
           {

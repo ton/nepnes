@@ -156,8 +156,23 @@ void assembly_pane_update(struct AssemblyPane *pane)
     {
       const Encoding encoding = instruction_read_encoding(pane->cpu->ram + address, ins.bytes);
 
-      ncplane_printf_yx(pane->plane, y, 1, "$%04X: %-*s (%0*X)", address, INSTRUCTION_BUFSIZE,
-                        instruction_print(&ins, encoding), ins.bytes * 2, encoding);
+      char encoding_little_endian[7];
+      if (ins.bytes == 1)
+      {
+        sprintf(encoding_little_endian, "%02X", encoding);
+      }
+      else if (ins.bytes == 2)
+      {
+        sprintf(encoding_little_endian, "%02X%02X", encoding & 0xff, (encoding >> 8) & 0xff);
+      }
+      else
+      {
+        sprintf(encoding_little_endian, "%02X%02X%02X", encoding & 0xff, (encoding >> 8) & 0xff,
+                (encoding >> 16) & 0xff);
+      }
+
+      ncplane_printf_yx(pane->plane, y, 1, "$%04X: %-*s (%s)", address, INSTRUCTION_BUFSIZE,
+                        instruction_print(&ins, encoding), encoding_little_endian);
 
       address += ins.bytes;
     }

@@ -535,7 +535,7 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
       switch (layout)
       {
         case IL_NES_DISASM:
-          snprintf(buffer, sizeof buffer, "%s $%02X (%d)", op_name, read_signed_8b_op(encoding),
+          snprintf(buffer, sizeof buffer, "%s $%02X (%d)", op_name, read_8b_op(encoding),
                    read_signed_8b_op(encoding));
           break;
         case IL_NINTENDULATOR:

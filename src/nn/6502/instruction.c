@@ -17,7 +17,8 @@ static const char *operation_mnemonic[] = {
     [OP_ROR] = "ROR", [OP_RTI] = "RTI", [OP_RTS] = "RTS", [OP_SBC] = "SBC", [OP_SEC] = "SEC",
     [OP_SED] = "SED", [OP_SEI] = "SEI", [OP_STA] = "STA", [OP_STX] = "STX", [OP_STY] = "STY",
     [OP_TAX] = "TAX", [OP_TAY] = "TAY", [OP_TSX] = "TSX", [OP_TXA] = "TXA", [OP_TXS] = "TXS",
-    [OP_TYA] = "TYA", [OP_IGN] = "IGN", [OP_SKB] = "SKB",
+    [OP_TYA] = "TYA", [OP_IGN] = "IGN", [OP_SKB] = "SKB", [OP_LAX] = "LAX", [OP_SAX] = "SAX",
+    [OP_USB] = "SBC", [OP_DCP] = "DCP",
 };
 
 static const struct Instruction instructions[256] = {
@@ -152,11 +153,11 @@ static const struct Instruction instructions[256] = {
     {0x80, OP_SKB, 2, AM_IMMEDIATE, 2, false},
     {0x81, OP_STA, 2, AM_INDIRECT_X, 6, true},
     {0},
-    {0},
+    {0x83, OP_SAX, 2, AM_INDIRECT_X, 6, false},
     {0x84, OP_STY, 2, AM_ZERO_PAGE, 3, true},
     {0x85, OP_STA, 2, AM_ZERO_PAGE, 3, true},
     {0x86, OP_STX, 2, AM_ZERO_PAGE, 3, true},
-    {0},
+    {0x87, OP_SAX, 2, AM_ZERO_PAGE, 3, false},
     {0x88, OP_DEY, 1, AM_IMPLIED, 2, true},
     {0},
     {0x8a, OP_TXA, 1, AM_IMPLIED, 2, true},
@@ -164,7 +165,7 @@ static const struct Instruction instructions[256] = {
     {0x8c, OP_STY, 3, AM_ABSOLUTE, 4, true},
     {0x8d, OP_STA, 3, AM_ABSOLUTE, 4, true},
     {0x8e, OP_STX, 3, AM_ABSOLUTE, 4, true},
-    {0},
+    {0x8f, OP_SAX, 3, AM_ABSOLUTE, 4, false},
     {0x90, OP_BCC, 2, AM_RELATIVE, 2 /* +1 on branch, +2 on page cross */, true},
     {0x91, OP_STA, 2, AM_INDIRECT_Y, 6, true},
     {0},
@@ -172,7 +173,7 @@ static const struct Instruction instructions[256] = {
     {0x94, OP_STY, 2, AM_ZERO_PAGE_X, 4, true},
     {0x95, OP_STA, 2, AM_ZERO_PAGE_X, 4, true},
     {0x96, OP_STX, 2, AM_ZERO_PAGE_Y, 4, true},
-    {0},
+    {0x97, OP_SAX, 2, AM_ZERO_PAGE_Y, 4, false},
     {0x98, OP_TYA, 1, AM_IMPLIED, 2, true},
     {0x99, OP_STA, 3, AM_ABSOLUTE_Y, 5, true},
     {0x9a, OP_TXS, 1, AM_IMPLIED, 2, true},
@@ -184,11 +185,11 @@ static const struct Instruction instructions[256] = {
     {0xa0, OP_LDY, 2, AM_IMMEDIATE, 2, true},
     {0xa1, OP_LDA, 2, AM_INDIRECT_X, 6, true},
     {0xa2, OP_LDX, 2, AM_IMMEDIATE, 2, true},
-    {0},
+    {0xa3, OP_LAX, 2, AM_INDIRECT_X, 6, false},
     {0xa4, OP_LDY, 2, AM_ZERO_PAGE, 3, true},
     {0xa5, OP_LDA, 2, AM_ZERO_PAGE, 3, true},
     {0xa6, OP_LDX, 2, AM_ZERO_PAGE, 3, true},
-    {0},
+    {0xa7, OP_LAX, 2, AM_ZERO_PAGE, 3, false},
     {0xa8, OP_TAY, 1, AM_IMPLIED, 2, true},
     {0xa9, OP_LDA, 2, AM_IMMEDIATE, 2, true},
     {0xaa, OP_TAX, 1, AM_IMPLIED, 2, true},
@@ -196,15 +197,15 @@ static const struct Instruction instructions[256] = {
     {0xac, OP_LDY, 3, AM_ABSOLUTE, 4, true},
     {0xad, OP_LDA, 3, AM_ABSOLUTE, 4, true},
     {0xae, OP_LDX, 3, AM_ABSOLUTE, 4, true},
-    {0},
+    {0xaf, OP_LAX, 3, AM_ABSOLUTE, 4, false},
     {0xb0, OP_BCS, 2, AM_RELATIVE, 2 /* +1 on branch, +2 on page cross */, true},
     {0xb1, OP_LDA, 2, AM_INDIRECT_Y, 5 /* +1 on page cross */, true},
     {0},
-    {0},
+    {0xb3, OP_LAX, 2, AM_INDIRECT_Y, 5 /* +1 on page cross */, false},
     {0xb4, OP_LDY, 2, AM_ZERO_PAGE_X, 4, true},
     {0xb5, OP_LDA, 2, AM_ZERO_PAGE_X, 4, true},
     {0xb6, OP_LDX, 2, AM_ZERO_PAGE_Y, 4, true},
-    {0},
+    {0xb7, OP_LAX, 2, AM_ZERO_PAGE_Y, 4, false},
     {0xb8, OP_CLV, 1, AM_IMPLIED, 2, true},
     {0xb9, OP_LDA, 3, AM_ABSOLUTE_Y, 4 /* +1 on page cross */, true},
     {0xba, OP_TSX, 1, AM_IMPLIED, 2, true},
@@ -212,15 +213,15 @@ static const struct Instruction instructions[256] = {
     {0xbc, OP_LDY, 3, AM_ABSOLUTE_X, 4 /* +1 on page cross */, true},
     {0xbd, OP_LDA, 3, AM_ABSOLUTE_X, 4 /* +1 on page cross */, true},
     {0xbe, OP_LDX, 3, AM_ABSOLUTE_Y, 4 /* +1 on page cross */, true},
-    {0},
+    {0xbf, OP_LAX, 3, AM_ABSOLUTE_Y, 4 /* +1 on page cross */, false},
     {0xc0, OP_CPY, 2, AM_IMMEDIATE, 2, true},
     {0xc1, OP_CMP, 2, AM_INDIRECT_X, 6, true},
     {0},
-    {0},
+    {0xc3, OP_DCP, 2, AM_INDIRECT_X, 8, false},
     {0xc4, OP_CPY, 2, AM_ZERO_PAGE, 3, true},
     {0xc5, OP_CMP, 2, AM_ZERO_PAGE, 3, true},
     {0xc6, OP_DEC, 2, AM_ZERO_PAGE, 5, true},
-    {0},
+    {0xc7, OP_DCP, 2, AM_ZERO_PAGE, 5, false},
     {0xc8, OP_INY, 1, AM_IMPLIED, 2, true},
     {0xc9, OP_CMP, 2, AM_IMMEDIATE, 2, true},
     {0xca, OP_DEX, 1, AM_IMPLIED, 2, true},
@@ -228,23 +229,23 @@ static const struct Instruction instructions[256] = {
     {0xcc, OP_CPY, 3, AM_ABSOLUTE, 4, true},
     {0xcd, OP_CMP, 3, AM_ABSOLUTE, 4, true},
     {0xce, OP_DEC, 3, AM_ABSOLUTE, 6, true},
-    {0},
+    {0xcf, OP_DCP, 3, AM_ABSOLUTE, 6, false},
     {0xd0, OP_BNE, 2, AM_RELATIVE, 2 /* +1 on branch, +2 on page cross */, true},
     {0xd1, OP_CMP, 2, AM_INDIRECT_Y, 5 /* +1 on page cross */, true},
     {0},
-    {0},
+    {0xd3, OP_DCP, 2, AM_INDIRECT_Y, 8, false},
     {0xd4, OP_IGN, 2, AM_ZERO_PAGE_X, 4, false},
     {0xd5, OP_CMP, 2, AM_ZERO_PAGE_X, 4, true},
     {0xd6, OP_DEC, 2, AM_ZERO_PAGE_X, 6, true},
-    {0},
+    {0xd7, OP_DCP, 2, AM_ZERO_PAGE_X, 6, false},
     {0xd8, OP_CLD, 1, AM_IMPLIED, 2, true},
     {0xd9, OP_CMP, 3, AM_ABSOLUTE_Y, 4 /* +1 on page cross */, true},
     {0xda, OP_NOP, 1, AM_IMPLIED, 2, false},
-    {0},
+    {0xdb, OP_DCP, 3, AM_ABSOLUTE_Y, 7, false},
     {0xdc, OP_IGN, 3, AM_ABSOLUTE_X, 4 /* +1 on page cross */, false},
     {0xdd, OP_CMP, 3, AM_ABSOLUTE_X, 4 /* +1 on page cross */, true},
     {0xde, OP_DEC, 3, AM_ABSOLUTE_X, 7, true},
-    {0},
+    {0xdf, OP_DCP, 3, AM_ABSOLUTE_X, 7, false},
     {0xe0, OP_CPX, 2, AM_IMMEDIATE, 2, true},
     {0xe1, OP_SBC, 2, AM_INDIRECT_X, 6, true},
     {0},
@@ -256,7 +257,7 @@ static const struct Instruction instructions[256] = {
     {0xe8, OP_INX, 1, AM_IMPLIED, 2, true},
     {0xe9, OP_SBC, 2, AM_IMMEDIATE, 2, true},
     {0xea, OP_NOP, 1, AM_IMPLIED, 2, true},
-    {0},
+    {0xeb, OP_USB, 2, AM_IMMEDIATE, 2, false},
     {0xec, OP_CPX, 3, AM_ABSOLUTE, 4, true},
     {0xed, OP_SBC, 3, AM_ABSOLUTE, 4, true},
     {0xee, OP_INC, 3, AM_ABSOLUTE, 6, true},
@@ -415,7 +416,8 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
            ins->op == OP_AND || ins->op == OP_EOR || ins->op == OP_ADC || ins->op == OP_CMP ||
            ins->op == OP_SBC || ins->op == OP_CPX || ins->op == OP_CPY || ins->op == OP_LSR ||
            ins->op == OP_ASL || ins->op == OP_ROR || ins->op == OP_ROL || ins->op == OP_INC ||
-           ins->op == OP_DEC || ins->op == OP_IGN);
+           ins->op == OP_DEC || ins->op == OP_IGN || ins->op == OP_LAX || ins->op == OP_SAX ||
+           ins->op == OP_DCP);
       if (print_address_value)
       {
         snprintf(buffer, sizeof buffer, "%s $%04X = %02X", op_name, read_16b_op(encoding),
@@ -434,7 +436,8 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
           (ins->op == OP_LDY || ins->op == OP_ORA || ins->op == OP_AND || ins->op == OP_EOR ||
            ins->op == OP_ADC || ins->op == OP_CMP || ins->op == OP_SBC || ins->op == OP_LDA ||
            ins->op == OP_STA || ins->op == OP_LSR || ins->op == OP_ASL || ins->op == OP_ROR ||
-           ins->op == OP_ROL || ins->op == OP_INC || ins->op == OP_DEC || ins->op == OP_IGN);
+           ins->op == OP_ROL || ins->op == OP_INC || ins->op == OP_DEC || ins->op == OP_IGN ||
+           ins->op == OP_DCP);
       if (print_address_value)
       {
         const Address address = read_16b_op(encoding) + cpu->X;
@@ -453,7 +456,7 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
           layout == IL_NINTENDULATOR &&
           (ins->op == OP_LDA || ins->op == OP_ORA || ins->op == OP_AND || ins->op == OP_EOR ||
            ins->op == OP_ADC || ins->op == OP_CMP || ins->op == OP_SBC || ins->op == OP_STA ||
-           ins->op == OP_LDY || ins->op == OP_LDX);
+           ins->op == OP_LDY || ins->op == OP_LDX || ins->op == OP_LAX || ins->op == OP_DCP);
       if (print_address_value)
       {
         const Address address = read_16b_op(encoding) + cpu->Y;
@@ -494,7 +497,8 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
       const bool print_address_value =
           layout == IL_NINTENDULATOR &&
           (ins->op == OP_LDA || ins->op == OP_STA || ins->op == OP_ORA || ins->op == OP_AND ||
-           ins->op == OP_EOR || ins->op == OP_ADC || ins->op == OP_CMP || ins->op == OP_SBC);
+           ins->op == OP_EOR || ins->op == OP_ADC || ins->op == OP_CMP || ins->op == OP_SBC ||
+           ins->op == OP_LAX || ins->op == OP_SAX || ins->op == OP_DCP);
       if (print_address_value)
       {
         const Address ptr = cpu_read_indirect_x_address(cpu, operand);
@@ -516,7 +520,8 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
       const bool print_address_value =
           layout == IL_NINTENDULATOR &&
           (ins->op == OP_LDA || ins->op == OP_ORA || ins->op == OP_AND || ins->op == OP_EOR ||
-           ins->op == OP_ADC || ins->op == OP_CMP || ins->op == OP_SBC || ins->op == OP_STA);
+           ins->op == OP_ADC || ins->op == OP_CMP || ins->op == OP_SBC || ins->op == OP_STA ||
+           ins->op == OP_LAX || ins->op == OP_DCP);
       if (print_address_value)
       {
         const Address ptr = cpu_read_indirect_y_address(cpu, operand);
@@ -564,7 +569,7 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
            ins->op == OP_EOR || ins->op == OP_ADC || ins->op == OP_CMP || ins->op == OP_SBC ||
            ins->op == OP_LDA || ins->op == OP_STA || ins->op == OP_LSR || ins->op == OP_ASL ||
            ins->op == OP_ROR || ins->op == OP_ROL || ins->op == OP_INC || ins->op == OP_DEC ||
-           ins->op == OP_IGN);
+           ins->op == OP_IGN || ins->op == OP_LAX || ins->op == OP_DCP);
       if (print_address_value)
       {
         const uint8_t offset = read_8b_op(encoding);
@@ -581,7 +586,8 @@ const char *instruction_print_layout(struct Instruction *ins, Encoding encoding,
     case AM_ZERO_PAGE_Y:
     {
       const bool print_address_value =
-          layout == IL_NINTENDULATOR && (ins->op == OP_LDX || ins->op == OP_STX);
+          layout == IL_NINTENDULATOR &&
+          (ins->op == OP_LDX || ins->op == OP_STX || ins->op == OP_LAX || ins->op == OP_SAX);
       if (print_address_value)
       {
         const uint8_t offset = read_8b_op(encoding);

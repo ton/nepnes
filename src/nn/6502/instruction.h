@@ -69,6 +69,10 @@ enum Operation
 
   OP_IGN,  // Read a value from memory, and ignore it
   OP_SKB,  // Read an immediate value and ignore it
+  OP_LAX,  // Shortcut for LDA, then TAX
+  OP_SAX,  // Stores the bit wise AND of A and X in memory
+  OP_USB,  // Non-official alias for SBC
+  OP_DCP,  // Decrement and compare
 };
 
 /*
@@ -219,6 +223,8 @@ struct Instruction
   /* The number of CPU cycles it takes to execute this instruction. */
   int cycles;
   /* Indicates whether this is a supported (non-illegal) instruction. */
+  /* TODO(ton): make a function that maps an `Operation` to bool to achieve the
+   * same without wasting memory. */
   bool is_supported;
 };
 

@@ -1517,6 +1517,19 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0x83:
+      /*
+       * SAX - bit wise AND of A and X (indirect, X) (invalid)
+       *
+       * Stores bit wise AND of A and X in memory. Does not affect any CPU
+       * flags.
+       */
+      {
+        const Address address = cpu_read_indirect_x_address(cpu, cpu->ram[cpu->PC + 1]);
+        cpu->ram[address] = cpu->A & cpu->X;
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x84:
       /*
        * STY - Store Y Register (zero page)
@@ -1550,6 +1563,19 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       {
         uint8_t address = cpu->ram[cpu->PC + 1];
         cpu->ram[address] = cpu->X;
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0x87:
+      /*
+       * SAX - bit wise AND of A and X (zero page) (invalid)
+       *
+       * Stores bit wise AND of A and X in memory. Does not affect any CPU
+       * flags.
+       */
+      {
+        const uint8_t address = cpu_read_8b(cpu, cpu->PC + 1);
+        cpu->ram[address] = cpu->A & cpu->X;
         cpu->PC += instruction.bytes;
       }
       break;
@@ -1608,6 +1634,19 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       {
         const uint16_t address = cpu_read_16b(cpu, cpu->PC + 1);
         cpu->ram[address] = cpu->X;
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0x8f:
+      /*
+       * SAX - bit wise AND of A and X (absolute) (invalid)
+       *
+       * Stores bit wise AND of A and X in memory. Does not affect any CPU
+       * flags.
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        cpu->ram[address] = cpu->A & cpu->X;
         cpu->PC += instruction.bytes;
       }
       break;
@@ -1679,6 +1718,20 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
         const uint8_t zero_page_y_offset = cpu_make_zero_page_y_offset(cpu, operand);
         cpu->ram[zero_page_y_offset] = cpu->X;
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0x97:
+      /*
+       * SAX - bit wise AND of A and X (zero page, Y) (invalid)
+       *
+       * Stores bit wise AND of A and X in memory. Does not affect any CPU
+       * flags.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        const uint8_t zero_page_y_offset = cpu_make_zero_page_y_offset(cpu, operand);
+        cpu->ram[zero_page_y_offset] = cpu->A & cpu->X;
         cpu->PC += instruction.bytes;
       }
       break;
@@ -1762,6 +1815,15 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_set_zero_negative_flags(cpu, cpu->X);
       cpu->PC += instruction.bytes;
       break;
+    case 0xa3:
+      /*
+       * LAX - LDA + TAX (indirect, X) (illegal)
+       */
+      cpu->A = cpu_read_indirect_x(cpu, cpu->ram[cpu->PC + 1]);
+      cpu->X = cpu->A;
+      cpu_set_zero_negative_flags(cpu, cpu->A);
+      cpu->PC += instruction.bytes;
+      break;
     case 0xa4:
       /*
        * LDY - Load Y Register (zero page)
@@ -1793,6 +1855,15 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        */
       cpu->X = cpu->ram[cpu->ram[cpu->PC + 1]];
       cpu_set_zero_negative_flags(cpu, cpu->X);
+      cpu->PC += instruction.bytes;
+      break;
+    case 0xa7:
+      /*
+       * LAX - LDA + TAX (zero page) (illegal)
+       */
+      cpu->A = cpu_read_8b(cpu, cpu_read_8b(cpu, cpu->PC + 1));
+      cpu->X = cpu->A;
+      cpu_set_zero_negative_flags(cpu, cpu->A);
       cpu->PC += instruction.bytes;
       break;
     case 0xa8:
@@ -1870,6 +1941,18 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0xaf:
+      /*
+       * LAX - LDA + TAX (absolute) (illegal)
+       */
+      {
+        const uint16_t address = cpu_read_16b(cpu, cpu->PC + 1);
+        cpu->A = cpu_read_16b(cpu, address);
+        cpu->X = cpu->A;
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0xb0:
       /*
        * BCS - Branch if Carry Set (relative)
@@ -1897,22 +1980,21 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       {
         const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
         cpu->A = cpu_read_indirect_y(cpu, operand);
-        cpu->cycle += cpu_page_cross(cpu_read_16b(cpu, operand), cpu->Y);
         cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->cycle += cpu_page_cross(cpu_read_16b(cpu, operand), cpu->Y);
         cpu->PC += instruction.bytes;
       }
       break;
-    case 0xb5:
+    case 0xb3:
       /*
-       * LDA - Load Accumulator (zero page, X)
-       *
-       * Loads a byte of memory into the accumulator setting the zero and
-       * negative flags as appropriate.
+       * LAX - LDA + TAX (indirect), Y (illegal)
        */
       {
         const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
-        cpu->A = cpu_read_zero_page_x(cpu, operand);
+        cpu->A = cpu_read_indirect_y(cpu, operand);
+        cpu->X = cpu->A;
         cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->cycle += cpu_page_cross(cpu_read_16b(cpu, operand), cpu->Y);
         cpu->PC += instruction.bytes;
       }
       break;
@@ -1930,6 +2012,20 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0xb5:
+      /*
+       * LDA - Load Accumulator (zero page, X)
+       *
+       * Loads a byte of memory into the accumulator setting the zero and
+       * negative flags as appropriate.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        cpu->A = cpu_read_zero_page_x(cpu, operand);
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0xb6:
       /*
        * LDX - Load X Register (zero page, Y)
@@ -1941,6 +2037,19 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
         cpu->X = cpu_read_8b(cpu, cpu_make_zero_page_y_offset(cpu, operand));
         cpu_set_zero_negative_flags(cpu, cpu->X);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0xb7:
+      /*
+       * LAX - LDA + TAX (zero page, Y) (illegal)
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        const uint8_t zero_page_y_offset = cpu_make_zero_page_y_offset(cpu, operand);
+        cpu->A = cpu_read_8b(cpu, zero_page_y_offset);
+        cpu->X = cpu->A;
+        cpu_set_zero_negative_flags(cpu, cpu->A);
         cpu->PC += instruction.bytes;
       }
       break;
@@ -2024,6 +2133,19 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0xbf:
+      /*
+       * LAX - LDA + TAX (absolute, Y) (illegal)
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        cpu->A = cpu_read_8b(cpu, address + cpu->Y);
+        cpu->X = cpu->A;
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->cycle += cpu_page_cross(address, cpu->Y);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0xc0:
       /*
        * CPY - Compare Y Register (immediate)
@@ -2072,6 +2194,25 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0xc3:
+      /*
+       * DCP - Decrement and compare (indirect, X) (illegal)
+       *
+       * Decrements the value at the given memory location, and then performs a
+       * CMP by comparing the resulting value in memory against the accumulator.
+       * Sets the zero and negative flags accordingly.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + cpu_read_indirect_x_address(cpu, operand);
+        (*value)--;
+        cpu_set_zero_negative_flags(cpu, *value);
+        BIT_SET_IF(cpu->A >= *value, cpu->P, FLAGS_BIT_CARRY);
+        BIT_SET_IF(cpu->A == *value, cpu->P, FLAGS_BIT_ZERO);
+        BIT_SET_IF((cpu->A - *value) & 0x80, cpu->P, FLAGS_BIT_NEGATIVE);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0xc5:
       /*
        * CMP - Compare (zero page)
@@ -2099,6 +2240,25 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         uint8_t *value = cpu->ram + cpu->ram[cpu->PC + 1];
         (*value)--;
         cpu_set_zero_negative_flags(cpu, *value);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0xc7:
+      /*
+       * DCP - Decrement and compare (zero page) (illegal)
+       *
+       * Decrements the value at the given memory location, and then performs a
+       * CMP by comparing the resulting value in memory against the accumulator.
+       * Sets the zero and negative flags accordingly.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + operand;
+        (*value)--;
+        cpu_set_zero_negative_flags(cpu, *value);
+        BIT_SET_IF(cpu->A >= *value, cpu->P, FLAGS_BIT_CARRY);
+        BIT_SET_IF(cpu->A == *value, cpu->P, FLAGS_BIT_ZERO);
+        BIT_SET_IF((cpu->A - *value) & 0x80, cpu->P, FLAGS_BIT_NEGATIVE);
         cpu->PC += instruction.bytes;
       }
       break;
@@ -2189,6 +2349,25 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0xcf:
+      /*
+       * DCP - Decrement and compare (absolute) (illegal)
+       *
+       * Decrements the value at the given memory location, and then performs a
+       * CMP by comparing the resulting value in memory against the accumulator.
+       * Sets the zero and negative flags accordingly.
+       */
+      {
+        const Address operand = cpu_read_16b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + operand;
+        (*value)--;
+        cpu_set_zero_negative_flags(cpu, *value);
+        BIT_SET_IF(cpu->A >= *value, cpu->P, FLAGS_BIT_CARRY);
+        BIT_SET_IF(cpu->A == *value, cpu->P, FLAGS_BIT_ZERO);
+        BIT_SET_IF((cpu->A - *value) & 0x80, cpu->P, FLAGS_BIT_NEGATIVE);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0xd0:
       /*
        * BNE - Branch if Not Equal (relative)
@@ -2221,6 +2400,25 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         BIT_SET_IF(cpu->A == value, cpu->P, FLAGS_BIT_ZERO);
         BIT_SET_IF((cpu->A - value) & 0x80, cpu->P, FLAGS_BIT_NEGATIVE);
         cpu->cycle += cpu_page_cross(cpu_read_16b(cpu, operand), cpu->Y);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0xd3:
+      /*
+       * DCP - Decrement and compare (indirect, Y) (illegal)
+       *
+       * Decrements the value at the given memory location, and then performs a
+       * CMP by comparing the resulting value in memory against the accumulator.
+       * Sets the zero and negative flags accordingly.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + cpu_read_indirect_y_address(cpu, operand);
+        (*value)--;
+        cpu_set_zero_negative_flags(cpu, *value);
+        BIT_SET_IF(cpu->A >= *value, cpu->P, FLAGS_BIT_CARRY);
+        BIT_SET_IF(cpu->A == *value, cpu->P, FLAGS_BIT_ZERO);
+        BIT_SET_IF((cpu->A - *value) & 0x80, cpu->P, FLAGS_BIT_NEGATIVE);
         cpu->PC += instruction.bytes;
       }
       break;
@@ -2265,6 +2463,25 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0xd7:
+      /*
+       * DCP - Decrement and compare (zero page, X) (illegal)
+       *
+       * Decrements the value at the given memory location, and then performs a
+       * CMP by comparing the resulting value in memory against the accumulator.
+       * Sets the zero and negative flags accordingly.
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + cpu_make_zero_page_x_offset(cpu, operand);
+        (*value)--;
+        cpu_set_zero_negative_flags(cpu, *value);
+        BIT_SET_IF(cpu->A >= *value, cpu->P, FLAGS_BIT_CARRY);
+        BIT_SET_IF(cpu->A == *value, cpu->P, FLAGS_BIT_ZERO);
+        BIT_SET_IF((cpu->A - *value) & 0x80, cpu->P, FLAGS_BIT_NEGATIVE);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0xd8:
       /*
        * CLD - Clear Decimal Mode
@@ -2299,6 +2516,25 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        * normal incrementing of the program counter to the next instruction.
        */
       cpu->PC += instruction.bytes;
+      break;
+    case 0xdb:
+      /*
+       * DCP - Decrement and compare (absolute, Y) (illegal)
+       *
+       * Decrements the value at the given memory location, and then performs a
+       * CMP by comparing the resulting value in memory against the accumulator.
+       * Sets the zero and negative flags accordingly.
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + address + cpu->Y;
+        (*value)--;
+        cpu_set_zero_negative_flags(cpu, *value);
+        BIT_SET_IF(cpu->A >= *value, cpu->P, FLAGS_BIT_CARRY);
+        BIT_SET_IF(cpu->A == *value, cpu->P, FLAGS_BIT_ZERO);
+        BIT_SET_IF((cpu->A - *value) & 0x80, cpu->P, FLAGS_BIT_NEGATIVE);
+        cpu->PC += instruction.bytes;
+      }
       break;
     case 0xdc:
       /*
@@ -2343,6 +2579,25 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         uint8_t *value = cpu->ram + address + cpu->X;
         (*value)--;
         cpu_set_zero_negative_flags(cpu, *value);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0xdf:
+      /*
+       * DCP - Decrement and compare (absolute, X) (illegal)
+       *
+       * Decrements the value at the given memory location, and then performs a
+       * CMP by comparing the resulting value in memory against the accumulator.
+       * Sets the zero and negative flags accordingly.
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + address + cpu->X;
+        (*value)--;
+        cpu_set_zero_negative_flags(cpu, *value);
+        BIT_SET_IF(cpu->A >= *value, cpu->P, FLAGS_BIT_CARRY);
+        BIT_SET_IF(cpu->A == *value, cpu->P, FLAGS_BIT_ZERO);
+        BIT_SET_IF((cpu->A - *value) & 0x80, cpu->P, FLAGS_BIT_NEGATIVE);
         cpu->PC += instruction.bytes;
       }
       break;
@@ -2491,6 +2746,33 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        * The NOP instruction causes no changes to the processor other than the
        * normal incrementing of the program counter to the next instruction.
        */
+      cpu->PC += instruction.bytes;
+      break;
+    case 0xeb:
+      /*
+       * USB - Subtract With Carry (immediate) (illegal)
+       *
+       * Subtracts the contents of a memory location from the accumulator
+       * together with the not of the carry bit. If overflow occurs, the carry
+       * bit is clear.
+       *
+       * Note that SBC is simply ADC, with the value at the memory location
+       * changed to one's complement. To see why this is, SBC is defined as:
+       *
+       *   SBC = A - v - B
+       *
+       * where `v` is some value in memory, and `B` is the borrow bit. B is
+       * defined as the inverse of the carry flag: (1 - C). Thus:
+       *
+       *   SBC = A - v - (1 - C)
+       *   SBC = A - v - (1 - C) + 256
+       *   SBC = A - v - C + 255
+       *   SBC = A + (255 - v) + C
+       *
+       * here, 255 - v is simply the one's complement of v. Note that adding 256
+       * to an 8bit value does not change the 8bit value.
+       */
+      cpu_addc(cpu, ~(cpu->ram[cpu->PC + 1]));
       cpu->PC += instruction.bytes;
       break;
     case 0xec:

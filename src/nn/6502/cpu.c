@@ -2846,8 +2846,9 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        */
       if (cpu->P & FLAGS_ZERO)
       {
-        cpu->PC += instruction.bytes + cpu->ram[cpu->PC + 1];
-        cpu->cycle++;
+        const int offset = cpu->ram[cpu->PC + 1];
+        cpu->cycle += 1 + cpu_page_cross(cpu->PC + instruction.bytes, offset);
+        cpu->PC += instruction.bytes + offset;
       }
       else
       {

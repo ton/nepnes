@@ -73,6 +73,11 @@ enum Operation
   OP_SAX,  // Stores the bit wise AND of A and X in memory
   OP_USB,  // Non-official alias for SBC
   OP_DCP,  // Decrement and compare
+  OP_ISC,  // Equivalent to INC followed by SBC
+  OP_SLO,  // Equivalent to ASL followed by ORA
+  OP_RLA,  // Equivalent to ROL followed by AND
+  OP_SRE,  // Equivalent to LSR followed by EOR
+  OP_RRA,  // Equivalent to ROR followed by ADC
 };
 
 /*

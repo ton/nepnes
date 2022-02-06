@@ -315,9 +315,25 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_set_zero_negative_flags(cpu, cpu->A);
       cpu->PC += instruction.bytes;
       break;
+    case 0x03:
+      /*
+       * SLO - ASL followed by ORA (indirect, X) (unofficial)
+       */
+      {
+        const Address address = cpu_read_indirect_x_address(cpu, cpu->ram[cpu->PC + 1]);
+        uint8_t *value = cpu->ram + address;
+        BIT_SET_IF(*value & 0x80, cpu->P, FLAGS_BIT_CARRY);
+        *value <<= 1;
+        *value &= 0xfe;
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu->A |= *value;
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x04:
       /*
-       * IGN - Ignore value (zero page, illegal)
+       * IGN - Ignore value (zero page) (unofficial)
        *
        * Reads a value from memory, and ignores it. This affects no registers or
        * flags. Effectively a NOP for this emulator.
@@ -353,6 +369,21 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         *value <<= 1;
         *value &= 0xfe;
         cpu_set_zero_negative_flags(cpu, *value);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0x07:
+      /*
+       * SLO - ASL followed by ORA (zero page) (unofficial)
+       */
+      {
+        uint8_t *value = cpu->ram + cpu_read_8b(cpu, cpu->PC + 1);
+        BIT_SET_IF(*value & 0x80, cpu->P, FLAGS_BIT_CARRY);
+        *value <<= 1;
+        *value &= 0xfe;
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu->A |= *value;
+        cpu_set_zero_negative_flags(cpu, cpu->A);
         cpu->PC += instruction.bytes;
       }
       break;
@@ -399,7 +430,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       break;
     case 0x0c:
       /*
-       * IGN - Ignore value (absolute, illegal)
+       * IGN - Ignore value (absolute) (unofficial)
        *
        * Reads a value from memory, and ignores it. This affects no registers or
        * flags. Effectively a NOP for this emulator.
@@ -442,6 +473,21 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0x0f:
+      /*
+       * SLO - ASL followed by ORA (absolute) (unofficial)
+       */
+      {
+        uint8_t *value = cpu->ram + cpu_read_16b(cpu, cpu->PC + 1);
+        BIT_SET_IF(*value & 0x80, cpu->P, FLAGS_BIT_CARRY);
+        *value <<= 1;
+        *value &= 0xfe;
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu->A |= *value;
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x10:
       /*
        * BPL - Branch if Positive
@@ -471,6 +517,23 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
         cpu->A |= cpu_read_indirect_y(cpu, operand);
         cpu->cycle += cpu_page_cross(cpu_read_16b(cpu, operand), cpu->Y);
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0x13:
+      /*
+       * SLO - ASL followed by ORA (indirect), Y (unofficial)
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        const Address address = cpu_read_indirect_y_address(cpu, operand);
+        uint8_t *value = cpu->ram + address;
+        BIT_SET_IF(*value & 0x80, cpu->P, FLAGS_BIT_CARRY);
+        *value <<= 1;
+        *value &= 0xfe;
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu->A |= *value;
         cpu_set_zero_negative_flags(cpu, cpu->A);
         cpu->PC += instruction.bytes;
       }
@@ -520,6 +583,22 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0x17:
+      /*
+       * SLO - ASL followed by ORA (zero page, X) (unofficial)
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + cpu_make_zero_page_x_offset(cpu, operand);
+        BIT_SET_IF(*value & 0x80, cpu->P, FLAGS_BIT_CARRY);
+        *value <<= 1;
+        *value &= 0xfe;
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu->A |= *value;
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x18:
       /*
        * CLC - Clear Carry Flag
@@ -547,12 +626,28 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       break;
     case 0x1a:
       /*
-       * NOP - No operation (implied, illegal)
+       * NOP - No operation (implied) (unofficial)
        *
        * The NOP instruction causes no changes to the processor other than the
        * normal incrementing of the program counter to the next instruction.
        */
       cpu->PC += instruction.bytes;
+      break;
+    case 0x1b:
+      /*
+       * SLO - ASL followed by ORA (absolute, Y) (unofficial)
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + address + cpu->Y;
+        BIT_SET_IF(*value & 0x80, cpu->P, FLAGS_BIT_CARRY);
+        *value <<= 1;
+        *value &= 0xfe;
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu->A |= *value;
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
       break;
     case 0x1c:
       /*
@@ -604,6 +699,22 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0x1f:
+      /*
+       * SLO - ASL followed by ORA (absolute, X) (unofficial)
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + address + cpu->X;
+        BIT_SET_IF(*value & 0x80, cpu->P, FLAGS_BIT_CARRY);
+        *value <<= 1;
+        *value &= 0xfe;
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu->A |= *value;
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x20:
       /*
        * JSR - Jump to Subroutine
@@ -627,6 +738,23 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu->A &= cpu_read_indirect_x(cpu, cpu->ram[cpu->PC + 1]);
       cpu_set_zero_negative_flags(cpu, cpu->A);
       cpu->PC += instruction.bytes;
+      break;
+    case 0x23:
+      /*
+       * RLA - ROL followed by AND (indirect, X) (unofficial)
+       */
+      {
+        const Address address = cpu_read_indirect_x_address(cpu, cpu->ram[cpu->PC + 1]);
+        uint8_t *value = cpu->ram + address;
+        const uint8_t new_carry = *value & 0x80;
+        *value <<= 1;
+        BIT_SET_IF(cpu->P & FLAGS_CARRY, *value, 0);
+        BIT_SET_IF(new_carry, cpu->P, FLAGS_BIT_CARRY);
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu->A &= *value;
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
       break;
     case 0x24:
       /*
@@ -673,6 +801,22 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         BIT_SET_IF(cpu->P & FLAGS_CARRY, *value, 0);
         BIT_SET_IF(new_carry, cpu->P, FLAGS_BIT_CARRY);
         cpu_set_zero_negative_flags(cpu, *value);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0x27:
+      /*
+       * RLA - ROL followed by AND (zero page) (unofficial)
+       */
+      {
+        uint8_t *value = cpu->ram + cpu_read_8b(cpu, cpu->PC + 1);
+        const uint8_t new_carry = *value & 0x80;
+        *value <<= 1;
+        BIT_SET_IF(cpu->P & FLAGS_CARRY, *value, 0);
+        BIT_SET_IF(new_carry, cpu->P, FLAGS_BIT_CARRY);
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu->A &= *value;
+        cpu_set_zero_negative_flags(cpu, cpu->A);
         cpu->PC += instruction.bytes;
       }
       break;
@@ -767,6 +911,22 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0x2f:
+      /*
+       * RLA - ROL followed by AND (absolute) (unofficial)
+       */
+      {
+        uint8_t *value = cpu->ram + cpu_read_16b(cpu, cpu->PC + 1);
+        const uint8_t new_carry = *value & 0x80;
+        *value <<= 1;
+        BIT_SET_IF(cpu->P & FLAGS_CARRY, *value, 0);
+        BIT_SET_IF(new_carry, cpu->P, FLAGS_BIT_CARRY);
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu->A &= *value;
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x30:
       /*
        * BMI - Branch If Minus (relative)
@@ -795,6 +955,24 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
         cpu->A &= cpu_read_indirect_y(cpu, operand);
         cpu->cycle += cpu_page_cross(cpu_read_16b(cpu, operand), cpu->Y);
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0x33:
+      /*
+       * RLA - ROL followed by AND (indirect), Y (unofficial)
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        const Address address = cpu_read_indirect_y_address(cpu, operand);
+        uint8_t *value = cpu->ram + address;
+        const uint8_t new_carry = *value & 0x80;
+        *value <<= 1;
+        BIT_SET_IF(cpu->P & FLAGS_CARRY, *value, 0);
+        BIT_SET_IF(new_carry, cpu->P, FLAGS_BIT_CARRY);
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu->A &= *value;
         cpu_set_zero_negative_flags(cpu, cpu->A);
         cpu->PC += instruction.bytes;
       }
@@ -842,6 +1020,23 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0x37:
+      /*
+       * RLA - ROL followed by AND (indirect, X) (unofficial)
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + cpu_make_zero_page_x_offset(cpu, operand);
+        const uint8_t new_carry = *value & 0x80;
+        *value <<= 1;
+        BIT_SET_IF(cpu->P & FLAGS_CARRY, *value, 0);
+        BIT_SET_IF(new_carry, cpu->P, FLAGS_BIT_CARRY);
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu->A &= *value;
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x38:
       /*
        * SEC - Set Carry Flag
@@ -867,12 +1062,29 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       break;
     case 0x3a:
       /*
-       * NOP - No operation (implied, illegal)
+       * NOP - No operation (implied) (unofficial)
        *
        * The NOP instruction causes no changes to the processor other than the
        * normal incrementing of the program counter to the next instruction.
        */
       cpu->PC += instruction.bytes;
+      break;
+    case 0x3b:
+      /*
+       * RLA - ROL followed by AND (absolute, Y) (unofficial)
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + address + cpu->Y;
+        const uint8_t new_carry = *value & 0x80;
+        *value <<= 1;
+        BIT_SET_IF(cpu->P & FLAGS_CARRY, *value, 0);
+        BIT_SET_IF(new_carry, cpu->P, FLAGS_BIT_CARRY);
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu->A &= *value;
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
       break;
     case 0x3c:
       /*
@@ -922,6 +1134,23 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0x3f:
+      /*
+       * RLA - ROL followed by AND (absolute, X) (unofficial)
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + address + cpu->X;
+        const uint8_t new_carry = *value & 0x80;
+        *value <<= 1;
+        BIT_SET_IF(cpu->P & FLAGS_CARRY, *value, 0);
+        BIT_SET_IF(new_carry, cpu->P, FLAGS_BIT_CARRY);
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu->A &= *value;
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x40:
       /*
        * RTI - Return from Interrupt
@@ -946,9 +1175,24 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_set_zero_negative_flags(cpu, cpu->A);
       cpu->PC += instruction.bytes;
       break;
+    case 0x43:
+      /*
+       * SRE - Equivalent to LSR followed by EOR (indirect, X) (unofficial)
+       */
+      {
+        const Address address = cpu_read_indirect_x_address(cpu, cpu->ram[cpu->PC + 1]);
+        uint8_t *value = cpu->ram + address;
+        BIT_SET_IF(*value & 0x01, cpu->P, FLAGS_BIT_CARRY);
+        *value = (*value >> 1) & 0x7f;
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu->A ^= *value;
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x44:
       /*
-       * IGN - Ignore value (zero page, illegal)
+       * IGN - Ignore value (zero page) (unofficial)
        *
        * Reads a value from memory, and ignores it. This affects no registers or
        * flags. Effectively a NOP for this emulator.
@@ -981,6 +1225,20 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         BIT_SET_IF(*value & 0x01, cpu->P, FLAGS_BIT_CARRY);
         *value = (*value >> 1) & 0x7f;
         cpu_set_zero_negative_flags(cpu, *value);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0x47:
+      /*
+       * SRE - Equivalent to LSR followed by EOR (zero page) (unofficial)
+       */
+      {
+        uint8_t *value = cpu->ram + cpu_read_8b(cpu, cpu->PC + 1);
+        BIT_SET_IF(*value & 0x01, cpu->P, FLAGS_BIT_CARRY);
+        *value = (*value >> 1) & 0x7f;
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu->A ^= *value;
+        cpu_set_zero_negative_flags(cpu, cpu->A);
         cpu->PC += instruction.bytes;
       }
       break;
@@ -1059,6 +1317,20 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0x4f:
+      /*
+       * SRE - Equivalent to LSR followed by EOR (absolute) (unofficial)
+       */
+      {
+        uint8_t *value = cpu->ram + cpu_read_16b(cpu, cpu->PC + 1);
+        BIT_SET_IF(*value & 0x01, cpu->P, FLAGS_BIT_CARRY);
+        *value = (*value >> 1) & 0x7f;
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu->A ^= *value;
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x50:
       /*
        * BVC - Branch if Overflow Clear
@@ -1088,6 +1360,22 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
         cpu->A ^= cpu_read_indirect_y(cpu, operand);
         cpu->cycle += cpu_page_cross(cpu_read_16b(cpu, operand), cpu->Y);
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0x53:
+      /*
+       * SRE - Equivalent to LSR followed by EOR (indirect), Y (unofficial)
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        const Address address = cpu_read_indirect_y_address(cpu, operand);
+        uint8_t *value = cpu->ram + address;
+        BIT_SET_IF(*value & 0x01, cpu->P, FLAGS_BIT_CARRY);
+        *value = (*value >> 1) & 0x7f;
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu->A ^= *value;
         cpu_set_zero_negative_flags(cpu, cpu->A);
         cpu->PC += instruction.bytes;
       }
@@ -1134,6 +1422,21 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0x57:
+      /*
+       * SRE - Equivalent to LSR followed by EOR (zero page, X) (unofficial)
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + cpu_make_zero_page_x_offset(cpu, operand);
+        BIT_SET_IF(*value & 0x01, cpu->P, FLAGS_BIT_CARRY);
+        *value = (*value >> 1) & 0x7f;
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu->A ^= *value;
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x59:
       /*
        * EOR - Exclusive OR (absolute, Y)
@@ -1151,12 +1454,27 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       break;
     case 0x5a:
       /*
-       * NOP - No operation (implied, illegal)
+       * NOP - No operation (implied) (unofficial)
        *
        * The NOP instruction causes no changes to the processor other than the
        * normal incrementing of the program counter to the next instruction.
        */
       cpu->PC += instruction.bytes;
+      break;
+    case 0x5b:
+      /*
+       * SRE - Equivalent to LSR followed by EOR (absolute, Y) (unofficial)
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + address + cpu->Y;
+        BIT_SET_IF(*value & 0x01, cpu->P, FLAGS_BIT_CARRY);
+        *value = (*value >> 1) & 0x7f;
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu->A ^= *value;
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
       break;
     case 0x5c:
       /*
@@ -1205,6 +1523,21 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0x5f:
+      /*
+       * SRE - Equivalent to LSR followed by EOR (absolute, X) (unofficial)
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + address + cpu->X;
+        BIT_SET_IF(*value & 0x01, cpu->P, FLAGS_BIT_CARRY);
+        *value = (*value >> 1) & 0x7f;
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu->A ^= *value;
+        cpu_set_zero_negative_flags(cpu, cpu->A);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x60:
       /*
        * RTS - Return from Subroutine
@@ -1226,9 +1559,25 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_addc(cpu, cpu_read_indirect_x(cpu, cpu->ram[cpu->PC + 1]));
       cpu->PC += instruction.bytes;
       break;
+    case 0x63:
+      /*
+       * RRA - Equivalent to ROR followed by ADC (indirect, X) (unofficial)
+       */
+      {
+        const Address address = cpu_read_indirect_x_address(cpu, cpu->ram[cpu->PC + 1]);
+        uint8_t *value = cpu->ram + address;
+        const uint8_t new_carry = *value & 0x01;
+        *value >>= 1;
+        BIT_SET_IF(cpu->P & FLAGS_CARRY, *value, 7);
+        BIT_SET_IF(new_carry, cpu->P, FLAGS_BIT_CARRY);
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu_addc(cpu, *value);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x64:
       /*
-       * IGN - Ignore value (zero page, illegal)
+       * IGN - Ignore value (zero page) (unofficial)
        *
        * Reads a value from memory, and ignores it. This affects no registers or
        * flags. Effectively a NOP for this emulator.
@@ -1244,6 +1593,21 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
        */
       cpu_addc(cpu, cpu->ram[cpu->ram[cpu->PC + 1]]);
       cpu->PC += instruction.bytes;
+      break;
+    case 0x67:
+      /*
+       * RRA - Equivalent to ROR followed by ADC (zero page) (unofficial)
+       */
+      {
+        uint8_t *value = cpu->ram + cpu_read_8b(cpu, cpu->PC + 1);
+        const uint8_t new_carry = *value & 0x01;
+        *value >>= 1;
+        BIT_SET_IF(cpu->P & FLAGS_CARRY, *value, 7);
+        BIT_SET_IF(new_carry, cpu->P, FLAGS_BIT_CARRY);
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu_addc(cpu, *value);
+        cpu->PC += instruction.bytes;
+      }
       break;
     case 0x68:
       /*
@@ -1345,6 +1709,21 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0x6f:
+      /*
+       * RRA - Equivalent to ROR followed by ADC (absolute) (unofficial)
+       */
+      {
+        uint8_t *value = cpu->ram + cpu_read_16b(cpu, cpu->PC + 1);
+        const uint8_t new_carry = *value & 0x01;
+        *value >>= 1;
+        BIT_SET_IF(cpu->P & FLAGS_CARRY, *value, 7);
+        BIT_SET_IF(new_carry, cpu->P, FLAGS_BIT_CARRY);
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu_addc(cpu, *value);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x70:
       /*
        * BVS - Branch if Overflow Set
@@ -1373,6 +1752,23 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
         cpu_addc(cpu, cpu_read_indirect_y(cpu, operand));
         cpu->cycle += cpu_page_cross(cpu_read_16b(cpu, operand), cpu->Y);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0x73:
+      /*
+       * RRA - Equivalent to ROR followed by ADC (indirect), Y (unofficial)
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        const Address address = cpu_read_indirect_y_address(cpu, operand);
+        uint8_t *value = cpu->ram + address;
+        const uint8_t new_carry = *value & 0x01;
+        *value >>= 1;
+        BIT_SET_IF(cpu->P & FLAGS_CARRY, *value, 7);
+        BIT_SET_IF(new_carry, cpu->P, FLAGS_BIT_CARRY);
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu_addc(cpu, *value);
         cpu->PC += instruction.bytes;
       }
       break;
@@ -1418,6 +1814,22 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0x77:
+      /*
+       * RRA - Equivalent to ROR followed by ADC (zero page, X) (unofficial)
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + cpu_make_zero_page_x_offset(cpu, operand);
+        const uint8_t new_carry = *value & 0x01;
+        *value >>= 1;
+        BIT_SET_IF(cpu->P & FLAGS_CARRY, *value, 7);
+        BIT_SET_IF(new_carry, cpu->P, FLAGS_BIT_CARRY);
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu_addc(cpu, *value);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x78:
       /*
        * SEI - Set Interrupt Disable
@@ -1442,12 +1854,28 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       break;
     case 0x7a:
       /*
-       * NOP - No operation (implied, illegal)
+       * NOP - No operation (implied) (unofficial)
        *
        * The NOP instruction causes no changes to the processor other than the
        * normal incrementing of the program counter to the next instruction.
        */
       cpu->PC += instruction.bytes;
+      break;
+    case 0x7b:
+      /*
+       * RRA - Equivalent to ROR followed by ADC (absolute, Y) (unofficial)
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + address + cpu->Y;
+        const uint8_t new_carry = *value & 0x01;
+        *value >>= 1;
+        BIT_SET_IF(cpu->P & FLAGS_CARRY, *value, 7);
+        BIT_SET_IF(new_carry, cpu->P, FLAGS_BIT_CARRY);
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu_addc(cpu, *value);
+        cpu->PC += instruction.bytes;
+      }
       break;
     case 0x7c:
       /*
@@ -1496,9 +1924,25 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0x7f:
+      /*
+       * RRA - Equivalent to ROR followed by ADC (absolute, X) (unofficial)
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + address + cpu->X;
+        const uint8_t new_carry = *value & 0x01;
+        *value >>= 1;
+        BIT_SET_IF(cpu->P & FLAGS_CARRY, *value, 7);
+        BIT_SET_IF(new_carry, cpu->P, FLAGS_BIT_CARRY);
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu_addc(cpu, *value);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0x80:
       /*
-       * SKB - Skip byte (immediate, illegal)
+       * SKB - Skip byte (immediate) (unofficial)
        *
        * Reads the immediate byte from memory, and ignores it. Effectively a NOP
        * for this emulator.
@@ -1817,7 +2261,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       break;
     case 0xa3:
       /*
-       * LAX - LDA + TAX (indirect, X) (illegal)
+       * LAX - LDA + TAX (indirect, X) (unofficial)
        */
       cpu->A = cpu_read_indirect_x(cpu, cpu->ram[cpu->PC + 1]);
       cpu->X = cpu->A;
@@ -1859,7 +2303,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       break;
     case 0xa7:
       /*
-       * LAX - LDA + TAX (zero page) (illegal)
+       * LAX - LDA + TAX (zero page) (unofficial)
        */
       cpu->A = cpu_read_8b(cpu, cpu_read_8b(cpu, cpu->PC + 1));
       cpu->X = cpu->A;
@@ -1943,7 +2387,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       break;
     case 0xaf:
       /*
-       * LAX - LDA + TAX (absolute) (illegal)
+       * LAX - LDA + TAX (absolute) (unofficial)
        */
       {
         const uint16_t address = cpu_read_16b(cpu, cpu->PC + 1);
@@ -1987,7 +2431,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       break;
     case 0xb3:
       /*
-       * LAX - LDA + TAX (indirect), Y (illegal)
+       * LAX - LDA + TAX (indirect), Y (unofficial)
        */
       {
         const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
@@ -2042,7 +2486,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       break;
     case 0xb7:
       /*
-       * LAX - LDA + TAX (zero page, Y) (illegal)
+       * LAX - LDA + TAX (zero page, Y) (unofficial)
        */
       {
         const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
@@ -2135,7 +2579,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       break;
     case 0xbf:
       /*
-       * LAX - LDA + TAX (absolute, Y) (illegal)
+       * LAX - LDA + TAX (absolute, Y) (unofficial)
        */
       {
         const Address address = cpu_read_16b(cpu, cpu->PC + 1);
@@ -2196,7 +2640,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       break;
     case 0xc3:
       /*
-       * DCP - Decrement and compare (indirect, X) (illegal)
+       * DCP - Decrement and compare (indirect, X) (unofficial)
        *
        * Decrements the value at the given memory location, and then performs a
        * CMP by comparing the resulting value in memory against the accumulator.
@@ -2245,7 +2689,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       break;
     case 0xc7:
       /*
-       * DCP - Decrement and compare (zero page) (illegal)
+       * DCP - Decrement and compare (zero page) (unofficial)
        *
        * Decrements the value at the given memory location, and then performs a
        * CMP by comparing the resulting value in memory against the accumulator.
@@ -2351,7 +2795,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       break;
     case 0xcf:
       /*
-       * DCP - Decrement and compare (absolute) (illegal)
+       * DCP - Decrement and compare (absolute) (unofficial)
        *
        * Decrements the value at the given memory location, and then performs a
        * CMP by comparing the resulting value in memory against the accumulator.
@@ -2405,7 +2849,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       break;
     case 0xd3:
       /*
-       * DCP - Decrement and compare (indirect, Y) (illegal)
+       * DCP - Decrement and compare (indirect, Y) (unofficial)
        *
        * Decrements the value at the given memory location, and then performs a
        * CMP by comparing the resulting value in memory against the accumulator.
@@ -2465,7 +2909,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       break;
     case 0xd7:
       /*
-       * DCP - Decrement and compare (zero page, X) (illegal)
+       * DCP - Decrement and compare (zero page, X) (unofficial)
        *
        * Decrements the value at the given memory location, and then performs a
        * CMP by comparing the resulting value in memory against the accumulator.
@@ -2510,7 +2954,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       break;
     case 0xda:
       /*
-       * NOP - No operation (implied, illegal)
+       * NOP - No operation (implied) (unofficial)
        *
        * The NOP instruction causes no changes to the processor other than the
        * normal incrementing of the program counter to the next instruction.
@@ -2519,7 +2963,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       break;
     case 0xdb:
       /*
-       * DCP - Decrement and compare (absolute, Y) (illegal)
+       * DCP - Decrement and compare (absolute, Y) (unofficial)
        *
        * Decrements the value at the given memory location, and then performs a
        * CMP by comparing the resulting value in memory against the accumulator.
@@ -2584,7 +3028,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       break;
     case 0xdf:
       /*
-       * DCP - Decrement and compare (absolute, X) (illegal)
+       * DCP - Decrement and compare (absolute, X) (unofficial)
        *
        * Decrements the value at the given memory location, and then performs a
        * CMP by comparing the resulting value in memory against the accumulator.
@@ -2644,6 +3088,19 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       cpu_addc(cpu, ~(cpu_read_indirect_x(cpu, cpu->ram[cpu->PC + 1])));
       cpu->PC += instruction.bytes;
       break;
+    case 0xe3:
+      /*
+       * ISC - INC followed by SBC (indirect, X) (unofficial)
+       */
+      {
+        const Address address = cpu_read_indirect_x_address(cpu, cpu->ram[cpu->PC + 1]);
+        uint8_t *value = cpu->ram + address;
+        (*value)++;
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu_addc(cpu, ~*value);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0xe4:
       /*
        * CPX - Compare X Register (zero page)
@@ -2701,6 +3158,18 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0xe7:
+      /*
+       * ISC - INC followed by SBC (zero page) (unofficial)
+       */
+      {
+        uint8_t *value = cpu->ram + cpu->ram[cpu->PC + 1];
+        (*value)++;
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu_addc(cpu, ~*value);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0xe8:
       /*
        * INX - Increment X Register
@@ -2750,7 +3219,7 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       break;
     case 0xeb:
       /*
-       * USB - Subtract With Carry (immediate) (illegal)
+       * USB - Subtract With Carry (immediate) (unofficial)
        *
        * Subtracts the contents of a memory location from the accumulator
        * together with the not of the carry bit. If overflow occurs, the carry
@@ -2837,6 +3306,19 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0xef:
+      /*
+       * ISC - INC followed by SBC (absolute) (unofficial)
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + address;
+        (*value)++;
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu_addc(cpu, ~*value);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0xf0:
       /*
        * BEQ - Branch if Equal
@@ -2883,6 +3365,20 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
         cpu_addc(cpu, ~(cpu_read_indirect_y(cpu, operand)));
         cpu->cycle += cpu_page_cross(cpu_read_16b(cpu, operand), cpu->Y);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0xf3:
+      /*
+       * ISC - INC followed by SBC (indirect), Y (unofficial)
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        const Address address = cpu_read_indirect_y_address(cpu, operand);
+        uint8_t *value = cpu->ram + address;
+        (*value)++;
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu_addc(cpu, ~*value);
         cpu->PC += instruction.bytes;
       }
       break;
@@ -2940,6 +3436,19 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         cpu->PC += instruction.bytes;
       }
       break;
+    case 0xf7:
+      /*
+       * ISC - INC followed by SBC (zero page, X) (unofficial)
+       */
+      {
+        const uint8_t operand = cpu_read_8b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + cpu_make_zero_page_x_offset(cpu, operand);
+        (*value)++;
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu_addc(cpu, ~*value);
+        cpu->PC += instruction.bytes;
+      }
+      break;
     case 0xf8:
       /*
        * SED - Set Decimal Flag
@@ -2981,12 +3490,25 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
       break;
     case 0xfa:
       /*
-       * NOP - No operation (implied, illegal)
+       * NOP - No operation (implied) (unofficial)
        *
        * The NOP instruction causes no changes to the processor other than the
        * normal incrementing of the program counter to the next instruction.
        */
       cpu->PC += instruction.bytes;
+      break;
+    case 0xfb:
+      /*
+       * ISC - INC followed by SBC (absolute, Y) (unofficial)
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + address + cpu->Y;
+        (*value)++;
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu_addc(cpu, ~*value);
+        cpu->PC += instruction.bytes;
+      }
       break;
     case 0xfc:
       /*
@@ -3044,6 +3566,19 @@ void cpu_execute_next_instruction(struct Cpu *cpu)
         uint8_t *value = cpu->ram + address + cpu->X;
         (*value)++;
         cpu_set_zero_negative_flags(cpu, *value);
+        cpu->PC += instruction.bytes;
+      }
+      break;
+    case 0xff:
+      /*
+       * ISC - INC followed by SBC (absolute, X) (unofficial)
+       */
+      {
+        const Address address = cpu_read_16b(cpu, cpu->PC + 1);
+        uint8_t *value = cpu->ram + address + cpu->X;
+        (*value)++;
+        cpu_set_zero_negative_flags(cpu, *value);
+        cpu_addc(cpu, ~*value);
         cpu->PC += instruction.bytes;
       }
       break;

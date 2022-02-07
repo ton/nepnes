@@ -169,13 +169,9 @@ int main(int argc, char **argv)
 
   printf("Binary size: %lu bytes\n", binary_size);
 
-  /* Create the CPU and debugger state. Set the program counter to the address
-   * where the ROM is loaded. */
-  struct Cpu cpu = {0};
-  cpu_power_on(&cpu);
-
   uint16_t prg_offset = 0;
   size_t prg_size = 0;
+  struct Cpu cpu = {0};
 
   /* Load the cartridge into memory. */
   struct RomHeader header = rom_make_header(binary_data);
@@ -208,8 +204,12 @@ int main(int argc, char **argv)
     }
   }
 
-  /* In case the initial PC is overridden by the user, do so. */
-  if (options.address != CPU_MAX_ADDRESS)
+  /* Power on the CPU, that is, initiate the RESET cycle. This will initialize
+   * PC from the RESET vector for example. */
+  cpu_power_on(&cpu);
+
+  /* In case the user specified a custom PC, override it here. */
+  if (options.address != CPU_ADDRESS_MAX)
   {
     cpu.PC = options.address;
   }
@@ -403,7 +403,7 @@ int main(int argc, char **argv)
         case 'G': /* scroll to bottom */
           if (assembly_pane.has_focus)
           {
-            assembly_pane_scroll_to_address(&assembly_pane, &debugger, &cpu, CPU_MAX_ADDRESS);
+            assembly_pane_scroll_to_address(&assembly_pane, &debugger, &cpu, CPU_ADDRESS_MAX);
           }
           break;
         case 'g': /* scroll to top */

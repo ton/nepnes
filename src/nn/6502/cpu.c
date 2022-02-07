@@ -3607,6 +3607,10 @@ void cpu_power_on(struct Cpu *cpu)
   memset(cpu->ram + 0x4000, 0x00, 16); /* 0x4000-0x400f: 0x00 */
   memset(cpu->ram + 0x4010, 0x00, 4);  /* 0x4000-0x400f: 0x00 */
 
+  /* Initialize the program counter by reading the address from the reset
+   * vector. */
+  cpu->PC = cpu_read_16b(cpu, CPU_ADDRESS_RESET_VECTOR);
+
   cpu->cycle = 7;
 }
 

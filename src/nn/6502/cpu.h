@@ -13,7 +13,8 @@
  * the PAL NES, the CPU and APU are contained within the RP2A07 chip.
  */
 
-#define CPU_MAX_ADDRESS 0xffff
+#define CPU_ADDRESS_RESET_VECTOR 0xfffc
+#define CPU_ADDRESS_MAX 0xffff
 
 /*
  * Enumeration of the flag values.
@@ -61,7 +62,7 @@ struct Cpu
   uint8_t P;  /* Status register */
   Address PC; /* Program Counter */
 
-  uint8_t ram[CPU_MAX_ADDRESS + 1];
+  uint8_t ram[CPU_ADDRESS_MAX + 1];
 
   unsigned cycle; /* Number of cycles elapsed since execution */
 };
@@ -69,7 +70,7 @@ struct Cpu
 uint8_t cpu_read_8b(struct Cpu *cpu, Address a);
 int8_t cpu_read_signed_8b(struct Cpu *cpu, Address a);
 uint16_t cpu_read_16b(struct Cpu *cpu, Address a);
-uint16_t cpu_read_indirect_16b(struct Cpu* cpu, Address a);
+uint16_t cpu_read_indirect_16b(struct Cpu *cpu, Address a);
 void cpu_write_16b(struct Cpu *cpu, Address a, uint16_t x);
 
 Address cpu_read_indirect_address(struct Cpu *cpu, uint8_t offset);

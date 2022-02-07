@@ -38,7 +38,7 @@ void options_init(struct Options* options)
   options->binary_file_name = NULL;
   options->log_file_name = NULL;
   options->print_help = false;
-  options->address = CPU_MAX_ADDRESS;
+  options->address = CPU_ADDRESS_MAX;
 }
 
 void options_parse(struct Options *options, int argc, char **argv)

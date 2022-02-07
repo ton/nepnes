@@ -93,7 +93,7 @@ struct AssemblyPane make_assembly_pane(struct ncplane *std_plane, struct Debugge
   pane.first_offset = 0;
   /* TODO(ton): in case a program writes to PRG ROM mapped memory, this needs to
    * be recalculated! */
-  pane.last_offset = debugger_address_to_instruction_offset(debugger, cpu, CPU_MAX_ADDRESS);
+  pane.last_offset = debugger_address_to_instruction_offset(debugger, cpu, CPU_ADDRESS_MAX);
   pane.scroll_offset = 3;
   pane.has_focus = false;
 
@@ -134,7 +134,7 @@ void assembly_pane_update(struct AssemblyPane *pane)
 
   int y = 0;
   const int lines = ncplane_dim_y(pane->plane);
-  while (y < lines && address <= CPU_MAX_ADDRESS)
+  while (y < lines && address <= CPU_ADDRESS_MAX)
   {
     struct Instruction ins = make_instruction(pane->cpu->ram[address]);
 

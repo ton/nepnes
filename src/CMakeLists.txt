@@ -5,6 +5,7 @@ add_subdirectory(vendor)
 add_library(libnepnes
   nn/6502/cpu.c
   nn/6502/instruction.c
+  nn/nes/mapper.c
   nn/nes/rom.c
   nn/std/io.c
   nn/std/util.c

@@ -1,5 +1,6 @@
 #include "options.h"
 
+#include <nn/6502/cpu.h>
 #include <nn/std/util.h>
 
 #include <getopt.h>
@@ -28,7 +29,19 @@ static void print_help()
   printf("\t-h | --help   : shows this help message\n");
 }
 
-void parse_options(struct Options *options, int argc, char **argv)
+/*
+ * Initializes the options struct, by default the starting address is set to an
+ * invalid address to distinguish it from user input.
+ */
+void options_init(struct Options* options)
+{
+  options->binary_file_name = NULL;
+  options->log_file_name = NULL;
+  options->print_help = false;
+  options->address = CPU_MAX_ADDRESS;
+}
+
+void options_parse(struct Options *options, int argc, char **argv)
 {
   struct option opts[] = {
       {"help", no_argument, NULL, 'h'},

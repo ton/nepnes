@@ -13,7 +13,7 @@ int main(int argc, char **argv)
 
   unsigned char *rom_data = NULL;
   size_t rom_size = 0;
-  if (read_all(options.rom_file_name, &rom_data, &rom_size) == -1)
+  if (nn_read_all(options.rom_file_name, &rom_data, &rom_size) == -1)
   {
     nn_quit_strerror("Could not open the given ROM file '%s' for reading", options.rom_file_name);
   }

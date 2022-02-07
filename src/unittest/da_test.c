@@ -27,7 +27,7 @@ static int disassemble_rom(const char *rom_filename, const struct stat *sb, int 
   /* Open the ROM file. */
   unsigned char *rom_data = NULL;
   size_t rom_size = 0;
-  if (read_all(rom_filename, &rom_data, &rom_size) == -1)
+  if (nn_read_all(rom_filename, &rom_data, &rom_size) == -1)
   {
     nn_quit_strerror("Could not open the given ROM file '%s' for reading", rom_filename);
   }

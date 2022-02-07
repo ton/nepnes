@@ -136,11 +136,7 @@ void assembly_pane_update(struct AssemblyPane *pane)
   const int lines = ncplane_dim_y(pane->plane);
   while (y < lines && address <= CPU_MAX_ADDRESS)
   {
-    struct Instruction ins = {0};
-    if (pane->debugger->prg_offset <= address && address < prg_last_address)
-    {
-      ins = make_instruction(pane->cpu->ram[address]);
-    }
+    struct Instruction ins = make_instruction(pane->cpu->ram[address]);
 
     /*
      * In case of an unknown instruction, the calculated size of the instruction

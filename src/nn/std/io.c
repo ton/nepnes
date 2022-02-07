@@ -60,7 +60,7 @@ static int inflate_file_index(zip_t *zip, int index, uint8_t **data, size_t *siz
  * hold the data read from file. In case the file does not exist or can not be
  * opened, returns -1, otherwise, returns 0.
  */
-int read_all(const char *file_name, uint8_t **data, size_t *size)
+int nn_read_all(const char *file_name, uint8_t **data, size_t *size)
 {
   if (access(file_name, F_OK) == -1)
   {

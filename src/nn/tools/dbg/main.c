@@ -155,12 +155,13 @@ int main(int argc, char **argv)
 {
   setlocale(LC_ALL, "");
 
-  struct Options options = {0};
-  parse_options(&options, argc, argv);
+  struct Options options;
+  options_init(&options);
+  options_parse(&options, argc, argv);
 
   unsigned char *binary_data = NULL;
   size_t binary_size = 0;
-  if (read_all(options.binary_file_name, &binary_data, &binary_size) == -1)
+  if (nn_read_all(options.binary_file_name, &binary_data, &binary_size) == -1)
   {
     nn_quit_strerror("Could not open the given ROM file '%s' for reading",
                      options.binary_file_name);
@@ -172,7 +173,6 @@ int main(int argc, char **argv)
    * where the ROM is loaded. */
   struct Cpu cpu = {0};
   cpu_power_on(&cpu);
-  cpu.PC = options.address;
 
   uint16_t prg_offset = 0;
   size_t prg_size = 0;
@@ -196,12 +196,26 @@ int main(int argc, char **argv)
     printf("PRG offset in ROM data: %lu\n", (prg_data - binary_data));
     printf("\n");
 
-    prg_offset = options.address;
-    memcpy(cpu.ram + prg_offset, prg_data, prg_size);
+    int error_code = mapper_initialize_cpu(header.mapper, &cpu, prg_data, prg_size);
+    if (error_code == MAPPER_ERR_UNSUPPORTED)
+    {
+      nn_quit("Mapper '%s' not supported.", mapper_to_string(header.mapper));
+    }
+    else if (error_code == MAPPER_ERR_NROM_UNEXPECTED_PRG_SIZE)
+    {
+      nn_quit("Unexpected PRG size of 0x%x for NROM mapper, expects either 0x4000 or 0x8000.",
+              prg_size);
+    }
+  }
+
+  /* In case the initial PC is overridden by the user, do so. */
+  if (options.address != CPU_MAX_ADDRESS)
+  {
+    cpu.PC = options.address;
   }
 
   /* Initialize the debugger state. */
-  struct Debugger debugger = make_debugger(prg_offset, prg_size);
+  struct Debugger debugger = make_debugger(cpu.PC, prg_size);
 
   notcurses_options opts = {0};
   opts.flags = NCOPTION_SUPPRESS_BANNERS;

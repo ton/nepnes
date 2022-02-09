@@ -1,5 +1,5 @@
-#ifndef NEPNES_ASSEMBLY_PANE_H
-#define NEPNES_ASSEMBLY_PANE_H
+#ifndef NEPNES_APP_DBG_ASSEMBLY_PANE_H
+#define NEPNES_APP_DBG_ASSEMBLY_PANE_H
 
 #include <lib/6502/include/cpu.h>
 

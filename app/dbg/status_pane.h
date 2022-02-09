@@ -1,5 +1,5 @@
-#ifndef NEPNES_STATUS_PANE_H
-#define NEPNES_STATUS_PANE_H
+#ifndef NEPNES_APP_DBG_STATUS_PANE_H
+#define NEPNES_APP_DBG_STATUS_PANE_H
 
 #include <stdbool.h>
 #include <stdint.h>

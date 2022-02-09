@@ -1,5 +1,5 @@
-#ifndef NEPNES_UTIL_H
-#define NEPNES_UTIL_H
+#ifndef NEPNES_STD_UTIL_H
+#define NEPNES_STD_UTIL_H
 
 #include <stdbool.h>
 #include <stdint.h>

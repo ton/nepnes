@@ -1,7 +1,5 @@
-#ifndef NEPNES_CPU_PANE_H
-#define NEPNES_CPU_PANE_H
-
-// #include <nn/nn.h>
+#ifndef NEPNES_APP_DBG_CPU_PANE_H
+#define NEPNES_APP_DBG_CPU_PANE_H
 
 #include <stdbool.h>
 #include <stdint.h>

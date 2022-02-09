@@ -1,5 +1,5 @@
-#ifndef NEPNES_NC_H
-#define NEPNES_NC_H
+#ifndef NEPNES_APP_DBG_NC_H
+#define NEPNES_APP_DBG_NC_H
 
 #include <stdint.h>
 

@@ -1,5 +1,5 @@
-#ifndef NEPNES_DEBUGGER_H
-#define NEPNES_DEBUGGER_H
+#ifndef NEPNES_APP_DBG_DEBUGGER_H
+#define NEPNES_APP_DBG_DEBUGGER_H
 
 #include <lib/6502/include/cpu.h>
 #include <lib/std/include/flat_set.h>

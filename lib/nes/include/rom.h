@@ -177,4 +177,4 @@ void rom_prg_data(struct RomHeader *header, uint8_t *rom_data, uint8_t **prg_dat
 enum RomFormat rom_get_format(uint8_t rom_header[16]);
 int write_rom_information(FILE *fp, uint8_t *rom_data);
 
-#endif  // NEPNES_ROM_H
+#endif

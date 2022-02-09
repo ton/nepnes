@@ -1,5 +1,5 @@
-#ifndef NN_TOOLS_DBG_OPTIONS_H
-#define NN_TOOLS_DBG_OPTIONS_H
+#ifndef NEPNES_APP_DBG_OPTIONS_H
+#define NEPNES_APP_DBG_OPTIONS_H
 
 #include <stdbool.h>
 

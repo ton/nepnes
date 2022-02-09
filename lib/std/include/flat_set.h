@@ -1,5 +1,5 @@
-#ifndef NN_FLAT_SET_H
-#define NN_FLAT_SET_H
+#ifndef NEPNES_STD_FLAT_SET_H
+#define NEPNES_STD_FLAT_SET_H
 
 #include <stdbool.h>
 #include <stddef.h>

@@ -1,5 +1,5 @@
-#ifndef NEPNES_IO_H
-#define NEPNES_IO_H
+#ifndef NEPNES_STD_IO_H
+#define NEPNES_STD_IO_H
 
 #include <stddef.h>
 #include <stdint.h>

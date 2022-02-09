@@ -1,5 +1,5 @@
-#ifndef NEPNES_INSTRUCTION_H
-#define NEPNES_INSTRUCTION_H
+#ifndef NEPNES_6502_INSTRUCTION_H
+#define NEPNES_6502_INSTRUCTION_H
 
 #include <stdbool.h>
 #include <stddef.h>

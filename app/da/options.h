@@ -1,5 +1,5 @@
-#ifndef NEPNES_TOOLS_DA_OPTIONS_H
-#define NEPNES_TOOLS_DA_OPTIONS_H
+#ifndef NEPNES_APP_DA_OPTIONS_H
+#define NEPNES_APP_DA_OPTIONS_H
 
 struct Options
 {

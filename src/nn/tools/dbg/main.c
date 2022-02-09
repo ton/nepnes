@@ -215,7 +215,8 @@ int main(int argc, char **argv)
   }
 
   /* Initialize the debugger state. */
-  struct Debugger debugger = make_debugger(cpu.PC, prg_size);
+  /* TODO(ton): NROM mapper PRG segment hardcoded; need mapper knowledge here */
+  struct Debugger debugger = make_debugger(0xc000, prg_size);
 
   notcurses_options opts = {0};
   opts.flags = NCOPTION_SUPPRESS_BANNERS;

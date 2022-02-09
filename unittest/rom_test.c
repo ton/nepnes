@@ -13,7 +13,7 @@ static uint8_t *load_rom(const char *rom_file_name)
   uint8_t *rom_data;
   size_t rom_size;
 
-  const char *roms_path = "src/unittest/input/roms/";
+  const char *roms_path = "unittest/input/roms/";
   char *rom_file_path = nn_strcat(roms_path, rom_file_name);
 
   if (nn_read_all(rom_file_path, &rom_data, &rom_size) == -1)

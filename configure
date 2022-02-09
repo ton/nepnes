@@ -29,3 +29,6 @@ cd build && cmake ../ -GNinja \
   -DCMAKE_MAKE_PROGRAM="$(command -v ninja)" \
   -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
   -DCMAKE_BUILD_TYPE="$build_type"
+
+echo
+echo "Configuration complete, to build issue 'ninja -C build'"

@@ -1,5 +1,5 @@
 #!/bin/sh
-pipe_name="debug-pipe"
+pipe_name=".debug-pipe"
 if [ ! -p "$pipe_name" ]
 then
     mkfifo "$pipe_name"

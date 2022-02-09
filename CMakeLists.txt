@@ -15,8 +15,8 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 add_compile_options("$<$<CONFIG:DEBUG>:-Wall;-Wextra;-Wshadow;-Wno-unused-variable;-Wno-unused-function;-Wno-unused-parameter;-Werror;-Wstrict-overflow;-fno-strict-aliasing;-march=native>")
 add_compile_options("$<$<CONFIG:RELEASE>:-Wall;-Wextra;-Wshadow;-Wpedantic;-Werror;-Wstrict-overflow;-fno-strict-aliasing;-march=native>")
 
-# By default, include headers from src/.
-include_directories(src)
+# By default, include headers from the root directory.
+include_directories(.)
 
 find_package(PkgConfig REQUIRED)
 find_package(Check REQUIRED)
@@ -28,4 +28,7 @@ pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
 pkg_check_modules(libzip REQUIRED IMPORTED_TARGET libzip)
 pkg_check_modules(notcurses notcurses>=3.0.4 REQUIRED IMPORTED_TARGET notcurses notcurses-core)
 
-add_subdirectory(src)
+add_subdirectory(app)
+add_subdirectory(lib)
+add_subdirectory(unittest)
+add_subdirectory(vendor)

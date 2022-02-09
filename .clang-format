@@ -1,0 +1,26 @@
+---
+BasedOnStyle: Google
+Language: Cpp
+
+AlignEscapedNewlines: Right
+AlignTrailingComments: true
+AllowShortFunctionsOnASingleLine: None
+
+DerivePointerAlignment: false
+PointerAlignment: Right
+
+ColumnLimit: 100
+
+BreakBeforeBraces: Allman
+
+IncludeBlocks: Regroup
+IncludeCategories:
+    - Regex:  '^".*"'
+      Priority: 1
+    - Regex:  '^<lib/.*\.h>'
+      Priority: 2
+    - Regex:  '^<(check.h)>'
+      Priority: 3
+    - Regex:  '^<.*\.h>'
+      Priority: 4
+...

@@ -11,6 +11,6 @@ tmux send-keys -t "$session:$window" 'source init-sandbox.sh' C-m C-l
 
 window="2"
 tmux new-window -d -t "$session"
-tmux send-keys -t "$session:$window" 'source init-sandbox.sh; cd src' C-m C-l
+tmux send-keys -t "$session:$window" 'source init-sandbox.sh' C-m C-l
 
 exec tmux attach-session -t "$session"

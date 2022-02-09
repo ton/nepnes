@@ -1,0 +1,2 @@
+#ifndef NEPNES_NES_COMMON_H
+#define NEPNES_NES_COMMON_H

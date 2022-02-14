@@ -19,8 +19,10 @@ IncludeCategories:
       Priority: 1
     - Regex:  '^<lib/.*\.h>'
       Priority: 2
-    - Regex:  '^<(check.h)>'
+    - Regex:  '^<vendor/.*\.h>'
       Priority: 3
-    - Regex:  '^<.*\.h>'
+    - Regex:  '^<(check.h)>'
       Priority: 4
+    - Regex:  '^<.*\.h>'
+      Priority: 5
 ...

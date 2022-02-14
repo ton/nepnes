@@ -1,6 +1,6 @@
 project(nepnes)
 
-cmake_minimum_required(VERSION 3.15.4)
+cmake_minimum_required(VERSION 3.20)
 
 # Custom cmake modules
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -18,10 +18,10 @@ add_compile_options("$<$<CONFIG:RELEASE>:-Wall;-Wextra;-Wshadow;-Wpedantic;-Werr
 # By default, include headers from the root directory.
 include_directories(.)
 
-find_package(PkgConfig REQUIRED)
 find_package(Check REQUIRED)
-find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
+find_package(glfw3 3.2 REQUIRED)
+find_package(PkgConfig REQUIRED)
 
 # TODO(ton): Need some platform specific check here.
 pkg_check_modules(GTK3 REQUIRED gtk+-3.0)

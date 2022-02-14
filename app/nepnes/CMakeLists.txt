@@ -6,9 +6,8 @@ add_executable(nepnes
 
 target_link_libraries(nepnes
   imgui
-  SDL2
-  OpenGL
-  GLEW
+  OpenGL::GL
+  glfw
   ${GTK3_LIBRARIES}
 )
 

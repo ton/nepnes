@@ -2,9 +2,13 @@
 BasedOnStyle: Google
 Language: Cpp
 
+AlignAfterOpenBracket: AlwaysBreak
 AlignEscapedNewlines: Right
 AlignTrailingComments: true
 AllowShortFunctionsOnASingleLine: None
+
+AllowAllParametersOfDeclarationOnNextLine: false
+BinPackParameters: false
 
 DerivePointerAlignment: false
 PointerAlignment: Right

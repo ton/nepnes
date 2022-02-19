@@ -169,7 +169,6 @@ int main(int argc, char **argv)
 
   printf("Binary size: %lu bytes\n", binary_size);
 
-  uint16_t prg_offset = 0;
   size_t prg_size = 0;
   struct Cpu cpu = {0};
 

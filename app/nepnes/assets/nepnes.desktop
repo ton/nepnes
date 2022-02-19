@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=NepNES
+GenericName=NES emulator
+Icon=nepnes
+StartupNotify=true
+Categories=Game
+Exec=nepnes

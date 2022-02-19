@@ -1,20 +1,26 @@
 add_executable(nepnes
-  ui.cpp
-  main.cpp
-  $<TARGET_OBJECTS:imgui>
+  app.c
+  app_window.c
+  main.c
 )
 
 target_link_libraries(nepnes
-  imgui
-  OpenGL::GL
-  glfw
-  ${GTK3_LIBRARIES}
+  # OpenGL::GL
+  PkgConfig::Gtk4
 )
 
-target_compile_definitions(nepnes
-  PRIVATE NOC_FILE_DIALOG_GTK
+# install target
+install(TARGETS nepnes)
+install(CODE "execute_process(COMMAND ${XDG_DESKTOP_MENU_EXECUTABLE} install --novendor ${CMAKE_CURRENT_SOURCE_DIR}/assets/nepnes.desktop)")
+install(CODE "execute_process(COMMAND ${XDG_ICON_RESOURCE_EXECUTABLE} install --novendor ${CMAKE_CURRENT_SOURCE_DIR}/assets/nepnes.png --size 64 nepnes)")
+
+# uninstall target
+add_custom_target(nepnes-uninstall-desktop-menu
+  COMMAND ${XDG_DESKTOP_MENU_EXECUTABLE} uninstall nepnes.desktop
 )
 
-target_include_directories(nepnes
-  PRIVATE ${GTK3_INCLUDE_DIRS}
+add_custom_target(nepnes-uninstall-icon
+  COMMAND ${XDG_ICON_RESOURCE_EXECUTABLE} uninstall --size 64 nepnes
 )
+
+add_dependencies(uninstall nepnes-uninstall-desktop-menu nepnes-uninstall-icon)
